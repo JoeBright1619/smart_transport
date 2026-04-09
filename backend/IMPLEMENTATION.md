@@ -67,7 +67,7 @@ Implement the `Settings` class using `pydantic-settings`. It must load all envir
 **Branch:** `chore/core-config`
 **Commit:** `Add pydantic-settings configuration module`
 
-- [ ] Task 1.2 complete
+- [x] Task 1.2 complete
 
 ---
 
