@@ -123,7 +123,7 @@ Define the shared response envelope types used by every endpoint:
 **Branch:** `chore/common-schemas`
 **Commit:** `Add shared API response envelope and pagination schemas`
 
-- [ ] Task 1.5 complete
+- [x] Task 1.5 complete
 
 ---
 
