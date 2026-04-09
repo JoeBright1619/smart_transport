@@ -103,7 +103,7 @@ Implement three utilities:
 **Branch:** `chore/core-security`
 **Commit:** `Add JWT creation, verification, and bcrypt password hashing`
 
-- [ ] Task 1.4 complete
+- [x] Task 1.4 complete
 
 ---
 
