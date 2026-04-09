@@ -83,7 +83,7 @@ Set up the async SQLAlchemy engine using `asyncpg`. Create the `AsyncSession` fa
 **Branch:** `chore/core-database`
 **Commit:** `Add async SQLAlchemy engine and session factory`
 
-- [ ] Task 1.3 complete
+- [x] Task 1.3 complete
 
 ---
 
