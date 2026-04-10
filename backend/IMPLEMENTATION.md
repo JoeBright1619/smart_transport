@@ -148,7 +148,7 @@ Create two ORM models:
 **Branch:** `feat/model-tenant`
 **Commit:** `Add Tenant and Subscription ORM models`
 
-- [ ] Task 2.1 complete
+- [x] Task 2.1 complete
 
 ---
 
