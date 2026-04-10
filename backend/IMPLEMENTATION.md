@@ -164,7 +164,7 @@ Create the `User` ORM model with: `id` (prefixed `user-`), `tenant_id` (FK → t
 **Branch:** `feat/model-user`
 **Commit:** `Add User ORM model with role enum and tenant FK`
 
-- [ ] Task 2.2 complete
+- [x] Task 2.2 complete
 
 ---
 
