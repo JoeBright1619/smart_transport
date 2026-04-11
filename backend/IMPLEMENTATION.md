@@ -180,7 +180,7 @@ Create the `Vehicle` ORM model: `id` (prefixed `veh-`), `tenant_id` (FK, indexed
 **Branch:** `feat/model-vehicle`
 **Commit:** `Add Vehicle ORM model`
 
-- [ ] Task 2.3 complete
+- [x] Task 2.3 complete
 
 ---
 
