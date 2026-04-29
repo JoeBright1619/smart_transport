@@ -277,7 +277,7 @@ Create `AuditLog`: `id`, `tenant_id` (FK nullable, indexed), `user_id` (FK), `en
 **Branch:** `feat/model-audit-log`
 **Commit:** `Add AuditLog ORM model (immutable)`
 
-- [ ] Task 2.9 complete
+- [x] Task 2.9 complete
 
 ---
 
