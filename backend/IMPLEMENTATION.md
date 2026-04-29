@@ -261,7 +261,7 @@ Create `Alert`: `id`, `tenant_id` (FK, indexed), `type` (enum), `severity` (enum
 **Branch:** `feat/model-alert`
 **Commit:** `Add Alert ORM model`
 
-- [ ] Task 2.8 complete
+- [x] Task 2.8 complete
 
 ---
 
