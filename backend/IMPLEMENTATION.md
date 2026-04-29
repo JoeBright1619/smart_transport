@@ -245,7 +245,7 @@ Create `MaintenanceRecord`: `id`, `tenant_id` (FK, indexed), `vehicle_id` (FK), 
 **Branch:** `feat/model-maintenance`
 **Commit:** `Add MaintenanceRecord ORM model`
 
-- [ ] Task 2.7 complete
+- [x] Task 2.7 complete
 
 ---
 
