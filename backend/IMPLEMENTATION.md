@@ -13,7 +13,8 @@
 > **Agent Rule:** After completing each task, stop and report:
 > 1. What was implemented
 > 2. Any decisions made or problems encountered
-> 3. Then ask: _"Ready to proceed to the next task?"_
+> 3. A commit message for what was implemented 
+> 4. Then ask: _"Ready to proceed to the next task?"_
 > Do not move forward until the user confirms.
 
 ---
@@ -198,7 +199,7 @@ Create three models:
 **Branch:** `feat/model-route`
 **Commit:** `Add Route, Stop, and RouteStop junction ORM models`
 
-- [ ] Task 2.4 complete
+- [x] Task 2.4 complete
 
 ---
 
