@@ -230,7 +230,7 @@ Create `Trip`: `id` (prefixed `trip-`), `tenant_id` (FK, indexed), `vehicle_id` 
 **Branch:** `feat/model-trip`
 **Commit:** `Add Trip ORM model`
 
-- [ ] Task 2.6 complete
+- [x] Task 2.6 complete
 
 ---
 
