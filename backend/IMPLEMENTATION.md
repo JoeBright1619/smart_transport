@@ -292,7 +292,7 @@ Set up Alembic (`alembic init alembic`) and configure `env.py` to use the async 
 **Branch:** `chore/initial-migration`
 **Commit:** `Add initial Alembic migration for all tables and indexes`
 
-- [ ] Task 2.10 complete
+- [x] Task 2.10 complete
 
 ---
 
