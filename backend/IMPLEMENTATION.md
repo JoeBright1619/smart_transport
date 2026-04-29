@@ -214,7 +214,7 @@ Create `Driver`: `id` (prefixed `drv-`), `tenant_id` (FK, indexed), `name`, `lic
 **Branch:** `feat/model-driver`
 **Commit:** `Add Driver ORM model`
 
-- [ ] Task 2.5 complete
+- [x] Task 2.5 complete
 
 ---
 
