@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 3.2 — FastAPI App Factory (`main.py`)
+**Next task:** Task 4.1 — Auth Schemas (`schemas/auth.py` + `schemas/user.py`)
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -347,7 +347,7 @@ Create `main.py` with:
 **Branch:** `chore/app-factory`
 **Commit:** `Add FastAPI app factory with CORS, router registration, and error handler`
 
-- [ ] Task 3.2 complete
+- [x] Task 3.2 complete
 
 ---
 
@@ -817,7 +817,7 @@ Run `ruff check .` and fix all linting errors. Run `pytest --cov=app --cov-repor
 |---|---|---|
 | Phase 1 — Project Foundation | 5 tasks | 5 / 5 |
 | Phase 2 — Database Models | 10 tasks | 10 / 10 |
-| Phase 3 — Dependencies & Middleware | 2 tasks | 1 / 2 |
+| Phase 3 — Dependencies & Middleware | 2 tasks | 2 / 2 |
 | Phase 4 — Auth Implementation | 4 tasks | 0 / 4 |
 | Phase 5 — Core Resource CRUD | 5 tasks | 0 / 5 |
 | Phase 6 — Operations | 3 tasks | 0 / 3 |
@@ -827,4 +827,4 @@ Run `ruff check .` and fix all linting errors. Run `pytest --cov=app --cov-repor
 | Phase 10 — Seed & Docker | 2 tasks | 0 / 2 |
 | Phase 11 — Tests | 3 tasks | 0 / 3 |
 | Phase 12 — Final Polish | 2 tasks | 0 / 2 |
-| **Total** | **40 tasks** | **16 / 40** |
+| **Total** | **40 tasks** | **17 / 40** |
