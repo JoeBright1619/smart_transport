@@ -3,9 +3,18 @@
 > **How to use this document:**
 > - Work through tasks **strictly in order** — each phase depends on the previous.
 > - After completing a task, tick its checkbox: `[ ]` → `[x]`
+> - Keep the **Current Task Pointer** below updated after each completed task.
 > - **DO NOT proceed to the next task without explicit user approval.**
 > - Each task lists the guideline files to read before starting work.
 > - Use the provided branch and commit message exactly.
+
+---
+
+## Current Task Pointer
+
+**Next task:** Task 3.2 — FastAPI App Factory (`main.py`)
+
+After completing any task, update this pointer to the next unchecked task before stopping to report.
 
 ---
 
@@ -317,7 +326,7 @@ Implement four reusable dependencies:
 **Branch:** `feat/core-dependencies`
 **Commit:** `Add get_current_user, get_current_tenant, require_role, require_feature dependencies`
 
-- [ ] Task 3.1 complete
+- [x] Task 3.1 complete
 
 ---
 
@@ -806,9 +815,9 @@ Run `ruff check .` and fix all linting errors. Run `pytest --cov=app --cov-repor
 
 | Phase | Tasks | Status |
 |---|---|---|
-| Phase 1 — Project Foundation | 5 tasks | 0 / 5 |
-| Phase 2 — Database Models | 10 tasks | 0 / 10 |
-| Phase 3 — Dependencies & Middleware | 2 tasks | 0 / 2 |
+| Phase 1 — Project Foundation | 5 tasks | 5 / 5 |
+| Phase 2 — Database Models | 10 tasks | 10 / 10 |
+| Phase 3 — Dependencies & Middleware | 2 tasks | 1 / 2 |
 | Phase 4 — Auth Implementation | 4 tasks | 0 / 4 |
 | Phase 5 — Core Resource CRUD | 5 tasks | 0 / 5 |
 | Phase 6 — Operations | 3 tasks | 0 / 3 |
@@ -818,4 +827,4 @@ Run `ruff check .` and fix all linting errors. Run `pytest --cov=app --cov-repor
 | Phase 10 — Seed & Docker | 2 tasks | 0 / 2 |
 | Phase 11 — Tests | 3 tasks | 0 / 3 |
 | Phase 12 — Final Polish | 2 tasks | 0 / 2 |
-| **Total** | **40 tasks** | **0 / 40** |
+| **Total** | **40 tasks** | **16 / 40** |
