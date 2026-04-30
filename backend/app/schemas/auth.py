@@ -1,0 +1,93 @@
+from datetime import datetime
+from typing import Literal
+
+from pydantic import Field
+
+from app.schemas.base import APIModel
+from app.schemas.user import UserRole
+
+SubscriptionTier = Literal["starter", "pro", "enterprise"]
+
+
+class RegisterRequest(APIModel):
+    company_name: str = Field(
+        min_length=1,
+        max_length=255,
+        json_schema_extra={"example": "Kigali Express Ltd"},
+    )
+    contact_email: str = Field(
+        min_length=3,
+        max_length=255,
+        json_schema_extra={"example": "admin@kigaliexpress.rw"},
+    )
+    billing_email: str | None = Field(
+        default=None,
+        max_length=255,
+        json_schema_extra={"example": "billing@kigaliexpress.rw"},
+    )
+    admin_full_name: str = Field(
+        min_length=1,
+        max_length=255,
+        json_schema_extra={"example": "Jean Claude Mugabo"},
+    )
+    admin_email: str = Field(
+        min_length=3,
+        max_length=255,
+        json_schema_extra={"example": "jean@kigaliexpress.rw"},
+    )
+    admin_phone: str | None = Field(
+        default=None,
+        max_length=50,
+        json_schema_extra={"example": "+250788123456"},
+    )
+    password: str = Field(
+        min_length=8,
+        max_length=128,
+        json_schema_extra={"example": "SecurePass123!"},
+    )
+
+
+class LoginRequest(APIModel):
+    email: str = Field(
+        min_length=3,
+        max_length=255,
+        json_schema_extra={"example": "jean@kigaliexpress.rw"},
+    )
+    password: str = Field(
+        min_length=1,
+        max_length=128,
+        json_schema_extra={"example": "SecurePass123!"},
+    )
+
+
+class AuthTenantSummary(APIModel):
+    id: str = Field(json_schema_extra={"example": "ten-uuid"})
+    name: str = Field(json_schema_extra={"example": "Kigali Express Ltd"})
+    subscription_tier: SubscriptionTier = Field(json_schema_extra={"example": "starter"})
+    trial_ends_at: datetime | None = Field(
+        default=None,
+        json_schema_extra={"example": "2026-04-22T00:00:00Z"},
+    )
+
+
+class AuthUserSummary(APIModel):
+    id: str = Field(json_schema_extra={"example": "user-uuid"})
+    email: str | None = Field(default=None, json_schema_extra={"example": "jean@kigaliexpress.rw"})
+    full_name: str | None = Field(default=None, json_schema_extra={"example": "Jean Claude Mugabo"})
+    role: UserRole = Field(json_schema_extra={"example": "admin"})
+    tenant_id: str | None = Field(default=None, json_schema_extra={"example": "ten-uuid"})
+
+
+class RegisterResponse(APIModel):
+    tenant: AuthTenantSummary
+    user: AuthUserSummary
+    access_token: str = Field(json_schema_extra={"example": "<jwt>"})
+
+
+class TokenResponse(APIModel):
+    access_token: str = Field(json_schema_extra={"example": "<jwt>"})
+    user: AuthUserSummary
+
+
+class RefreshTokenResponse(APIModel):
+    access_token: str = Field(json_schema_extra={"example": "<new_jwt>"})
