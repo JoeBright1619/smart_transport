@@ -22,14 +22,25 @@ def generate_audit_log_id() -> str:
 class AuditLog(Base):
     __tablename__ = "audit_logs"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=generate_audit_log_id)
-    tenant_id: Mapped[str | None] = mapped_column(String, ForeignKey("tenants.id"), nullable=True)
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=generate_audit_log_id
+    )
+    tenant_id: Mapped[str | None] = mapped_column(
+        String, ForeignKey("tenants.id"), nullable=True
+    )
     user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False)
 
     entity_type: Mapped[str] = mapped_column(String, nullable=False)
     entity_id: Mapped[str] = mapped_column(String, nullable=False)
     action_type: Mapped[str] = mapped_column(
-        Enum("create", "update", "soft_delete", "login", "impersonate", name="audit_action_type_enum"),
+        Enum(
+            "create",
+            "update",
+            "soft_delete",
+            "login",
+            "impersonate",
+            name="audit_action_type_enum",
+        ),
         nullable=False,
     )
     metadata_: Mapped[dict[str, Any] | None] = mapped_column(

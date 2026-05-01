@@ -56,10 +56,14 @@ class UserUpdate(APIModel):
 
 class UserRead(APIModel):
     id: str = Field(json_schema_extra={"example": "user-uuid"})
-    tenant_id: str | None = Field(default=None, json_schema_extra={"example": "ten-uuid"})
+    tenant_id: str | None = Field(
+        default=None, json_schema_extra={"example": "ten-uuid"}
+    )
     full_name: str = Field(json_schema_extra={"example": "Marie Umutesi"})
     email: str = Field(json_schema_extra={"example": "marie@kigaliexpress.rw"})
     role: UserRole = Field(json_schema_extra={"example": "operator"})
-    phone: str | None = Field(default=None, json_schema_extra={"example": "+250788234567"})
+    phone: str | None = Field(
+        default=None, json_schema_extra={"example": "+250788234567"}
+    )
     is_deleted: bool = Field(default=False, json_schema_extra={"example": False})
     created_at: datetime = Field(json_schema_extra={"example": "2026-04-01T08:00:00Z"})

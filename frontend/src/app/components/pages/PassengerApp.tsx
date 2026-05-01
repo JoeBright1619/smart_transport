@@ -19,13 +19,13 @@ export function PassengerApp() {
   const getEstimatedArrival = (stopId: string, routeId: string) => {
     const vehicle = mockVehicles.find(v => v.routeId === routeId && v.status === 'active');
     if (!vehicle) return null;
-    
+
     // Simulate ETA calculation
     const baseETA = Math.floor(Math.random() * 15) + 5;
     return baseETA;
   };
 
-  const stopArrivals = selectedStop 
+  const stopArrivals = selectedStop
     ? mockRoutes
         .filter(route => route.stops.some(s => s.id === selectedStop))
         .map(route => {
@@ -101,10 +101,10 @@ export function PassengerApp() {
             <CardContent>
               <div className="space-y-2">
                 {filteredStops.map(stop => {
-                  const routesAtStop = mockRoutes.filter(r => 
+                  const routesAtStop = mockRoutes.filter(r =>
                     r.stops.some(s => s.id === stop.id)
                   );
-                  
+
                   return (
                     <div
                       key={stop.id}
@@ -178,7 +178,7 @@ export function PassengerApp() {
                           <p className="text-xs text-slate-500">minutes</p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center justify-between mt-3 pt-3 border-t">
                         <div className="flex items-center gap-4 text-xs text-slate-600">
                           <span>{route.distance} km</span>
@@ -208,7 +208,7 @@ export function PassengerApp() {
                   <p className="text-xs text-slate-600">Monday - Sunday: 5:00 AM - 11:00 PM</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
                 <Star className="size-5 text-yellow-600 mt-0.5" />
                 <div>

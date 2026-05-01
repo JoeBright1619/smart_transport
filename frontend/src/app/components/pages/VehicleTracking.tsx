@@ -12,7 +12,7 @@ import { useVehicleSimulation } from '../../lib/use-vehicle-simulation';
 
 // Create custom icon for vehicles
 const createVehicleIcon = (status: string) => {
-  const color = 
+  const color =
     status === 'active' ? '#10B981' :
     status === 'idle' ? '#F59E0B' :
     status === 'maintenance' ? '#EF4444' : '#6B7280';
@@ -89,7 +89,7 @@ export function VehicleTracking() {
               {filteredVehicles.map((vehicle) => {
                 const driver = mockDrivers.find(d => d.id === vehicle.driverId);
                 const route = mockRoutes.find(r => r.id === vehicle.routeId);
-                
+
                 return (
                   <div
                     key={vehicle.id}
@@ -164,7 +164,7 @@ export function VehicleTracking() {
                 {filteredVehicles.map((vehicle) => {
                   const driver = mockDrivers.find(d => d.id === vehicle.driverId);
                   const route = mockRoutes.find(r => r.id === vehicle.routeId);
-                  
+
                   return (
                     <Marker
                       key={vehicle.id}
@@ -206,7 +206,7 @@ export function VehicleTracking() {
                     stop.location.lat,
                     stop.location.lng
                   ]);
-                  
+
                   return (
                     <Polyline
                       key={route.id}

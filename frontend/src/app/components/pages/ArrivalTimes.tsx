@@ -14,7 +14,7 @@ export function ArrivalTimes() {
       <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
         {mockStops.slice(0, 6).map(stop => {
           const routesAtStop = mockRoutes.filter(r => r.stops.some(s => s.id === stop.id));
-          
+
           return (
             <Card key={stop.id}>
               <CardHeader>
@@ -27,7 +27,7 @@ export function ArrivalTimes() {
                 {routesAtStop.map(route => {
                   const vehicle = mockVehicles.find(v => v.routeId === route.id && v.status === 'active');
                   const eta = vehicle ? Math.floor(Math.random() * 15) + 3 : null;
-                  
+
                   return (
                     <div key={route.id} className="flex items-center justify-between rounded-lg border p-3">
                       <div className="flex items-center gap-3">

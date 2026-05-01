@@ -4,7 +4,16 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, Integer, String, func
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -25,7 +34,9 @@ class Route(Base):
     __tablename__ = "routes"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=generate_route_id)
-    tenant_id: Mapped[str] = mapped_column(String, ForeignKey("tenants.id"), nullable=False)
+    tenant_id: Mapped[str] = mapped_column(
+        String, ForeignKey("tenants.id"), nullable=False
+    )
 
     name: Mapped[str] = mapped_column(String, nullable=False)
     number: Mapped[str] = mapped_column(String, nullable=False)
@@ -61,7 +72,9 @@ class Stop(Base):
     __tablename__ = "stops"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=generate_stop_id)
-    tenant_id: Mapped[str] = mapped_column(String, ForeignKey("tenants.id"), nullable=False, index=True)
+    tenant_id: Mapped[str] = mapped_column(
+        String, ForeignKey("tenants.id"), nullable=False, index=True
+    )
 
     name: Mapped[str] = mapped_column(String, nullable=False)
     lat: Mapped[float] = mapped_column(Float, nullable=False)
@@ -91,8 +104,12 @@ class Stop(Base):
 class RouteStop(Base):
     __tablename__ = "route_stops"
 
-    route_id: Mapped[str] = mapped_column(String, ForeignKey("routes.id"), primary_key=True)
-    stop_id: Mapped[str] = mapped_column(String, ForeignKey("stops.id"), primary_key=True)
+    route_id: Mapped[str] = mapped_column(
+        String, ForeignKey("routes.id"), primary_key=True
+    )
+    stop_id: Mapped[str] = mapped_column(
+        String, ForeignKey("stops.id"), primary_key=True
+    )
     stop_order: Mapped[int] = mapped_column(Integer, nullable=False)
 
     route: Mapped["Route"] = relationship("Route", back_populates="route_stops")

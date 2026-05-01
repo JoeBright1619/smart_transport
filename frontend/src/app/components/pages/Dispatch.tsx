@@ -69,7 +69,7 @@ export function Dispatch() {
               const vehicle = mockVehicles.find(v => v.id === trip.vehicleId);
               const driver = mockDrivers.find(d => d.id === trip.driverId);
               const route = mockRoutes.find(r => r.id === trip.routeId);
-              
+
               return (
                 <div key={trip.id} className="rounded-lg border p-4">
                   <div className="flex items-start justify-between mb-2">

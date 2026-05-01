@@ -24,16 +24,32 @@ class Trip(Base):
     __tablename__ = "trips"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=generate_trip_id)
-    tenant_id: Mapped[str] = mapped_column(String, ForeignKey("tenants.id"), nullable=False)
+    tenant_id: Mapped[str] = mapped_column(
+        String, ForeignKey("tenants.id"), nullable=False
+    )
 
-    vehicle_id: Mapped[str] = mapped_column(String, ForeignKey("vehicles.id"), nullable=False)
-    route_id: Mapped[str] = mapped_column(String, ForeignKey("routes.id"), nullable=False)
-    driver_id: Mapped[str] = mapped_column(String, ForeignKey("drivers.id"), nullable=False)
+    vehicle_id: Mapped[str] = mapped_column(
+        String, ForeignKey("vehicles.id"), nullable=False
+    )
+    route_id: Mapped[str] = mapped_column(
+        String, ForeignKey("routes.id"), nullable=False
+    )
+    driver_id: Mapped[str] = mapped_column(
+        String, ForeignKey("drivers.id"), nullable=False
+    )
 
-    scheduled_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    actual_start: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    scheduled_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    actual_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    scheduled_start: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    actual_start: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    scheduled_end: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    actual_end: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     status: Mapped[str] = mapped_column(
         Enum("scheduled", "active", "completed", "cancelled", name="trip_status_enum"),
         nullable=False,

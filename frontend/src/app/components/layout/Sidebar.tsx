@@ -1,13 +1,13 @@
 import { Link, useLocation } from 'react-router';
-import { 
-  LayoutDashboard, 
-  MapPin, 
-  Route, 
-  Bus, 
-  Users, 
-  Wrench, 
-  BarChart3, 
-  Bell, 
+import {
+  LayoutDashboard,
+  MapPin,
+  Route,
+  Bus,
+  Users,
+  Wrench,
+  BarChart3,
+  Bell,
   Settings,
   Clock,
   Smartphone,
@@ -39,7 +39,7 @@ export function Sidebar() {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  const filteredNavigation = navigation.filter(item => 
+  const filteredNavigation = navigation.filter(item =>
     user && item.roles.includes(user.role)
   );
 

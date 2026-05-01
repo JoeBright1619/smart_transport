@@ -27,7 +27,7 @@ from app.services import audit_service, tenant_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-REFRESH_TOKEN_COOKIE = "refresh_token"
+REFRESH_TOKEN_COOKIE = "refresh_token"  # nosec
 
 
 def _error_detail(code: str, message: str) -> dict[str, Any]:
@@ -278,7 +278,9 @@ async def logout(
     raw_token = request.cookies.get(REFRESH_TOKEN_COOKIE)
     if raw_token is not None:
         refresh_token = await db.scalar(
-            select(RefreshToken).where(RefreshToken.token_hash == _token_hash(raw_token))
+            select(RefreshToken).where(
+                RefreshToken.token_hash == _token_hash(raw_token)
+            )
         )
         if refresh_token is not None and refresh_token.revoked_at is None:
             refresh_token.revoked_at = _utc_now()

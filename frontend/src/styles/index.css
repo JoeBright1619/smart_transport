@@ -8,27 +8,27 @@
 .sidebar-scroll::-webkit-scrollbar {
     width: 6px;
   }
-  
+
   .sidebar-scroll::-webkit-scrollbar-track {
     background: transparent;
   }
-  
+
   .sidebar-scroll::-webkit-scrollbar-thumb {
     background-color: transparent;
     border-radius: 6px;
     transition: background-color 0.2s;
   }
-  
+
   .sidebar-scroll:hover::-webkit-scrollbar-thumb {
     background-color: #334155; /* slate-700 */
   }
-  
+
   /* Firefox */
   .sidebar-scroll {
     scrollbar-width: thin;
     scrollbar-color: transparent transparent;
   }
-  
+
   .sidebar-scroll:hover {
     scrollbar-color: #334155 transparent;
   }

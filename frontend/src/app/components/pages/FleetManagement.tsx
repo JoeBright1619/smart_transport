@@ -129,7 +129,7 @@ export function FleetManagement() {
                   {filteredVehicles.map((vehicle) => {
                     const driver = mockDrivers.find(d => d.id === vehicle.driverId);
                     const route = mockRoutes.find(r => r.id === vehicle.routeId);
-                    
+
                     return (
                       <TableRow key={vehicle.id}>
                         <TableCell className="font-medium">{vehicle.registrationNumber}</TableCell>
@@ -193,7 +193,7 @@ export function FleetManagement() {
                 {mockVehicles.map((vehicle) => {
                   const trips = mockTrips.filter(t => t.vehicleId === vehicle.id);
                   const utilization = trips.length > 0 ? Math.min(100, trips.length * 15) : 0;
-                  
+
                   return (
                     <div key={vehicle.id}>
                       <div className="flex items-center justify-between mb-1">

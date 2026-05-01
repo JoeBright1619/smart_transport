@@ -16,9 +16,18 @@ def generate_tenant_id() -> str:
 class Tenant(Base):
     __tablename__ = "tenants"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=generate_tenant_id)
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=generate_tenant_id
+    )
     name: Mapped[str] = mapped_column(String, nullable=False)
     contact_email: Mapped[str] = mapped_column(String, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        onupdate=func.now(),
+        server_default=func.now(),
+        nullable=False,
+    )

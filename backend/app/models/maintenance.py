@@ -4,7 +4,17 @@ import uuid
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, Date, DateTime, Enum, Float, ForeignKey, Index, String, func
+from sqlalchemy import (
+    Boolean,
+    Date,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Index,
+    String,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -21,9 +31,15 @@ def generate_maintenance_id() -> str:
 class MaintenanceRecord(Base):
     __tablename__ = "maintenance_records"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=generate_maintenance_id)
-    tenant_id: Mapped[str] = mapped_column(String, ForeignKey("tenants.id"), nullable=False)
-    vehicle_id: Mapped[str] = mapped_column(String, ForeignKey("vehicles.id"), nullable=False)
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=generate_maintenance_id
+    )
+    tenant_id: Mapped[str] = mapped_column(
+        String, ForeignKey("tenants.id"), nullable=False
+    )
+    vehicle_id: Mapped[str] = mapped_column(
+        String, ForeignKey("vehicles.id"), nullable=False
+    )
 
     type: Mapped[str] = mapped_column(
         Enum("routine", "repair", "inspection", name="maintenance_type_enum"),

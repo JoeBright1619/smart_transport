@@ -4,7 +4,17 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Index, Integer, String, func
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -21,8 +31,12 @@ def generate_driver_id() -> str:
 class Driver(Base):
     __tablename__ = "drivers"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=generate_driver_id)
-    tenant_id: Mapped[str] = mapped_column(String, ForeignKey("tenants.id"), nullable=False)
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=generate_driver_id
+    )
+    tenant_id: Mapped[str] = mapped_column(
+        String, ForeignKey("tenants.id"), nullable=False
+    )
 
     name: Mapped[str] = mapped_column(String, nullable=False)
     license_number: Mapped[str] = mapped_column(String, nullable=False)
@@ -34,8 +48,12 @@ class Driver(Base):
         nullable=False,
         default="available",
     )
-    vehicle_id: Mapped[str | None] = mapped_column(String, ForeignKey("vehicles.id"), nullable=True)
-    certification_expiry: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    vehicle_id: Mapped[str | None] = mapped_column(
+        String, ForeignKey("vehicles.id"), nullable=True
+    )
+    certification_expiry: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
 
     is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(

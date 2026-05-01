@@ -141,8 +141,8 @@ export function Alerts() {
                           </div>
                           <Badge variant="destructive">{alert.severity}</Badge>
                         </div>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           className="mt-3"
                           onClick={() => acknowledgeAlert(alert.id)}
                         >
@@ -183,8 +183,8 @@ export function Alerts() {
                           {alert.severity}
                         </Badge>
                       </div>
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant="outline"
                         className="mt-3"
                         onClick={() => acknowledgeAlert(alert.id)}
@@ -276,7 +276,7 @@ export function Alerts() {
                             )}
                           </div>
                         </div>
-                        <Badge variant={alert.acknowledged ? 'outline' : 
+                        <Badge variant={alert.acknowledged ? 'outline' :
                           alert.severity === 'critical' ? 'destructive' :
                           alert.severity === 'high' ? 'destructive' : 'default'
                         }>
@@ -284,8 +284,8 @@ export function Alerts() {
                         </Badge>
                       </div>
                       {!alert.acknowledged && (
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           className="mt-3"
                           onClick={() => acknowledgeAlert(alert.id)}

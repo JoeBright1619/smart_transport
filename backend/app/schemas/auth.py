@@ -58,10 +58,16 @@ class AuthTenantSummary(APIModel):
 
 class AuthUserSummary(APIModel):
     id: str = Field(json_schema_extra={"example": "user-uuid"})
-    email: str | None = Field(default=None, json_schema_extra={"example": "jean@kigaliexpress.rw"})
-    full_name: str | None = Field(default=None, json_schema_extra={"example": "Jean Claude Mugabo"})
+    email: str | None = Field(
+        default=None, json_schema_extra={"example": "jean@kigaliexpress.rw"}
+    )
+    full_name: str | None = Field(
+        default=None, json_schema_extra={"example": "Jean Claude Mugabo"}
+    )
     role: UserRole = Field(json_schema_extra={"example": "admin"})
-    tenant_id: str | None = Field(default=None, json_schema_extra={"example": "ten-uuid"})
+    tenant_id: str | None = Field(
+        default=None, json_schema_extra={"example": "ten-uuid"}
+    )
 
 
 class RegisterResponse(APIModel):

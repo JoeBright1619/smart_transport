@@ -97,7 +97,7 @@ export function Maintenance() {
                     <TableCell>{record.description}</TableCell>
                     <TableCell>{new Date(record.scheduledDate).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      {record.completedDate 
+                      {record.completedDate
                         ? new Date(record.completedDate).toLocaleDateString()
                         : '-'}
                     </TableCell>
@@ -111,7 +111,7 @@ export function Maintenance() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {record.nextDue 
+                      {record.nextDue
                         ? new Date(record.nextDue).toLocaleDateString()
                         : '-'}
                     </TableCell>

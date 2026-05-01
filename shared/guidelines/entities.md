@@ -36,7 +36,7 @@ All operational entities MUST include a `tenantId` field linking them to a speci
 - **Booleans** — `is` or `has` prefix: `isActive`, `isAcknowledged`, `isDeleted`
 - **Status enums** — Always lowercase strings: `'active'`, `'on-trip'`, `'in-progress'`
 - **Location** — `{ lat: number, lng: number }` decimal degrees, WGS84 coordinate system
-- **Speed** — km/h (integer). 
+- **Speed** — km/h (integer).
 - **Distance** — km (decimal).
 - **Fuel** — percentage 0–100.
 - **Delay** — minutes (integer).

@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from typing import Annotated, Any
+from typing import Annotated, Any, NoReturn, Awaitable
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -26,7 +26,7 @@ def _error_detail(code: str, message: str) -> dict[str, Any]:
     }
 
 
-def _raise_error(status_code: int, code: str, message: str) -> None:
+def _raise_error(status_code: int, code: str, message: str) -> NoReturn:
     raise HTTPException(
         status_code=status_code,
         detail=_error_detail(code, message),
@@ -45,6 +45,12 @@ async def get_current_user(
         )
 
     try:
+        if credentials is None:
+            _raise_error(
+                status.HTTP_401_UNAUTHORIZED,
+                "UNAUTHORIZED",
+                "Missing bearer token",
+            )
         payload = decode_access_token(credentials.credentials)
     except JWTError:
         _raise_error(
@@ -117,7 +123,7 @@ async def get_current_tenant(
     return tenant
 
 
-def require_role(*roles: str) -> Callable[[User], User]:
+def require_role(*roles: str) -> Callable[[User], Awaitable[User]]:
     allowed_roles = set(roles)
 
     async def dependency(

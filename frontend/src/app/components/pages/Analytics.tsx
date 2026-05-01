@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { 
+import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { mockAnalytics, mockVehicles, mockTrips, mockRoutes } from '../../lib/mock-data';
 import { TrendingUp, TrendingDown, Clock, DollarSign, Users, Fuel } from 'lucide-react';
@@ -34,7 +34,7 @@ export function Analytics() {
   const totalFuel = mockAnalytics.reduce((sum, a) => sum + a.fuelConsumption, 0);
 
   // Trend calculations
-  const revenueChange = mockAnalytics.length > 1 
+  const revenueChange = mockAnalytics.length > 1
     ? ((mockAnalytics[mockAnalytics.length - 1].revenue - mockAnalytics[0].revenue) / mockAnalytics[0].revenue * 100).toFixed(1)
     : 0;
   const passengerChange = mockAnalytics.length > 1
@@ -142,8 +142,8 @@ export function Analytics() {
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={mockAnalytics}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="date" 
+                    <XAxis
+                      dataKey="date"
                       tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     />
                     <YAxis />
@@ -164,8 +164,8 @@ export function Analytics() {
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={mockAnalytics}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="date" 
+                    <XAxis
+                      dataKey="date"
                       tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     />
                     <YAxis yAxisId="left" />
@@ -188,8 +188,8 @@ export function Analytics() {
               <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={mockAnalytics}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="date" 
+                  <XAxis
+                    dataKey="date"
                     tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   />
                   <YAxis />
@@ -233,12 +233,12 @@ export function Analytics() {
                     const routeTrips = mockTrips.filter(t => t.routeId === route.id);
                     const totalPassengers = routeTrips.reduce((sum, t) => sum + t.passengers, 0);
                     const avgPassengers = routeTrips.length > 0 ? Math.round(totalPassengers / routeTrips.length) : 0;
-                    
+
                     return (
                       <div key={route.id} className="border-b pb-3 last:border-0">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <div 
+                            <div
                               className="size-3 rounded-full"
                               style={{ backgroundColor: route.color }}
                             />

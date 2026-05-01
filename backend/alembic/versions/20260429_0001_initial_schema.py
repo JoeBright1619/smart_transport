@@ -5,8 +5,8 @@ Revises:
 Create Date: 2026-04-29 00:00:00.000000
 
 """
-from typing import Sequence, Union
 
+from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
@@ -20,32 +20,76 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     user_role_enum = postgresql.ENUM(
-        "superadmin", "admin", "operator", "dispatcher", "passenger", name="user_role_enum", create_type=False
+        "superadmin",
+        "admin",
+        "operator",
+        "dispatcher",
+        "passenger",
+        name="user_role_enum",
+        create_type=False,
     )
     vehicle_status_enum = postgresql.ENUM(
-        "active", "idle", "maintenance", "offline", name="vehicle_status_enum", create_type=False
+        "active",
+        "idle",
+        "maintenance",
+        "offline",
+        name="vehicle_status_enum",
+        create_type=False,
     )
-    engine_status_enum = postgresql.ENUM("good", "warning", "critical", name="engine_status_enum", create_type=False)
+    engine_status_enum = postgresql.ENUM(
+        "good", "warning", "critical", name="engine_status_enum", create_type=False
+    )
     driver_status_enum = postgresql.ENUM(
         "available", "on-trip", "off-duty", name="driver_status_enum", create_type=False
     )
     trip_status_enum = postgresql.ENUM(
-        "scheduled", "active", "completed", "cancelled", name="trip_status_enum", create_type=False
+        "scheduled",
+        "active",
+        "completed",
+        "cancelled",
+        name="trip_status_enum",
+        create_type=False,
     )
     maintenance_type_enum = postgresql.ENUM(
-        "routine", "repair", "inspection", name="maintenance_type_enum", create_type=False
+        "routine",
+        "repair",
+        "inspection",
+        name="maintenance_type_enum",
+        create_type=False,
     )
     maintenance_status_enum = postgresql.ENUM(
-        "scheduled", "in-progress", "completed", name="maintenance_status_enum", create_type=False
+        "scheduled",
+        "in-progress",
+        "completed",
+        name="maintenance_status_enum",
+        create_type=False,
     )
     alert_type_enum = postgresql.ENUM(
-        "delay", "breakdown", "maintenance", "geofence", "speeding", "info", name="alert_type_enum", create_type=False
+        "delay",
+        "breakdown",
+        "maintenance",
+        "geofence",
+        "speeding",
+        "info",
+        name="alert_type_enum",
+        create_type=False,
     )
     alert_severity_enum = postgresql.ENUM(
-        "low", "medium", "high", "critical", name="alert_severity_enum", create_type=False
+        "low",
+        "medium",
+        "high",
+        "critical",
+        name="alert_severity_enum",
+        create_type=False,
     )
     audit_action_type_enum = postgresql.ENUM(
-        "create", "update", "soft_delete", "login", "impersonate", name="audit_action_type_enum", create_type=False
+        "create",
+        "update",
+        "soft_delete",
+        "login",
+        "impersonate",
+        name="audit_action_type_enum",
+        create_type=False,
     )
 
     bind = op.get_bind()
@@ -69,8 +113,18 @@ def upgrade() -> None:
         sa.Column("name", sa.String(), nullable=False),
         sa.Column("contact_email", sa.String(), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
 
@@ -85,8 +139,18 @@ def upgrade() -> None:
         sa.Column("is_active", sa.Boolean(), nullable=False),
         sa.Column("color", sa.String(), nullable=False),
         sa.Column("is_deleted", sa.Boolean(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -100,8 +164,18 @@ def upgrade() -> None:
         sa.Column("lat", sa.Float(), nullable=False),
         sa.Column("lng", sa.Float(), nullable=False),
         sa.Column("is_deleted", sa.Boolean(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -117,8 +191,18 @@ def upgrade() -> None:
         sa.Column("role", user_role_enum, nullable=False),
         sa.Column("phone", sa.String(), nullable=True),
         sa.Column("is_deleted", sa.Boolean(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -132,12 +216,22 @@ def upgrade() -> None:
         sa.Column("token_hash", sa.String(), nullable=False),
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("revoked_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("idx_refresh_tokens_user_id", "refresh_tokens", ["user_id"])
-    op.create_index(op.f("ix_refresh_tokens_token_hash"), "refresh_tokens", ["token_hash"], unique=True)
+    op.create_index(
+        op.f("ix_refresh_tokens_token_hash"),
+        "refresh_tokens",
+        ["token_hash"],
+        unique=True,
+    )
 
     op.create_table(
         "vehicles",
@@ -156,8 +250,18 @@ def upgrade() -> None:
         sa.Column("route_id", sa.String(), nullable=True),
         sa.Column("driver_id", sa.String(), nullable=True),
         sa.Column("is_deleted", sa.Boolean(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -177,16 +281,32 @@ def upgrade() -> None:
         sa.Column("vehicle_id", sa.String(), nullable=True),
         sa.Column("certification_expiry", sa.DateTime(timezone=True), nullable=False),
         sa.Column("is_deleted", sa.Boolean(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("idx_drivers_tenant_id", "drivers", ["tenant_id"])
 
-    op.create_foreign_key("fk_vehicles_route_id_routes", "vehicles", "routes", ["route_id"], ["id"])
-    op.create_foreign_key("fk_vehicles_driver_id_drivers", "vehicles", "drivers", ["driver_id"], ["id"])
-    op.create_foreign_key("fk_drivers_vehicle_id_vehicles", "drivers", "vehicles", ["vehicle_id"], ["id"])
+    op.create_foreign_key(
+        "fk_vehicles_route_id_routes", "vehicles", "routes", ["route_id"], ["id"]
+    )
+    op.create_foreign_key(
+        "fk_vehicles_driver_id_drivers", "vehicles", "drivers", ["driver_id"], ["id"]
+    )
+    op.create_foreign_key(
+        "fk_drivers_vehicle_id_vehicles", "drivers", "vehicles", ["vehicle_id"], ["id"]
+    )
 
     op.create_table(
         "route_stops",
@@ -213,8 +333,18 @@ def upgrade() -> None:
         sa.Column("passengers", sa.Integer(), nullable=False),
         sa.Column("delay", sa.Integer(), nullable=False),
         sa.Column("is_deleted", sa.Boolean(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["driver_id"], ["drivers.id"]),
         sa.ForeignKeyConstraint(["route_id"], ["routes.id"]),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"]),
@@ -237,13 +367,25 @@ def upgrade() -> None:
         sa.Column("status", maintenance_status_enum, nullable=False),
         sa.Column("next_due", sa.Date(), nullable=True),
         sa.Column("is_deleted", sa.Boolean(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"]),
         sa.ForeignKeyConstraint(["vehicle_id"], ["vehicles.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index("idx_maintenance_records_tenant_id", "maintenance_records", ["tenant_id"])
+    op.create_index(
+        "idx_maintenance_records_tenant_id", "maintenance_records", ["tenant_id"]
+    )
 
     op.create_table(
         "alerts",
@@ -256,7 +398,12 @@ def upgrade() -> None:
         sa.Column("vehicle_id", sa.String(), nullable=True),
         sa.Column("driver_id", sa.String(), nullable=True),
         sa.Column("is_acknowledged", sa.Boolean(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["driver_id"], ["drivers.id"]),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"]),
         sa.ForeignKeyConstraint(["vehicle_id"], ["vehicles.id"]),
@@ -274,7 +421,12 @@ def upgrade() -> None:
         sa.Column("entity_id", sa.String(), nullable=False),
         sa.Column("action_type", audit_action_type_enum, nullable=False),
         sa.Column("metadata", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"]),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"]),
         sa.PrimaryKeyConstraint("id"),

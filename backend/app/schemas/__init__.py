@@ -8,7 +8,13 @@ from app.schemas.auth import (
     TokenResponse,
 )
 from app.schemas.base import APIModel
-from app.schemas.common import APIResponse, ErrorDetail, Meta, PaginatedResponse, PaginationParams
+from app.schemas.common import (
+    APIResponse,
+    ErrorDetail,
+    Meta,
+    PaginatedResponse,
+    PaginationParams,
+)
 from app.schemas.user import TenantUserRole, UserCreate, UserRead, UserRole, UserUpdate
 
 __all__ = [

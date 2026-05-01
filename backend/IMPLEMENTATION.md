@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 5.1 — Users CRUD
+**Next task:** Task 5.2 — Vehicles CRUD
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -22,7 +22,7 @@ After completing any task, update this pointer to the next unchecked task before
 > **Agent Rule:** After completing each task, stop and report:
 > 1. What was implemented
 > 2. Any decisions made or problems encountered
-> 3. A commit message for what was implemented 
+> 3. A commit message for what was implemented
 > 4. Then ask: _"Ready to proceed to the next task?"_
 > Do not move forward until the user confirms.
 
@@ -453,7 +453,7 @@ Implement schemas (`schemas/user.py`) if not already done, service (`services/us
 **Branch:** `feat/users-crud`
 **Commit:** `Add users service and router (CRUD with tenant isolation)`
 
-- [ ] Task 5.1 complete
+- [x] Task 5.1 complete
 
 ---
 
