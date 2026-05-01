@@ -6,13 +6,13 @@
 > - Keep the **Current Task Pointer** below updated after each completed task.
 > - **DO NOT proceed to the next task without explicit user approval.**
 > - Each task lists the guideline files to read before starting work.
-> - Use the provided branch and commit message exactly.
+> - for now ignore the provided branch, we will use `master` branch instead of the branches given in the tasks and commit messages exactly as provided.
 
 ---
 
 ## Current Task Pointer
 
-**Next task:** Task 5.2 — Vehicles CRUD
+**Next task:** Task 5.3 — Routes CRUD
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -470,7 +470,7 @@ Implement `schemas/vehicle.py`, `services/vehicle_service.py`, and `routers/vehi
 **Branch:** `feat/vehicles-crud`
 **Commit:** `Add vehicles service and router with vehicle limit enforcement`
 
-- [ ] Task 5.2 complete
+- [x] Task 5.2 complete
 
 ---
 
