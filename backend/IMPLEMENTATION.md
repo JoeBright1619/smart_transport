@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 5.4 — Drivers CRUD
+**Next task:** Task 6.1 — Alert Service & Router
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -500,7 +500,7 @@ Implement `schemas/driver.py`, `services/driver_service.py`, and `routers/driver
 **Branch:** `feat/drivers-crud`
 **Commit:** `Add drivers service and router`
 
-- [ ] Task 5.4 complete
+- [x] Task 5.4 complete
 
 ---
 
@@ -516,7 +516,7 @@ Implement `schemas/trip.py`, `services/trip_service.py`, and `routers/trips.py`.
 **Branch:** `feat/trips-crud`
 **Commit:** `Add trips service and router with status transition enforcement`
 
-- [ ] Task 5.5 complete
+- [x] Task 5.5 complete
 
 ---
 
