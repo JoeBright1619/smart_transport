@@ -1,3 +1,3 @@
-from app.services import tenant_service
+from app.services import audit_service, tenant_service
 
-__all__ = ["tenant_service"]
+__all__ = ["audit_service", "tenant_service"]
