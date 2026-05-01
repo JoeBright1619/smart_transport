@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 6.1 — Alert Service & Router
+**Next task:** Task 6.2 — Maintenance CRUD
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -540,7 +540,7 @@ Implement `routers/alerts.py` with `GET /api/v1/alerts` (filtered) and `POST /ap
 **Branch:** `feat/alerts`
 **Commit:** `Add alert service with auto-generation, suppression, and acknowledge endpoint`
 
-- [ ] Task 6.1 complete
+- [x] Task 6.1 complete
 
 ---
 
