@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 6.3 — Analytics Router
+**Next task:** Task 7.1 — WebSocket Connection Manager
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -573,7 +573,7 @@ Implement `services/analytics_service.py` to aggregate data from `trips`, `vehic
 **Branch:** `feat/analytics`
 **Commit:** `Add analytics service and router with Redis caching`
 
-- [ ] Task 6.3 complete
+- [x] Task 6.3 complete
 
 ---
 
@@ -813,8 +813,8 @@ Run `ruff check .` and fix all linting errors. Run `pytest --cov=app --cov-repor
 | Phase 2 — Database Models | 10 tasks | 10 / 10 |
 | Phase 3 — Dependencies & Middleware | 2 tasks | 2 / 2 |
 | Phase 4 — Auth Implementation | 4 tasks | 4 / 4 |
-| Phase 5 — Core Resource CRUD | 5 tasks | 0 / 5 |
-| Phase 6 — Operations | 3 tasks | 0 / 3 |
+| Phase 5 — Core Resource CRUD | 5 tasks | 5 / 5 |
+| Phase 6 — Operations | 3 tasks | 3 / 3 |
 | Phase 7 — Real-Time Tracking | 2 tasks | 0 / 2 |
 | Phase 8 — Arrival Time Estimation | 1 task | 0 / 1 |
 | Phase 9 — Superadmin Portal | 1 task | 0 / 1 |

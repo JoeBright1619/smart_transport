@@ -3,6 +3,7 @@ repos:
     rev: v0.5.7
     hooks:
       - id: ruff
+        args: ["--fix"]
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -19,6 +20,8 @@ repos:
       - id: mypy
         files: ^backend/
         exclude: ^backend/alembic/
+        args: ["--config-file=pyproject.toml"]
+        additional_dependencies: ["types-redis"]
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.9
     hooks:
