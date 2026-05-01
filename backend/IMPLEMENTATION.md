@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 6.2 — Maintenance CRUD
+**Next task:** Task 6.3 — Analytics Router
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -556,7 +556,7 @@ Implement `schemas/maintenance.py`, `services/maintenance_service.py`, and `rout
 **Branch:** `feat/maintenance-crud`
 **Commit:** `Add maintenance service and router`
 
-- [ ] Task 6.2 complete
+- [x] Task 6.2 complete
 
 ---
 
