@@ -1,3 +1,289 @@
-from fastapi import APIRouter
+from datetime import datetime, timedelta, timezone
+from hashlib import sha256
+from secrets import token_urlsafe
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import settings
+from app.core.database import get_db
+from app.core.security import create_access_token, verify_password
+from app.models.refresh_token import RefreshToken
+from app.models.tenant import Tenant
+from app.models.user import User
+from app.schemas.auth import (
+    AuthTenantSummary,
+    AuthUserSummary,
+    LoginRequest,
+    RefreshTokenResponse,
+    RegisterRequest,
+    RegisterResponse,
+    TokenResponse,
+)
+from app.schemas.common import APIResponse
+from app.services import audit_service, tenant_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+REFRESH_TOKEN_COOKIE = "refresh_token"
+
+
+def _error_detail(code: str, message: str) -> dict[str, Any]:
+    return {
+        "data": None,
+        "meta": None,
+        "error": {
+            "code": code,
+            "message": message,
+        },
+    }
+
+
+def _raise_error(status_code: int, code: str, message: str) -> None:
+    raise HTTPException(
+        status_code=status_code,
+        detail=_error_detail(code, message),
+    )
+
+
+def _token_hash(token: str) -> str:
+    return sha256(token.encode("utf-8")).hexdigest()
+
+
+def _utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _ensure_aware(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value
+
+
+def _access_token_for_user(user: User) -> str:
+    return create_access_token(
+        {
+            "userId": user.id,
+            "tenantId": user.tenant_id,
+            "role": user.role,
+        }
+    )
+
+
+def _set_refresh_cookie(response: Response, token: str) -> None:
+    max_age = settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+    response.set_cookie(
+        key=REFRESH_TOKEN_COOKIE,
+        value=token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=max_age,
+        path="/auth",
+    )
+
+
+def _clear_refresh_cookie(response: Response) -> None:
+    response.delete_cookie(
+        key=REFRESH_TOKEN_COOKIE,
+        httponly=True,
+        samesite="lax",
+        path="/auth",
+    )
+
+
+async def _create_refresh_token(db: AsyncSession, user_id: str) -> str:
+    raw_token = token_urlsafe(48)
+    refresh_token = RefreshToken(
+        user_id=user_id,
+        token_hash=_token_hash(raw_token),
+        expires_at=_utc_now() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+    )
+    db.add(refresh_token)
+    await db.flush()
+    return raw_token
+
+
+async def _get_active_tenant(db: AsyncSession, tenant_id: str | None) -> Tenant | None:
+    if tenant_id is None:
+        return None
+
+    tenant = await db.get(Tenant, tenant_id)
+    if tenant is None or not tenant.is_active:
+        _raise_error(
+            status.HTTP_403_FORBIDDEN,
+            "TENANT_INACTIVE",
+            "Tenant account is inactive",
+        )
+
+    return tenant
+
+
+async def _get_refresh_token_record(db: AsyncSession, raw_token: str) -> RefreshToken:
+    refresh_token = await db.scalar(
+        select(RefreshToken).where(RefreshToken.token_hash == _token_hash(raw_token))
+    )
+    if refresh_token is None or refresh_token.revoked_at is not None:
+        _raise_error(
+            status.HTTP_401_UNAUTHORIZED,
+            "UNAUTHORIZED",
+            "Refresh token is invalid",
+        )
+
+    if _ensure_aware(refresh_token.expires_at) <= _utc_now():
+        refresh_token.revoked_at = _utc_now()
+        await db.commit()
+        _raise_error(
+            status.HTTP_401_UNAUTHORIZED,
+            "UNAUTHORIZED",
+            "Refresh token has expired",
+        )
+
+    return refresh_token
+
+
+@router.post(
+    "/register",
+    status_code=status.HTTP_201_CREATED,
+    response_model=APIResponse[RegisterResponse],
+)
+async def register(
+    data: RegisterRequest,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+) -> APIResponse[RegisterResponse]:
+    tenant = await tenant_service.create_tenant(db, data)
+    user = await db.scalar(select(User).where(User.email == data.admin_email.lower()))
+    if user is None:
+        _raise_error(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "INTERNAL_SERVER_ERROR",
+            "Registered admin user was not found",
+        )
+
+    refresh_token = await _create_refresh_token(db, user.id)
+    await audit_service.log(
+        db=db,
+        user_id=user.id,
+        tenant_id=tenant.id,
+        entity_type="User",
+        entity_id=user.id,
+        action_type="login",
+        metadata={"source": "register"},
+    )
+    await db.commit()
+
+    _set_refresh_cookie(response, refresh_token)
+    return APIResponse(
+        data=RegisterResponse(
+            tenant=AuthTenantSummary.model_validate(tenant),
+            user=AuthUserSummary.model_validate(user),
+            access_token=_access_token_for_user(user),
+        )
+    )
+
+
+@router.post("/login", response_model=APIResponse[TokenResponse])
+async def login(
+    data: LoginRequest,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+) -> APIResponse[TokenResponse]:
+    user = await db.scalar(
+        select(User).where(
+            User.email == data.email.lower(),
+            User.is_deleted.is_(False),
+        )
+    )
+    if user is None or not verify_password(data.password, user.password_hash):
+        _raise_error(
+            status.HTTP_401_UNAUTHORIZED,
+            "UNAUTHORIZED",
+            "Invalid email or password",
+        )
+
+    await _get_active_tenant(db, user.tenant_id)
+    refresh_token = await _create_refresh_token(db, user.id)
+    await audit_service.log(
+        db=db,
+        user_id=user.id,
+        tenant_id=user.tenant_id,
+        entity_type="User",
+        entity_id=user.id,
+        action_type="login",
+        metadata={"source": "login"},
+    )
+    await db.commit()
+
+    _set_refresh_cookie(response, refresh_token)
+    return APIResponse(
+        data=TokenResponse(
+            access_token=_access_token_for_user(user),
+            user=AuthUserSummary.model_validate(user),
+        )
+    )
+
+
+@router.post("/refresh", response_model=APIResponse[RefreshTokenResponse])
+async def refresh(
+    request: Request,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+) -> APIResponse[RefreshTokenResponse]:
+    raw_token = request.cookies.get(REFRESH_TOKEN_COOKIE)
+    if raw_token is None:
+        _raise_error(
+            status.HTTP_401_UNAUTHORIZED,
+            "UNAUTHORIZED",
+            "Refresh token is missing",
+        )
+
+    refresh_token = await _get_refresh_token_record(db, raw_token)
+    user = await db.scalar(
+        select(User).where(
+            User.id == refresh_token.user_id,
+            User.is_deleted.is_(False),
+        )
+    )
+    if user is None:
+        refresh_token.revoked_at = _utc_now()
+        await db.commit()
+        _raise_error(
+            status.HTTP_401_UNAUTHORIZED,
+            "UNAUTHORIZED",
+            "Refresh token user was not found",
+        )
+
+    await _get_active_tenant(db, user.tenant_id)
+    refresh_token.revoked_at = _utc_now()
+    new_refresh_token = await _create_refresh_token(db, user.id)
+    await db.commit()
+
+    _set_refresh_cookie(response, new_refresh_token)
+    return APIResponse(
+        data=RefreshTokenResponse(
+            access_token=_access_token_for_user(user),
+        )
+    )
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(
+    request: Request,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    raw_token = request.cookies.get(REFRESH_TOKEN_COOKIE)
+    if raw_token is not None:
+        refresh_token = await db.scalar(
+            select(RefreshToken).where(RefreshToken.token_hash == _token_hash(raw_token))
+        )
+        if refresh_token is not None and refresh_token.revoked_at is None:
+            refresh_token.revoked_at = _utc_now()
+            await db.commit()
+
+    _clear_refresh_cookie(response)
+    response.status_code = status.HTTP_204_NO_CONTENT
+    return response
