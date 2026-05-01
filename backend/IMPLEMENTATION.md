@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 5.3 — Routes CRUD
+**Next task:** Task 5.4 — Drivers CRUD
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -485,7 +485,7 @@ Implement `schemas/route.py`, `services/route_service.py`, and `routers/routes.p
 **Branch:** `feat/routes-crud`
 **Commit:** `Add routes service and router with atomic stop management`
 
-- [ ] Task 5.3 complete
+- [x] Task 5.3 complete
 
 ---
 
