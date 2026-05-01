@@ -5,7 +5,6 @@ from app.schemas.auth import (
     RefreshTokenResponse,
     RegisterRequest,
     RegisterResponse,
-    SubscriptionTier,
     TokenResponse,
 )
 from app.schemas.base import APIModel
@@ -25,7 +24,6 @@ __all__ = [
     "RefreshTokenResponse",
     "RegisterRequest",
     "RegisterResponse",
-    "SubscriptionTier",
     "TenantUserRole",
     "TokenResponse",
     "UserCreate",

@@ -1,8 +1,16 @@
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
+
 from sqlalchemy import String, Integer, Float, Boolean, DateTime, func, ForeignKey, Enum, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
+
+if TYPE_CHECKING:
+    from app.models.tenant import Tenant
+
 
 def generate_vehicle_id() -> str:
     return f"veh-{uuid.uuid4()}"

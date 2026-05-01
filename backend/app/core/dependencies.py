@@ -14,21 +14,6 @@ from app.models.user import User
 
 security = HTTPBearer(auto_error=False)
 
-TIER_ORDER = {
-    "starter": 0,
-    "pro": 1,
-    "enterprise": 2,
-}
-
-FEATURE_MINIMUM_TIERS = {
-    "analytics": "pro",
-    "maintenance": "pro",
-    "driver_scoring": "pro",
-    "sms_alerts": "pro",
-    "api_access": "enterprise",
-    "white_label": "enterprise",
-}
-
 
 def _error_detail(code: str, message: str) -> dict[str, Any]:
     return {
@@ -125,8 +110,8 @@ async def get_current_tenant(
     if not tenant.is_active:
         _raise_error(
             status.HTTP_403_FORBIDDEN,
-            "SUBSCRIPTION_INACTIVE",
-            "Tenant subscription is inactive",
+            "TENANT_INACTIVE",
+            "Tenant account is inactive",
         )
 
     return tenant
@@ -146,27 +131,5 @@ def require_role(*roles: str) -> Callable[[User], User]:
             )
 
         return current_user
-
-    return dependency
-
-
-def require_feature(feature: str) -> Callable[[Tenant], Tenant]:
-    minimum_tier = FEATURE_MINIMUM_TIERS.get(feature)
-    if minimum_tier is None:
-        raise ValueError(f"Unknown feature gate: {feature}")
-
-    async def dependency(
-        tenant: Annotated[Tenant, Depends(get_current_tenant)],
-    ) -> Tenant:
-        tenant_level = TIER_ORDER[tenant.subscription_tier]
-        required_level = TIER_ORDER[minimum_tier]
-        if tenant_level < required_level:
-            _raise_error(
-                status.HTTP_403_FORBIDDEN,
-                "FEATURE_NOT_AVAILABLE",
-                "This feature is not available on the tenant subscription tier",
-            )
-
-        return tenant
 
     return dependency

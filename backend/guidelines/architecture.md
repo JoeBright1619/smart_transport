@@ -23,10 +23,10 @@ backend/
 │   │   ├── database.py             # Async SQLAlchemy engine + session factory
 │   │   ├── security.py             # JWT creation/verification, bcrypt hashing
 │   │   └── dependencies.py         # get_db, get_current_user, get_current_tenant,
-│   │                               # require_role(), require_feature()
+│   │                               # require_role()
 │   │
 │   ├── models/                     # SQLAlchemy ORM models — one file per entity
-│   │   ├── tenant.py               # Tenant + Subscription
+│   │   ├── tenant.py               # Tenant/company account
 │   │   ├── user.py
 │   │   ├── vehicle.py
 │   │   ├── route.py
@@ -60,7 +60,7 @@ backend/
 │   │   └── superadmin.py           # /superadmin/tenants, /superadmin/users, /superadmin/analytics
 │   │
 │   ├── services/                   # Business logic — one file per domain
-│   │   ├── tenant_service.py       # Create, suspend, reactivate tenants; vehicle limit check
+│   │   ├── tenant_service.py       # Create, suspend, reactivate company tenants
 │   │   ├── vehicle_service.py
 │   │   ├── trip_service.py
 │   │   ├── dispatch_service.py

@@ -31,14 +31,12 @@
 |---|---|
 | `get_db` | Yields an async DB session; auto-closes on response |
 | `get_current_user` | Decodes JWT → returns `User` ORM model |
-| `get_current_tenant` | Loads `Tenant` → checks `isActive` → raises `403 SUBSCRIPTION_INACTIVE` if inactive |
+| `get_current_tenant` | Loads `Tenant` → checks `isActive` → raises `403 TENANT_INACTIVE` if inactive |
 | `require_role(*roles)` | Factory — raises `403` if user role not in allowed roles |
-| `require_feature(feature)` | Factory — raises `403 FEATURE_NOT_AVAILABLE` if tier too low |
 
 ```python
 # Usage examples
 @router.delete("/{id}", dependencies=[Depends(require_role("admin", "superadmin"))])
-@router.get("/analytics", dependencies=[Depends(require_feature("analytics"))])
 ```
 
 ---

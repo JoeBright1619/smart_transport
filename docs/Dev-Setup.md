@@ -103,10 +103,6 @@ CORS_ORIGINS=http://localhost:5173
 DATABASE_URL=postgresql+asyncpg://transport:transport@localhost:5432/transport_db
 REDIS_URL=redis://localhost:6379/0
 
-BILLING_PROVIDER=stripe
-STRIPE_SECRET_KEY=sk_test_placeholder
-STRIPE_WEBHOOK_SECRET=whsec_placeholder
-
 SUPERADMIN_PASSWORD=Admin@123456
 SEED_PASSWORD=Password123!
 RUN_SEED=true
@@ -209,4 +205,3 @@ pytest tests/test_tenant_isolation.py -v
 | `alembic: No module named 'app'` | Virtualenv not activated | Activate `.venv` first |
 | Frontend shows old mock data | Backend not connected | Confirm backend is on port 8000; check `VITE_API_URL` in frontend `.env` |
 | WebSocket not connecting | Redis not running | `docker compose up -d redis` |
-| `VEHICLE_LIMIT_REACHED` on seed | Vehicles exceed starter tier limit | Demo tenant is `pro` — check seed script ran correctly |

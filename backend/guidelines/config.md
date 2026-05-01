@@ -30,17 +30,6 @@
 |---|---|---|
 | `REDIS_URL` | — | Redis connection string. Example: `redis://localhost:6379/0` |
 
-### Billing
-
-| Variable | Default | Description |
-|---|---|---|
-| `BILLING_PROVIDER` | `stripe` | `stripe` or `flutterwave` |
-| `STRIPE_SECRET_KEY` | — | Stripe API secret key |
-| `STRIPE_WEBHOOK_SECRET` | — | Stripe webhook signature verification secret |
-| `FLUTTERWAVE_SECRET_KEY` | — | Flutterwave secret key (if `BILLING_PROVIDER=flutterwave`) |
-
----
-
 ## `.env.example` Template
 
 Maintain an `.env.example` file in the repo root with all variables listed (no real values):
@@ -56,10 +45,6 @@ CORS_ORIGINS=http://localhost:5173,https://yourdomain.com
 DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/transport_db
 
 REDIS_URL=redis://localhost:6379/0
-
-BILLING_PROVIDER=stripe
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
 ---

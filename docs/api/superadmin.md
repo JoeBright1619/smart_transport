@@ -7,7 +7,7 @@
 ---
 
 ## `GET /superadmin/tenants`
-**Query params:** `?isActive=true&tier=pro&page=1&page_size=20`
+**Query params:** `?isActive=true&page=1&page_size=20`
 
 **Response `200`:**
 ```json
@@ -17,11 +17,9 @@
       "id": "ten-uuid",
       "name": "Kigali Express Ltd",
       "contactEmail": "admin@kigaliexpress.rw",
-      "subscriptionTier": "pro",
       "isActive": true,
       "vehicleCount": 12,
       "userCount": 8,
-      "trialEndsAt": null,
       "createdAt": "2026-03-01T08:00:00Z"
     }
   ],
@@ -40,11 +38,7 @@
     "id": "ten-uuid",
     "name": "Kigali Express Ltd",
     "contactEmail": "admin@kigaliexpress.rw",
-    "billingEmail": "billing@kigaliexpress.rw",
-    "subscriptionTier": "pro",
-    "vehicleLimit": 100,
     "isActive": true,
-    "trialEndsAt": null,
     "vehicleCount": 12,
     "userCount": 8,
     "createdAt": "2026-03-01T08:00:00Z",
@@ -56,14 +50,11 @@
 ---
 
 ## `PATCH /superadmin/tenants/{id}`
-Used to suspend/reactivate tenants or manually override tier.
+Used to suspend/reactivate tenant company accounts.
 
 **Request** (all optional):
 ```json
 { "isActive": false }
-```
-```json
-{ "subscriptionTier": "enterprise", "vehicleLimit": null }
 ```
 **Response `200`:** Updated tenant object.
 
@@ -95,7 +86,6 @@ Platform-wide aggregated stats across all tenants.
   "data": {
     "totalTenants": 12,
     "activeTenants": 11,
-    "trialingTenants": 3,
     "totalVehicles": 187,
     "totalTripsToday": 432,
     "totalPassengersToday": 17280

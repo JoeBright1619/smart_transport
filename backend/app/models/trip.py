@@ -1,10 +1,19 @@
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Index, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+
+if TYPE_CHECKING:
+    from app.models.driver import Driver
+    from app.models.route import Route
+    from app.models.tenant import Tenant
+    from app.models.vehicle import Vehicle
 
 
 def generate_trip_id() -> str:

@@ -55,7 +55,7 @@
 | `204 No Content` | Successful DELETE (no body) |
 | `400 Bad Request` | Validation failure (wrong format/type) |
 | `401 Unauthorized` | Missing or invalid JWT |
-| `403 Forbidden` | Insufficient role, inactive subscription, feature gate |
+| `403 Forbidden` | Insufficient role or inactive tenant account |
 | `404 Not Found` | Resource does not exist (also use for cross-tenant ownership mismatch) |
 | `409 Conflict` | Duplicate resource (e.g., duplicate registration number) |
 | `422 Unprocessable Entity` | Semantically invalid input (e.g., end date before start date) |
@@ -69,9 +69,7 @@ These `code` values must be used exactly as specified in the error envelope:
 
 | Code | Meaning |
 |---|---|
-| `SUBSCRIPTION_INACTIVE` | Tenant account suspended or cancelled |
-| `VEHICLE_LIMIT_REACHED` | Tenant hit their tier's vehicle count ceiling |
-| `FEATURE_NOT_AVAILABLE` | Endpoint requires a higher subscription tier |
+| `TENANT_INACTIVE` | Tenant/company account is suspended or inactive |
 
 ---
 

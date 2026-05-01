@@ -13,7 +13,7 @@
 | [realtime.md](./realtime.md) | WebSocket setup, Redis pub/sub, tenant-scoped channels | Anything touching real-time vehicle tracking |
 | [database.md](./database.md) | Migrations, soft deletes, audit logging, indexes | Schema changes, new ORM models, Alembic usage |
 | [testing.md](./testing.md) | pytest rules, tenant isolation tests, coverage targets | Writing or reviewing tests |
-| [config.md](./config.md) | Environment variables, billing config, deployment settings | Setting up environment, adding new config values |
+| [config.md](./config.md) | Environment variables and deployment settings | Setting up environment, adding new config values |
 
 ---
 

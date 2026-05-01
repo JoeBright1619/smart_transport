@@ -47,7 +47,7 @@
 }
 ```
 **Response `201`:** Vehicle object.
-**Errors:** `403 VEHICLE_LIMIT_REACHED` | `409` duplicate registration number.
+**Errors:** `409` duplicate registration number.
 
 ---
 

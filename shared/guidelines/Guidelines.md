@@ -13,5 +13,5 @@ for better clarity and lower token usage when working with AI agents.
 | [entities.md](./entities.md) | Domain entity definitions |
 | [api-contracts.md](./api-contracts.md) | REST rules, response envelopes, error codes |
 | [auth.md](./auth.md) | Roles, JWT, RBAC, superadmin |
-| [multi-tenancy.md](./multi-tenancy.md) | Tenant isolation, subscription tiers, feature gating |
+| [multi-tenancy.md](./multi-tenancy.md) | Tenant/company isolation and active-account rules |
 | [conventions.md](./conventions.md) | Naming, code quality, git, documentation |

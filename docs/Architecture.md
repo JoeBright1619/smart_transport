@@ -10,7 +10,7 @@
 The **Smart Public Transport Tracking and Fleet Management System** is a multi-tenant B2B SaaS platform providing real-time visibility, operational control, and data-driven analytics for public transport fleet operations. The prototype reference dataset is based in **Kigali, Rwanda**; the system is geography-agnostic and supports any city or country.
 
 The system serves five actors:
-- **Superadmin** — platform operator; manages tenants, billing, and platform-wide analytics
+- **Superadmin** — platform operator; manages tenant/company accounts and platform-wide analytics
 - **Admin** — per-tenant administrator; manages their company's users and configuration
 - **Operator** — fleet and driver management within a tenant
 - **Dispatcher** — trip scheduling and dispatch within a tenant
@@ -183,21 +183,8 @@ tenants                                  ← TOP-LEVEL: one row per customer com
  ├── id (PK, UUID, prefix: ten-)
  ├── name
  ├── contact_email
- ├── billing_email
- ├── subscription_tier ENUM('starter','pro','enterprise')
- ├── vehicle_limit (INTEGER: 20 / 100 / NULL)
  ├── is_active (BOOLEAN DEFAULT TRUE)
- ├── trial_ends_at (TIMESTAMP, nullable)
  └── created_at, updated_at
-
-subscriptions
- ├── id (PK, UUID)
- ├── tenant_id (FK → tenants)
- ├── tier ENUM('starter','pro','enterprise')
- ├── status ENUM('active','past_due','cancelled','trialing')
- ├── current_period_start, current_period_end
- ├── external_billing_id (Stripe/Flutterwave subscription ID)
- └── created_at
 
 users
  ├── id (PK, UUID)

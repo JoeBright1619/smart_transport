@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 4.2 — Tenant Service (`services/tenant_service.py`)
+**Next task:** Task 4.3 — Audit Service (`services/audit_service.py`)
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -144,19 +144,18 @@ Define the shared response envelope types used by every endpoint:
 
 ---
 
-### Task 2.1 — Tenant & Subscription Models (`models/tenant.py`)
+### Task 2.1 — Tenant/Company Model (`models/tenant.py`)
 
 **Description:**
-Create two ORM models:
-- `Tenant` — columns: `id` (prefixed `ten-`), `name`, `contact_email`, `billing_email`, `subscription_tier` (enum), `vehicle_limit`, `is_active`, `trial_ends_at`, `created_at`, `updated_at`. **No `tenant_id` and no `is_deleted` on this model.**
-- `Subscription` — columns: `id`, `tenant_id` (FK), `tier`, `status` (enum), `current_period_start`, `current_period_end`, `external_billing_id`, `created_at`
+Create the transport company tenant ORM model:
+- `Tenant` — columns: `id` (prefixed `ten-`), `name`, `contact_email`, `is_active`, `created_at`, `updated_at`. **No `tenant_id` and no `is_deleted` on this model.**
 
 **Guidelines to read first:**
-- `shared/guidelines/entities.md` — Tenant and Subscription entity fields
+- `shared/guidelines/entities.md` — Tenant entity fields
 - `backend/guidelines/database.md` — Alembic migration rules, column requirements
 
 **Branch:** `feat/model-tenant`
-**Commit:** `Add Tenant and Subscription ORM models`
+**Commit:** `Add Tenant ORM model`
 
 - [x] Task 2.1 complete
 
@@ -312,19 +311,18 @@ Set up Alembic (`alembic init alembic`) and configure `env.py` to use the async 
 ### Task 3.1 — FastAPI Dependencies (`core/dependencies.py`)
 
 **Description:**
-Implement four reusable dependencies:
+Implement three reusable dependencies:
 1. `get_current_user(token: str) -> User` — decode JWT → load User from DB
-2. `get_current_tenant(user: User) -> Tenant` — load Tenant → raise `403 SUBSCRIPTION_INACTIVE` if `is_active = False`
+2. `get_current_tenant(user: User) -> Tenant` — load Tenant → raise `403 TENANT_INACTIVE` if `is_active = False`
 3. `require_role(*roles) -> Depends` — factory that raises `403` if user role not in `roles`
-4. `require_feature(feature: str) -> Depends` — factory that checks `subscriptionTier` against the feature gate map (from `shared/guidelines/multi-tenancy.md`) and raises `403 FEATURE_NOT_AVAILABLE`
 
 **Guidelines to read first:**
 - `shared/guidelines/auth.md` — role hierarchy and access rules
-- `shared/guidelines/multi-tenancy.md` — feature gate map (which features → which tiers)
+- `shared/guidelines/multi-tenancy.md` — tenant isolation and active-account rules
 - `backend/guidelines/patterns.md` — dependency usage patterns
 
 **Branch:** `feat/core-dependencies`
-**Commit:** `Add get_current_user, get_current_tenant, require_role, require_feature dependencies`
+**Commit:** `Add get_current_user, get_current_tenant, and require_role dependencies`
 
 - [x] Task 3.1 complete
 
@@ -380,21 +378,18 @@ Define Pydantic schemas for:
 
 **Description:**
 Implement:
-- `create_tenant(db, data) -> Tenant` — creates tenant + first admin user in one transaction; sets `subscription_tier = 'starter'` and `trial_ends_at = now + 14 days`
+- `create_tenant(db, data) -> Tenant` — creates the transport company tenant + first admin user in one transaction
 - `get_tenant(db, tenant_id) -> Tenant`
-- `check_vehicle_limit(db, tenant_id) -> None` — counts active vehicles; raises `403 VEHICLE_LIMIT_REACHED` if at or over limit
 - `suspend_tenant(db, tenant_id)` / `reactivate_tenant(db, tenant_id)`
-- `set_tier(db, tenant_id, tier, vehicle_limit)`
 
 **Guidelines to read first:**
-- `shared/guidelines/multi-tenancy.md` — vehicle limit rules, tier definitions, trial period
+- `shared/guidelines/multi-tenancy.md` — tenant isolation rules
 - `backend/guidelines/patterns.md` — service layer rules, transaction wrapping
-- `shared/guidelines/api-contracts.md` — `VEHICLE_LIMIT_REACHED` error code
 
 **Branch:** `feat/tenant-service`
-**Commit:** `Add TenantService with create, vehicle limit check, and tier management`
+**Commit:** `Add TenantService with create and account status management`
 
-- [ ] Task 4.2 complete
+- [x] Task 4.2 complete
 
 ---
 
@@ -465,11 +460,11 @@ Implement schemas (`schemas/user.py`) if not already done, service (`services/us
 ### Task 5.2 — Vehicles CRUD
 
 **Description:**
-Implement `schemas/vehicle.py`, `services/vehicle_service.py`, and `routers/vehicles.py`. On `POST`, call `tenant_service.check_vehicle_limit()` before creation. On `DELETE`, verify vehicle is not `active`. All queries scoped to `tenant_id`. Soft delete + audit log.
+Implement `schemas/vehicle.py`, `services/vehicle_service.py`, and `routers/vehicles.py`. On `DELETE`, verify vehicle is not `active`. All queries scoped to `tenant_id`. Soft delete + audit log.
 
 **Guidelines to read first:**
 - `docs/api/vehicles.md` — endpoint shapes and validation rules
-- `shared/guidelines/multi-tenancy.md` — vehicle limit enforcement
+- `shared/guidelines/multi-tenancy.md` — tenant isolation rules
 - `backend/guidelines/patterns.md`
 
 **Branch:** `feat/vehicles-crud`
@@ -549,35 +544,34 @@ Implement `routers/alerts.py` with `GET /api/v1/alerts` (filtered) and `POST /ap
 
 ---
 
-### Task 6.2 — Maintenance CRUD (Tier-Gated)
+### Task 6.2 — Maintenance CRUD
 
 **Description:**
-Implement `schemas/maintenance.py`, `services/maintenance_service.py`, and `routers/maintenance.py`. All endpoints must be decorated with `Depends(require_feature("maintenance"))`. Setting `status: "completed"` auto-fills `completed_date` if not provided.
+Implement `schemas/maintenance.py`, `services/maintenance_service.py`, and `routers/maintenance.py`. Setting `status: "completed"` auto-fills `completed_date` if not provided.
 
 **Guidelines to read first:**
 - `docs/api/operations.md` — maintenance endpoint shapes
-- `shared/guidelines/multi-tenancy.md` — `maintenance` feature = `pro+` tier
-- `backend/guidelines/patterns.md` — `require_feature` dependency usage
+- `shared/guidelines/multi-tenancy.md` — tenant isolation rules
 
 **Branch:** `feat/maintenance-crud`
-**Commit:** `Add maintenance service and router (pro+ tier gated)`
+**Commit:** `Add maintenance service and router`
 
 - [ ] Task 6.2 complete
 
 ---
 
-### Task 6.3 — Analytics Router (Tier-Gated)
+### Task 6.3 — Analytics Router
 
 **Description:**
-Implement `services/analytics_service.py` to aggregate data from `trips`, `vehicles`, and `analytics` tables into the summary + daily breakdown format. Cache results in Redis (60-second TTL, keyed by `tenant_id + date range`). Implement `routers/analytics.py` gated with `require_feature("analytics")`.
+Implement `services/analytics_service.py` to aggregate data from `trips`, `vehicles`, and `analytics` tables into the summary + daily breakdown format. Cache results in Redis (60-second TTL, keyed by `tenant_id + date range`). Implement `routers/analytics.py`.
 
 **Guidelines to read first:**
 - `docs/api/analytics.md` — exact response shape
-- `shared/guidelines/multi-tenancy.md` — `analytics` feature = `pro+` tier
+- `shared/guidelines/multi-tenancy.md` — tenant isolation rules
 - `backend/guidelines/patterns.md` — Redis caching rule
 
 **Branch:** `feat/analytics`
-**Commit:** `Add analytics service and router with Redis caching (pro+ tier gated)`
+**Commit:** `Add analytics service and router with Redis caching`
 
 - [ ] Task 6.3 complete
 
@@ -666,7 +660,7 @@ Implement the Haversine formula in a utility function in `app/core/geo.py`.
 Implement `routers/superadmin.py` with all endpoints in `docs/api/superadmin.md`:
 - `GET /superadmin/tenants` — list all tenants with vehicle + user counts
 - `GET /superadmin/tenants/{id}` — full tenant detail
-- `PATCH /superadmin/tenants/{id}` — suspend/reactivate/change tier
+- `PATCH /superadmin/tenants/{id}` — suspend/reactivate tenant company accounts
 - `POST /superadmin/tenants/{id}/impersonate` — return 1-hour JWT, create audit log entry
 - `GET /superadmin/analytics` — platform-wide aggregated stats
 
@@ -690,7 +684,7 @@ All endpoints must require `role: superadmin` via `Depends(require_role("superad
 ### Task 10.1 — Database Seed Script (`core/seed.py`)
 
 **Description:**
-Implement an idempotent seed script following `docs/Seed-Plan.md` exactly. Must create: 1 superadmin, 1 demo tenant (`pro` tier), 4 demo users, 2 routes with stops, 3 drivers, 4 vehicles with initial positions, 2 maintenance records, 3 alerts. Read passwords from `SUPERADMIN_PASSWORD` and `SEED_PASSWORD` env vars. Output `[seed] ...` log lines for each step.
+Implement an idempotent seed script following `docs/Seed-Plan.md` exactly. Must create: 1 superadmin, 1 demo tenant/company, 4 demo users, 2 routes with stops, 3 drivers, 4 vehicles with initial positions, 2 maintenance records, 3 alerts. Read passwords from `SUPERADMIN_PASSWORD` and `SEED_PASSWORD` env vars. Output `[seed] ...` log lines for each step.
 
 **Guidelines to read first:**
 - `docs/Seed-Plan.md` — full seed data specification (IDs, names, coordinates, etc.)
@@ -818,7 +812,7 @@ Run `ruff check .` and fix all linting errors. Run `pytest --cov=app --cov-repor
 | Phase 1 — Project Foundation | 5 tasks | 5 / 5 |
 | Phase 2 — Database Models | 10 tasks | 10 / 10 |
 | Phase 3 — Dependencies & Middleware | 2 tasks | 2 / 2 |
-| Phase 4 — Auth Implementation | 4 tasks | 1 / 4 |
+| Phase 4 — Auth Implementation | 4 tasks | 2 / 4 |
 | Phase 5 — Core Resource CRUD | 5 tasks | 0 / 5 |
 | Phase 6 — Operations | 3 tasks | 0 / 3 |
 | Phase 7 — Real-Time Tracking | 2 tasks | 0 / 2 |
@@ -827,4 +821,4 @@ Run `ruff check .` and fix all linting errors. Run `pytest --cov=app --cov-repor
 | Phase 10 — Seed & Docker | 2 tasks | 0 / 2 |
 | Phase 11 — Tests | 3 tasks | 0 / 3 |
 | Phase 12 — Final Polish | 2 tasks | 0 / 2 |
-| **Total** | **40 tasks** | **18 / 40** |
+| **Total** | **40 tasks** | **19 / 40** |

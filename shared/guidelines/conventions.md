@@ -12,7 +12,7 @@
 |---|---|---|
 | Entity IDs | `<prefix>-<uuid>` | `veh-uuid`, `drv-uuid`, `ten-uuid`, `route-uuid` |
 | Boolean fields | `is` or `has` prefix | `isActive`, `isDeleted`, `hasAlerts` |
-| Timestamp fields | `camelCase` + `At` suffix | `createdAt`, `updatedAt`, `trialEndsAt` |
+| Timestamp fields | `camelCase` + `At` suffix | `createdAt`, `updatedAt`, `completedAt` |
 | Status enums | lowercase strings | `'active'`, `'on-trip'`, `'in-progress'` |
 
 ### By Layer

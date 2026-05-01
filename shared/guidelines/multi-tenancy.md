@@ -1,7 +1,7 @@
-# Shared — Multi-Tenancy & Subscription Rules
+# Shared — Multi-Tenancy Rules
 
-> Rules for data isolation between tenants and subscription tier enforcement.
-> This is the most critical document for commercial correctness.
+> Rules for data ownership and isolation between transport companies.
+> For the thesis prototype, a tenant represents the partner bus company or transport operator.
 
 ---
 
@@ -18,7 +18,7 @@ JWT Token  →  contains tenantId
     │
 get_current_user()  →  extracts user + tenant_id
     │
-get_current_tenant()  →  loads Tenant, checks isActive + subscription
+get_current_tenant()  →  loads Tenant and checks isActive
     │
 Service Method  →  receives tenant_id as required parameter
     │
@@ -33,57 +33,12 @@ ORM Query  →  WHERE tenant_id = :tenant_id  (MANDATORY on every query)
 2. **`tenantId` comes from the JWT, never from the request.** Never read `tenantId` from query params, path params, or request body on non-superadmin endpoints.
 3. **Validate ownership on GET by ID.** When retrieving a single entity by `id`, verify the record's `tenant_id` matches the requester's. Return `404 Not Found` on mismatch — do not reveal the resource exists in another tenant.
 4. **`superadmin` bypasses tenant filters.** When `role == 'superadmin'`, tenant filtering may be omitted. All superadmin actions must still be logged in `audit_logs`.
-5. **Subscription check on every request.** `get_current_tenant` must raise `403 SUBSCRIPTION_INACTIVE` if `tenant.isActive` is `false`, before any business logic runs.
-
----
-
-## Subscription Tiers
-
-| Tier | Vehicle Limit | Features Included |
-|---|---|---|
-| `starter` | 20 | Live tracking, basic alerts (delay, breakdown), route & stop management |
-| `pro` | 100 | Everything in Starter + analytics dashboard, maintenance scheduling, driver scoring, SMS/email alerts |
-| `enterprise` | Unlimited | Everything in Pro + REST API access, white-label branding, priority support |
-
----
-
-## Feature Gating Rules
-
-- Use a `require_feature(feature_name)` dependency on gated endpoints:
-  ```python
-  @router.get("/analytics", dependencies=[Depends(require_feature("analytics"))])
-  ```
-- Returns `403 FEATURE_NOT_AVAILABLE` if the tenant's tier does not include the feature.
-- Feature → tier mapping:
-  | Feature Key | Minimum Tier |
-  |---|---|
-  | `analytics` | `pro` |
-  | `maintenance` | `pro` |
-  | `driver_scoring` | `pro` |
-  | `sms_alerts` | `pro` |
-  | `api_access` | `enterprise` |
-  | `white_label` | `enterprise` |
-
----
-
-## Vehicle Limit Enforcement
-
-- Call `tenant_service.check_vehicle_limit(tenant_id)` before creating a new vehicle.
-- Count active (non-deleted) vehicles for the tenant and compare to `tenant.vehicleLimit`.
-- Return `403 VEHICLE_LIMIT_REACHED` if the limit would be exceeded.
-
----
-
-## Trial Period
-
-- New tenants get a **14-day free trial** with full `pro` tier access (`status: 'trialing'`).
-- When `trialEndsAt` passes with no billing method on file, the tenant is downgraded to `starter`.
-- `isActive` remains `true` during trial.
+5. **Active company check on every protected request.** `get_current_tenant` must raise `403 TENANT_INACTIVE` if `tenant.isActive` is `false`, before any business logic runs.
 
 ---
 
 ## Inactive Tenant Behaviour
 
-When `tenant.isActive` is `false` (subscription cancelled/suspended):
-- **All** API endpoints return `403 SUBSCRIPTION_INACTIVE`
-- **Exception:** `/auth/login` and `/auth/refresh` remain accessible so users can log in and view their billing status page
+When `tenant.isActive` is `false`:
+- Protected operational API endpoints return `403 TENANT_INACTIVE`
+- `/auth/login` and `/auth/refresh` remain accessible so users can authenticate and see account status

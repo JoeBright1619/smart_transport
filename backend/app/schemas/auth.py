@@ -1,12 +1,7 @@
-from datetime import datetime
-from typing import Literal
-
 from pydantic import Field
 
 from app.schemas.base import APIModel
 from app.schemas.user import UserRole
-
-SubscriptionTier = Literal["starter", "pro", "enterprise"]
 
 
 class RegisterRequest(APIModel):
@@ -19,11 +14,6 @@ class RegisterRequest(APIModel):
         min_length=3,
         max_length=255,
         json_schema_extra={"example": "admin@kigaliexpress.rw"},
-    )
-    billing_email: str | None = Field(
-        default=None,
-        max_length=255,
-        json_schema_extra={"example": "billing@kigaliexpress.rw"},
     )
     admin_full_name: str = Field(
         min_length=1,
@@ -63,11 +53,7 @@ class LoginRequest(APIModel):
 class AuthTenantSummary(APIModel):
     id: str = Field(json_schema_extra={"example": "ten-uuid"})
     name: str = Field(json_schema_extra={"example": "Kigali Express Ltd"})
-    subscription_tier: SubscriptionTier = Field(json_schema_extra={"example": "starter"})
-    trial_ends_at: datetime | None = Field(
-        default=None,
-        json_schema_extra={"example": "2026-04-22T00:00:00Z"},
-    )
+    is_active: bool = Field(default=True, json_schema_extra={"example": True})
 
 
 class AuthUserSummary(APIModel):

@@ -61,5 +61,5 @@ async def vehicle_a(db, tenant_a):
 ## Coverage Target
 
 - **≥80% coverage** on `services/` and `routers/`
-- Mock external services in unit tests: email sending, WebSocket broadcasts, billing webhooks
-- Test billing webhooks and WebSocket broadcasts in integration tests
+- Mock external services in unit tests: email sending and WebSocket broadcasts
+- Test WebSocket broadcasts in integration tests

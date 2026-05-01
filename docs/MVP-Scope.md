@@ -9,14 +9,14 @@
 
 ## MVP Goal
 
-Deliver a working, multi-tenant fleet management SaaS that allows a transport company to:
+Deliver a working fleet management system for a transport company, with company-scoped data ownership, that allows staff to:
 1. Track their vehicles in real time on a map
 2. Manage their fleet, drivers, and routes
 3. Dispatch trips
 4. Receive automated alerts for critical events
 5. View basic operational analytics
 
-A company must be able to sign up, log in, and start using all five capabilities above without any manual intervention from us.
+A company administrator must be able to log in and use all five capabilities above in the thesis prototype.
 
 ---
 
@@ -27,7 +27,6 @@ A company must be able to sign up, log in, and start using all five capabilities
 |---|---|
 | Login / logout | JWT + HttpOnly refresh cookie |
 | Register new tenant (company) | Creates tenant + first admin user in one step |
-| 14-day free trial | Full `pro` access during trial, no billing required |
 | Role-based access control | `superadmin`, `admin`, `operator`, `dispatcher`, `passenger` |
 | Protected routes (frontend) | Role-checked route guards |
 | Tenant data isolation | Every query filtered by `tenant_id` from JWT |
@@ -53,10 +52,9 @@ A company must be able to sign up, log in, and start using all five capabilities
 | Feature | Notes |
 |---|---|
 | List all vehicles with filters | Filter by status, route |
-| Add new vehicle | Enforces `vehicleLimit` per subscription tier |
+| Add new vehicle | Creates a company-owned vehicle record |
 | Edit vehicle details | Patch: model, capacity, registration, status |
 | Soft-delete a vehicle | Sets `is_deleted = true`; audit logged |
-| Vehicle count vs tier limit indicator | Shown in the UI when approaching the limit |
 
 ---
 
@@ -138,8 +136,6 @@ arrival_time = now + eta_minutes
 | Mark maintenance as complete | Sets `completed_date`, triggers `next_due` calculation |
 | Maintenance due alert | Auto-generated when `next_due` within 7 days |
 
-> **Tier gate:** Maintenance module requires `pro` or `enterprise` tier. On `starter`, the page returns `403 FEATURE_NOT_AVAILABLE`.
-
 ---
 
 ### ✅ Analytics Dashboard
@@ -151,8 +147,6 @@ arrival_time = now + eta_minutes
 | Total passengers per day | Area chart |
 | Fleet status distribution | Pie/radial chart (active/idle/maintenance/offline) |
 | Date range filter | `from` / `to` query params |
-
-> **Tier gate:** Analytics module requires `pro` or `enterprise` tier.
 
 ---
 
@@ -169,22 +163,10 @@ arrival_time = now + eta_minutes
 ### ✅ Superadmin Portal
 | Feature | Notes |
 |---|---|
-| List all tenants | Name, tier, is_active, vehicle count, created date |
-| View tenant details | Users, vehicles, subscription status |
+| List all tenants | Name, is_active, vehicle count, created date |
+| View tenant details | Users, vehicles, account status |
 | Suspend / reactivate a tenant | Sets `is_active = false / true` |
-| Manual tier override | Change tier without billing (for manual deals) |
 | Impersonate tenant admin | Full audit log entry created on impersonation |
-
----
-
-### ✅ Subscription Tiers (Soft-Enforced in MVP)
-| Tier | Vehicle Limit | Feature Gates |
-|---|---|---|
-| `starter` | 20 | Tracking, Fleet, Routes, Drivers, Dispatch, Alerts |
-| `pro` | 100 | + Analytics, Maintenance |
-| `enterprise` | Unlimited | + API access (deferred), White-label (deferred) |
-
-> **Billing integration is deferred.** In MVP, tiers are set manually by superadmin or default to `trialing` (14 days). Stripe/Flutterwave integration is post-MVP.
 
 ---
 
@@ -192,14 +174,12 @@ arrival_time = now + eta_minutes
 
 | Feature | Target Version | Reason Deferred |
 |---|---|---|
-| Stripe / Flutterwave billing integration | v1.1 | Complex to implement + not needed to validate product |
 | SMS / email alert notifications | v1.1 | Needs third-party API (Africa's Talking, SendGrid) |
 | Passenger mobile app | v1.1 | Separate product with different UX requirements |
 | Arrival time predictions (ML/ETA) | v1.2 | Simple physics-based ETA is in MVP; ML refinement deferred |
 | Geofence drawing tool | v1.1 | Backend rule exists; UI tool deferred |
 | Historical vehicle route playback | v1.2 | Needs position history table (not in MVP schema) |
 | GTFS data import | v1.2 | Useful for onboarding but not blocking |
-| API access for enterprise tenants | v1.1 | API keys + rate limiting system needed |
 | White-label branding | v1.1 | Requires theme customisation per tenant |
 | Route optimisation / AI dispatch | v2.0 | Requires significant ML investment |
 | Recurring / automated trip schedules | v1.1 | Cron/task queue infrastructure needed |
@@ -218,20 +198,17 @@ The MVP is complete when all of the following are true:
 - [ ] All `IN Scope` endpoints are implemented, tested, and return the standard response envelope
 - [ ] Every list endpoint filters by `tenant_id` from JWT (verified by `test_tenant_isolation.py`)
 - [ ] `get_current_tenant` checks `isActive` on every protected request
-- [ ] Subscription tier feature gates enforced for `analytics` and `maintenance` endpoints
-- [ ] Vehicle limit enforced on vehicle creation
 - [ ] WebSocket broadcasts to tenant-scoped Redis channels
 - [ ] Audit logs written for mutations on Users, Vehicles, Routes, Tenants
 - [ ] **≥80% test coverage** on `services/` and `routers/`
 - [ ] All Alembic migrations reversible and applied cleanly on fresh DB
-- [ ] Seed script creates: 1 superadmin, 1 demo tenant (pro tier), demo vehicles/routes/drivers
+- [ ] Seed script creates: 1 superadmin, 1 demo tenant/company, demo vehicles/routes/drivers
 
 ### Frontend
 - [ ] All `IN Scope` module pages are implemented and consuming mock data (prototype) or real API
 - [ ] Role-based route guards enforce access restrictions
 - [ ] Vehicle tracking map renders live positions with correct status colours
 - [ ] Alerts page shows feed with unacknowledged badge count in sidebar
-- [ ] Analytics and Maintenance pages show `FEATURE_NOT_AVAILABLE` state for `starter` tier
 - [ ] All tables support filtering and sorting
 - [ ] Responsive at 1280px minimum viewport
 

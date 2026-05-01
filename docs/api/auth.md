@@ -13,7 +13,6 @@ Register a new tenant and their first admin user in one step.
 {
   "companyName": "Kigali Express Ltd",
   "contactEmail": "admin@kigaliexpress.rw",
-  "billingEmail": "billing@kigaliexpress.rw",
   "adminFullName": "Jean Claude Mugabo",
   "adminEmail": "jean@kigaliexpress.rw",
   "adminPhone": "+250788123456",
@@ -24,7 +23,7 @@ Register a new tenant and their first admin user in one step.
 ```json
 {
   "data": {
-    "tenant": { "id": "ten-uuid", "name": "Kigali Express Ltd", "subscriptionTier": "starter", "trialEndsAt": "2026-04-22T00:00:00Z" },
+    "tenant": { "id": "ten-uuid", "name": "Kigali Express Ltd", "isActive": true },
     "user": { "id": "user-uuid", "email": "jean@kigaliexpress.rw", "role": "admin" },
     "accessToken": "<jwt>"
   }
@@ -46,7 +45,7 @@ Register a new tenant and their first admin user in one step.
   }
 }
 ```
-**Errors:** `401` invalid credentials | `403 SUBSCRIPTION_INACTIVE` if tenant suspended.
+**Errors:** `401` invalid credentials | `403 TENANT_INACTIVE` if tenant/company account is suspended.
 
 ---
 

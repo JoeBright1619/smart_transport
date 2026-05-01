@@ -47,11 +47,7 @@ One company seeded for development and manual testing.
 | `id` | `ten-demo-001` |
 | `name` | `Kigali Express Ltd` |
 | `contactEmail` | `admin@kigaliexpress.rw` |
-| `billingEmail` | `billing@kigaliexpress.rw` |
-| `subscriptionTier` | `pro` |
-| `vehicleLimit` | `100` |
 | `isActive` | `true` |
-| `trialEndsAt` | `null` (no trial — full pro for dev) |
 
 ---
 

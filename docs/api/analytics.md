@@ -1,10 +1,5 @@
 # API Spec — Analytics
 
-> **Tier gate:** `pro` and `enterprise` only.
-> Returns `403 FEATURE_NOT_AVAILABLE` for `starter` tier tenants.
-
----
-
 ## `GET /api/v1/analytics`
 **Roles:** `admin`, `operator`
 **Query params:** `?from=2026-04-01&to=2026-04-08`

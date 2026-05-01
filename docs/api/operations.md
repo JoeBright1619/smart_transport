@@ -42,9 +42,6 @@ No request body. Sets `isAcknowledged = true`.
 
 ## Maintenance
 
-> **Tier gate:** `pro` and `enterprise` only.
-> Returns `403 FEATURE_NOT_AVAILABLE` for `starter` tier tenants.
-
 ### `GET /api/v1/maintenance`
 **Roles:** `admin`, `operator`
 **Query params:** `?vehicleId=veh-uuid&status=scheduled&page=1&page_size=20`

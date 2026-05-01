@@ -1,4 +1,5 @@
-from typing import List, Optional, Literal
+from typing import List
+
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -14,11 +15,6 @@ class Settings(BaseSettings):
     
     DATABASE_URL: str
     REDIS_URL: str
-    
-    BILLING_PROVIDER: Literal["stripe", "flutterwave"] = "stripe"
-    STRIPE_SECRET_KEY: Optional[str] = None
-    STRIPE_WEBHOOK_SECRET: Optional[str] = None
-    FLUTTERWAVE_SECRET_KEY: Optional[str] = None
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -15,8 +15,7 @@ All operational entities MUST include a `tenantId` field linking them to a speci
 
 | Entity | Key Fields |
 |---|---|
-| `Tenant` | `id`, `name`, `contactEmail`, `billingEmail`, `subscriptionTier` (`starter\|pro\|enterprise`), `vehicleLimit`, `isActive`, `trialEndsAt`, `createdAt`, `updatedAt` |
-| `Subscription` | `id`, `tenantId`, `tier`, `status` (`active\|past_due\|cancelled\|trialing`), `currentPeriodStart`, `currentPeriodEnd`, `externalBillingId`, `createdAt` |
+| `Tenant` | `id`, `name`, `contactEmail`, `isActive`, `createdAt`, `updatedAt` |
 | `User` | `id`, `tenantId`, `email`, `fullName`, `role` (`superadmin\|admin\|operator\|dispatcher\|passenger`), `phone` |
 | `Vehicle` | `id`, `tenantId`, `registrationNumber`, `model`, `capacity`, `status` (`active\|idle\|maintenance\|offline`), `currentLocation {lat, lng}`, `speed`, `heading`, `routeId`, `driverId`, `fuel`, `engineStatus` (`good\|warning\|critical`) |
 | `Route` | `id`, `tenantId`, `name`, `number`, `stops[]`, `distance`, `duration`, `isActive`, `color` |

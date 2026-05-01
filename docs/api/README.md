@@ -29,4 +29,3 @@
 - All list endpoints support `?page=1&page_size=20` (max 100)
 - All soft-deleted records are excluded from list results automatically
 - `404` is returned for cross-tenant ID access (not `403`) — do not reveal existence
-- Tier-gated endpoints return `403 FEATURE_NOT_AVAILABLE` for insufficient tier

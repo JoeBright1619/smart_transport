@@ -17,8 +17,8 @@ See [`MVP-Scope.md`](./MVP-Scope.md) for the full feature list and definition of
 - Fleet, route, driver, and trip management
 - Automated alerts
 - Simple physics-based arrival time estimation
-- Basic analytics dashboard (pro+ tier)
-- Maintenance logging (pro+ tier)
+- Basic analytics dashboard
+- Maintenance logging
 - Superadmin portal for tenant management
 
 ---

@@ -19,12 +19,6 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    subscription_tier_enum = postgresql.ENUM(
-        "starter", "pro", "enterprise", name="subscription_tier_enum", create_type=False
-    )
-    subscription_status_enum = postgresql.ENUM(
-        "active", "past_due", "cancelled", "trialing", name="subscription_status_enum", create_type=False
-    )
     user_role_enum = postgresql.ENUM(
         "superadmin", "admin", "operator", "dispatcher", "passenger", name="user_role_enum", create_type=False
     )
@@ -56,8 +50,6 @@ def upgrade() -> None:
 
     bind = op.get_bind()
     for enum_type in (
-        subscription_tier_enum,
-        subscription_status_enum,
         user_role_enum,
         vehicle_status_enum,
         engine_status_enum,
@@ -76,11 +68,7 @@ def upgrade() -> None:
         sa.Column("id", sa.String(), nullable=False),
         sa.Column("name", sa.String(), nullable=False),
         sa.Column("contact_email", sa.String(), nullable=False),
-        sa.Column("billing_email", sa.String(), nullable=True),
-        sa.Column("subscription_tier", subscription_tier_enum, nullable=False),
-        sa.Column("vehicle_limit", sa.Integer(), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False),
-        sa.Column("trial_ends_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.PrimaryKeyConstraint("id"),
@@ -118,21 +106,6 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_stops_tenant_id"), "stops", ["tenant_id"])
-
-    op.create_table(
-        "subscriptions",
-        sa.Column("id", sa.String(), nullable=False),
-        sa.Column("tenant_id", sa.String(), nullable=False),
-        sa.Column("tier", subscription_tier_enum, nullable=False),
-        sa.Column("status", subscription_status_enum, nullable=False),
-        sa.Column("current_period_start", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("current_period_end", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("external_billing_id", sa.String(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"]),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index(op.f("ix_subscriptions_tenant_id"), "subscriptions", ["tenant_id"])
 
     op.create_table(
         "users",
@@ -318,8 +291,6 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_users_tenant_id"), table_name="users")
     op.drop_index(op.f("ix_users_email"), table_name="users")
     op.drop_table("users")
-    op.drop_index(op.f("ix_subscriptions_tenant_id"), table_name="subscriptions")
-    op.drop_table("subscriptions")
     op.drop_index(op.f("ix_stops_tenant_id"), table_name="stops")
     op.drop_table("stops")
     op.drop_index("idx_routes_tenant_id", table_name="routes")
@@ -338,7 +309,5 @@ def downgrade() -> None:
         "engine_status_enum",
         "vehicle_status_enum",
         "user_role_enum",
-        "subscription_status_enum",
-        "subscription_tier_enum",
     ):
         sa.Enum(name=enum_name).drop(bind, checkfirst=True)
