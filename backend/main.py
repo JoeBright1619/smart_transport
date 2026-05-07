@@ -22,6 +22,7 @@ from app.routers import (
     users,
     vehicles,
 )
+from app.websocket import tracking
 
 
 def _error_response(status_code: int, code: str, message: str) -> JSONResponse:
@@ -84,6 +85,7 @@ def create_app() -> FastAPI:
     app.include_router(alerts.router, prefix="/api/v1")
     app.include_router(analytics.router, prefix="/api/v1")
     app.include_router(superadmin.router, prefix="/superadmin")
+    app.include_router(tracking.router)
 
     @app.exception_handler(HTTPException)
     async def http_exception_handler(

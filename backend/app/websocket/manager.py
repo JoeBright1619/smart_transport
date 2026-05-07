@@ -85,6 +85,13 @@ class ConnectionManager:
     async def subscribe_to_tenant(self, tenant_id: str) -> None:
         await self._ensure_redis_listener(tenant_id)
 
+    async def publish_to_tenant(self, tenant_id: str, message: dict[str, Any]) -> None:
+        redis = await self._get_redis()
+        await redis.publish(
+            self.channel_for_tenant(tenant_id),
+            json.dumps(message),
+        )
+
     async def close(self) -> None:
         async with self._lock:
             tasks = list(self._listener_tasks.values())

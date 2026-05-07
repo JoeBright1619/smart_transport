@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date as date_type
 
 from pydantic import Field
 
@@ -23,7 +23,7 @@ class AnalyticsSummary(APIModel):
 
 
 class AnalyticsDaily(APIModel):
-    date: date = Field(json_schema_extra={"example": "2026-04-01"})
+    date: date_type = Field(json_schema_extra={"example": "2026-04-01"})
     total_trips: int = Field(json_schema_extra={"example": 21}, alias="totalTrips")
     on_time_percentage: float = Field(
         json_schema_extra={"example": 90.0}, alias="onTimePercentage"
