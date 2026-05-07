@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 2.12 — Alembic Migration for Telemetry Table
+**Next task:** Task 7.1 — WebSocket Connection Manager (`websocket/manager.py`)
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -339,7 +339,7 @@ Run `alembic revision --autogenerate -m "add telemetry table"`, review the gener
 **Branch:** `chore/migration-telemetry`
 **Commit:** `Add Alembic migration for telemetry table`
 
-- [ ] Task 2.12 complete
+- [x] Task 2.12 complete
 
 ---
 
@@ -851,7 +851,7 @@ Run `ruff check .` and fix all linting errors. Run `pytest --cov=app --cov-repor
 | Phase | Tasks | Status |
 |---|---|---|
 | Phase 1 — Project Foundation | 5 tasks | 5 / 5 |
-| Phase 2 — Database Models | 12 tasks | 11 / 12 |
+| Phase 2 — Database Models | 12 tasks | 12 / 12 |
 | Phase 3 — Dependencies & Middleware | 2 tasks | 2 / 2 |
 | Phase 4 — Auth Implementation | 4 tasks | 4 / 4 |
 | Phase 5 — Core Resource CRUD | 5 tasks | 5 / 5 |
@@ -862,4 +862,4 @@ Run `ruff check .` and fix all linting errors. Run `pytest --cov=app --cov-repor
 | Phase 10 — Seed & Docker | 2 tasks | 0 / 2 |
 | Phase 11 — Tests | 3 tasks | 0 / 3 |
 | Phase 12 — Final Polish | 2 tasks | 0 / 2 |
-| **Total** | **42 tasks** | **22 / 42** |
+| **Total** | **42 tasks** | **23 / 42** |
