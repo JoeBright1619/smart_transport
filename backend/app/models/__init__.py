@@ -6,6 +6,7 @@ from app.models.maintenance import MaintenanceRecord
 from app.models.refresh_token import RefreshToken
 from app.models.route import Route, RouteStop, Stop
 from app.models.tenant import Tenant
+from app.models.telemetry import Telemetry
 from app.models.trip import Trip
 from app.models.user import User
 from app.models.vehicle import Vehicle
@@ -21,6 +22,7 @@ __all__ = [
     "RouteStop",
     "Stop",
     "Tenant",
+    "Telemetry",
     "Trip",
     "User",
     "Vehicle",
