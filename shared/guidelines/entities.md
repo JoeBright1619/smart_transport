@@ -16,7 +16,7 @@ All operational entities MUST include a `tenantId` field linking them to a speci
 | Entity | Key Fields |
 |---|---|
 | `Tenant` | `id`, `name`, `contactEmail`, `isActive`, `createdAt`, `updatedAt` |
-| `User` | `id`, `tenantId`, `email`, `fullName`, `role` (`superadmin\|admin\|operator\|dispatcher\|passenger`), `phone` |
+| `User` | `id`, `tenantId` (nullable for superadmin), `email`, `passwordHash`, `fullName`, `role` (`superadmin\|admin\|operator\|dispatcher\|passenger`), `phone`, `isDeleted` |
 | `Vehicle` | `id`, `tenantId`, `registrationNumber`, `model`, `capacity`, `status` (`active\|idle\|maintenance\|offline`), `currentLocation {lat, lng}`, `speed`, `heading`, `routeId`, `driverId`, `fuel`, `engineStatus` (`good\|warning\|critical`) |
 | `Route` | `id`, `tenantId`, `name`, `number`, `stops[]`, `distance`, `duration`, `isActive`, `color` |
 | `Stop` | `id`, `tenantId`, `name`, `location {lat, lng}`, `order` |
@@ -26,6 +26,7 @@ All operational entities MUST include a `tenantId` field linking them to a speci
 | `Alert` | `id`, `tenantId`, `type` (`delay\|breakdown\|maintenance\|geofence\|speeding\|info`), `severity` (`low\|medium\|high\|critical`), `title`, `message`, `vehicleId?`, `driverId?`, `timestamp`, `isAcknowledged` |
 | `Analytics` | `tenantId`, `date`, `totalTrips`, `onTimePercentage`, `avgDelay`, `totalPassengers`, `fuelConsumption`, `revenue` |
 | `AuditLog` | `id`, `tenantId`, `userId`, `entityType`, `entityId`, `actionType` (`create\|update\|soft_delete\|login\|impersonate`), `metadata` (JSON diff), `createdAt` |
+| `Telemetry` | `id`, `tenantId`, `vehicleId`, `lat`, `lng`, `speed`, `heading`, `timestamp` |
 
 ---
 
@@ -48,4 +49,20 @@ All operational entities MUST include a `tenantId` field linking them to a speci
 
 All operational entities have an `isDeleted` (`is_deleted` in DB) boolean field defaulting to `false`. Records are never physically deleted — they are soft-deleted. All list queries must filter `WHERE is_deleted = FALSE`.
 
-Exceptions: `AuditLog` (immutable, never deleted), `Tenant` (deactivated via `isActive`, not deleted).
+Entities that carry `isDeleted`: `User`, `Vehicle`, `Route`, `Stop`, `Trip`, `Driver`, `MaintenanceRecord`.
+
+Exceptions: `Alert` (no soft delete — acknowledged via `isAcknowledged`), `Telemetry` (append-only log, never deleted), `AuditLog` (immutable, never deleted), `Analytics` (aggregated, replaced not deleted), `Tenant` (deactivated via `isActive`, not deleted).
+
+---
+
+## Telemetry
+
+`Telemetry` records are written by the real-time tracking service on every broadcast cycle (every 5 seconds per active vehicle). They are **append-only** — never updated or soft-deleted. This table is the historical GPS/sensor log and enables route replay and speed auditing.
+
+- `id` — prefixed `telem-<uuid>`
+- `tenantId` — tenant scoping (same multi-tenancy rules apply)
+- `vehicleId` — FK to `vehicles`
+- `lat`, `lng` — WGS84 decimal degrees (same rules as Vehicle location)
+- `speed` — km/h integer
+- `heading` — degrees 0–360 clockwise from north
+- `timestamp` — ISO 8601 UTC, set at write time

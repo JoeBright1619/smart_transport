@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 7.1 — WebSocket Connection Manager
+**Next task:** Task 2.11 — Telemetry Model
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -301,6 +301,45 @@ Set up Alembic (`alembic init alembic`) and configure `env.py` to use the async 
 **Commit:** `Add initial Alembic migration for all tables and indexes`
 
 - [x] Task 2.10 complete
+
+---
+
+### Task 2.11 — Telemetry Model (`models/telemetry.py`)
+
+**Description:**
+Create the `Telemetry` ORM model. This table is an **append-only GPS/sensor log** — one row is written per active vehicle per broadcast cycle by the tracking service.
+
+Columns: `id` (prefixed `telem-<uuid>`), `tenant_id` (FK → tenants, indexed), `vehicle_id` (FK → vehicles, indexed), `lat` (Float), `lng` (Float), `speed` (Integer), `heading` (Integer), `timestamp` (DateTime UTC, not server_default — set explicitly at write time).
+
+**No `is_deleted`, `updated_at`, or `created_at`** — `timestamp` is the only time column. No soft delete.
+
+Index: composite `(tenant_id, vehicle_id, timestamp)` to support efficient range queries per vehicle.
+
+**Guidelines to read first:**
+- `shared/guidelines/entities.md` — Telemetry entity and the Telemetry section for append-only rules
+- `backend/guidelines/database.md` — index requirements
+
+**Branch:** `feat/model-telemetry`
+**Commit:** `Add Telemetry ORM model (append-only GPS log)`
+
+- [ ] Task 2.11 complete
+
+---
+
+### Task 2.12 — Alembic Migration for Telemetry Table
+
+**Description:**
+Generate an additive Alembic migration that creates the `telemetry` table and its indexes. The initial migration (Task 2.10) predates this model, so this must be a new revision.
+
+Run `alembic revision --autogenerate -m "add telemetry table"`, review the generated migration, and verify it runs cleanly with `alembic upgrade head` without touching any existing tables.
+
+**Guidelines to read first:**
+- `backend/guidelines/database.md` — migration rules (never modify existing migrations)
+
+**Branch:** `chore/migration-telemetry`
+**Commit:** `Add Alembic migration for telemetry table`
+
+- [ ] Task 2.12 complete
 
 ---
 
@@ -608,13 +647,15 @@ Implement the tracking endpoint `WS /ws/tracking`:
 - Validate JWT from `?token=` query param; reject with code `4001` if invalid
 - Register connection with `ConnectionManager` using `tenant_id` from JWT
 - Implement the 5-second broadcast loop that reads current vehicle positions from DB (filtered by `tenant_id`) and publishes to `vehicle_updates:{tenant_id}` Redis channel
+- **Before publishing each cycle**, write one `Telemetry` row per active vehicle with a position (skip vehicles where `lat`/`lng` is null or `status != "active"`). A write failure must log a warning but must not abort the broadcast.
 - Handle clean disconnects
 
 Also implement the GPS simulation loop for development (move seeded vehicles slightly every 5 seconds to simulate movement).
 
 **Guidelines to read first:**
 - `backend/guidelines/realtime.md` — full architecture, channel naming, broadcast rules
-- `docs/api/tracking.md` — exact message format, rejection code
+- `docs/api/tracking.md` — exact message format, rejection code, and Telemetry persistence contract
+- `shared/guidelines/entities.md` — Telemetry entity fields and append-only rules
 
 **Branch:** `feat/ws-tracking`
 **Commit:** `Add WebSocket tracking endpoint with 5-second broadcast loop and GPS simulation`
@@ -810,7 +851,7 @@ Run `ruff check .` and fix all linting errors. Run `pytest --cov=app --cov-repor
 | Phase | Tasks | Status |
 |---|---|---|
 | Phase 1 — Project Foundation | 5 tasks | 5 / 5 |
-| Phase 2 — Database Models | 10 tasks | 10 / 10 |
+| Phase 2 — Database Models | 12 tasks | 10 / 12 |
 | Phase 3 — Dependencies & Middleware | 2 tasks | 2 / 2 |
 | Phase 4 — Auth Implementation | 4 tasks | 4 / 4 |
 | Phase 5 — Core Resource CRUD | 5 tasks | 5 / 5 |
@@ -821,4 +862,4 @@ Run `ruff check .` and fix all linting errors. Run `pytest --cov=app --cov-repor
 | Phase 10 — Seed & Docker | 2 tasks | 0 / 2 |
 | Phase 11 — Tests | 3 tasks | 0 / 3 |
 | Phase 12 — Final Polish | 2 tasks | 0 / 2 |
-| **Total** | **40 tasks** | **21 / 40** |
+| **Total** | **42 tasks** | **21 / 42** |

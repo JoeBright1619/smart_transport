@@ -96,3 +96,13 @@ vehicle_updates:{tenant_id}
 Example: `vehicle_updates:ten-demo-001`
 
 The `ConnectionManager` broadcasts only to WebSocket clients whose `tenant_id` matches the channel.
+
+### Telemetry Persistence
+
+On every broadcast cycle, the tracking service must write one `Telemetry` row per active vehicle to the `telemetry` table **before** publishing to Redis. This creates the historical GPS/sensor log.
+
+Fields written: `id` (`telem-<uuid>`), `tenant_id`, `vehicle_id`, `lat`, `lng`, `speed`, `heading`, `timestamp` (UTC now).
+
+- Do **not** write a row if `lat` or `lng` is `null` (vehicle has no position yet)
+- Do **not** write a row for vehicles with `status != "active"`
+- This is fire-and-forget — a write failure must log a warning but must **not** abort the broadcast to connected clients

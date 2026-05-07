@@ -64,3 +64,16 @@
 - Public API endpoints must have OpenAPI annotations (FastAPI docstring or `description=` param)
 - Complex business logic (delay calc, geofence detection, feature gating) must have an inline comment explaining the algorithm
 - New domain entities or status enums must be added to `shared/guidelines/entities.md` immediately
+
+---
+
+## Architecture Decisions
+
+Decisions locked in the codebase. Do not revisit without explicit team agreement.
+
+| Decision | Choice | Rationale |
+|---|---|---|
+| **Entity ID format** | UUID v4 string with entity prefix (`veh-<uuid>`, `drv-<uuid>`, `user-<uuid>`, etc.) | Avoids enumerable IDs in API responses; prefix makes log debugging easier |
+| **User role modeling** | Single `User` table with `role` enum (`superadmin\|admin\|operator\|dispatcher\|passenger`) | Flat model is simpler to query, easier to extend, and works naturally with multi-tenancy FK; inheritance hierarchies map poorly to relational DBs |
+| **Telemetry storage** | Dedicated `Telemetry` table (append-only, one row per broadcast cycle per vehicle) | Enables historical route replay and speed auditing; Vehicle still holds current snapshot fields for fast live reads |
+| **Location format** | Flat `lat: Float`, `lng: Float` columns on every entity (no nested JSON) | Simpler SQL queries and indexing; consistent across Vehicle, Stop, Telemetry |
