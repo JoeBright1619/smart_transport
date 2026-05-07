@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 10.1 — Database Seed Script (`core/seed.py`)
+**Next task:** Task 10.2 — Docker Compose
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -733,7 +733,7 @@ Implement an idempotent seed script following `docs/Seed-Plan.md` exactly. Must 
 **Branch:** `chore/seed-script`
 **Commit:** `Add idempotent database seed script`
 
-- [ ] Task 10.1 complete
+- [x] Task 10.1 complete
 
 ---
 
