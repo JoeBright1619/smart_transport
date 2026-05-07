@@ -13,6 +13,7 @@ from app.core.database import engine
 from app.routers import (
     alerts,
     analytics,
+    arrivals,
     auth,
     drivers,
     maintenance,
@@ -84,6 +85,7 @@ def create_app() -> FastAPI:
     app.include_router(maintenance.router, prefix="/api/v1")
     app.include_router(alerts.router, prefix="/api/v1")
     app.include_router(analytics.router, prefix="/api/v1")
+    app.include_router(arrivals.router)
     app.include_router(superadmin.router, prefix="/superadmin")
     app.include_router(tracking.router)
 

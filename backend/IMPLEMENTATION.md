@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 8.1 — Arrivals Endpoint
+**Next task:** Task 9.1 — Superadmin Router
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -687,7 +687,7 @@ Implement the Haversine formula in a utility function in `app/core/geo.py`.
 **Branch:** `feat/arrivals-eta`
 **Commit:** `Add arrivals endpoint with Haversine-based ETA calculation`
 
-- [ ] Task 8.1 complete
+- [x] Task 8.1 complete
 
 ---
 
@@ -857,9 +857,9 @@ Run `ruff check .` and fix all linting errors. Run `pytest --cov=app --cov-repor
 | Phase 5 — Core Resource CRUD | 5 tasks | 5 / 5 |
 | Phase 6 — Operations | 3 tasks | 3 / 3 |
 | Phase 7 — Real-Time Tracking | 2 tasks | 2 / 2 |
-| Phase 8 — Arrival Time Estimation | 1 task | 0 / 1 |
+| Phase 8 — Arrival Time Estimation | 1 task | 1 / 1 |
 | Phase 9 — Superadmin Portal | 1 task | 0 / 1 |
 | Phase 10 — Seed & Docker | 2 tasks | 0 / 2 |
 | Phase 11 — Tests | 3 tasks | 0 / 3 |
 | Phase 12 — Final Polish | 2 tasks | 0 / 2 |
-| **Total** | **42 tasks** | **25 / 42** |
+| **Total** | **42 tasks** | **26 / 42** |

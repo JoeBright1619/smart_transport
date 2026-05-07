@@ -1,3 +1,4 @@
+from app.schemas.arrival import ArrivalRead
 from app.schemas.auth import (
     AuthTenantSummary,
     AuthUserSummary,
@@ -20,6 +21,7 @@ from app.schemas.user import TenantUserRole, UserCreate, UserRead, UserRole, Use
 __all__ = [
     "APIModel",
     "APIResponse",
+    "ArrivalRead",
     "AuthTenantSummary",
     "AuthUserSummary",
     "ErrorDetail",
