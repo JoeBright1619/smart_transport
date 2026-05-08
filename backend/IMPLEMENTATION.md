@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 10.2 — Docker Compose
+**Next task:** Task 11.1 — Test Infrastructure (`tests/conftest.py`)
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -748,7 +748,7 @@ Create `prototype/docker-compose.yml` with four services: `db` (postgres:15), `r
 **Branch:** `chore/docker-setup`
 **Commit:** `Add Docker Compose and backend Dockerfile for full-stack local setup`
 
-- [ ] Task 10.2 complete
+- [x] Task 10.2 complete
 
 ---
 

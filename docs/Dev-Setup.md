@@ -22,17 +22,17 @@ Ensure the following are installed before starting:
 
 ```bash
 git clone <repo-url>
-cd "final year project/prototype"
+cd "final year project/smart_transport"
 ```
 
 ---
 
 ## 2. Start Infrastructure (PostgreSQL + Redis)
 
-A `docker-compose.yml` at the root of `prototype/` runs PostgreSQL and Redis:
+A `docker-compose.yml` at the repo root runs PostgreSQL and Redis:
 
 ```yaml
-# prototype/docker-compose.yml
+# docker-compose.yml
 services:
   db:
     image: postgres:15
@@ -55,7 +55,7 @@ volumes:
 ```
 
 ```bash
-# From prototype/ directory
+# From the repo root
 docker compose up -d
 ```
 
