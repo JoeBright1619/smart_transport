@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pre-commit run *)"
+      "Bash(pre-commit run *)",
+      "Bash(python -m pytest --collect-only)"
     ]
   }
 }

@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 11.1 — Test Infrastructure (`tests/conftest.py`)
+**Next task:** Task 11.2 — Tenant Isolation Tests (`tests/test_tenant_isolation.py`)
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -771,7 +771,7 @@ Set up pytest fixtures:
 **Branch:** `test/conftest`
 **Commit:** `Add pytest conftest with async DB, test client, and factory fixtures`
 
-- [ ] Task 11.1 complete
+- [x] Task 11.1 complete
 
 ---
 
