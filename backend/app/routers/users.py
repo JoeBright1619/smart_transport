@@ -27,6 +27,8 @@ def _error_detail(code: str, message: str) -> dict:
     "",
     response_model=PaginatedResponse[UserRead],
     dependencies=[Depends(require_role("superadmin", "admin"))],
+    summary="List users",
+    description="Returns a paginated list of users in the current tenant. Optionally filter by role.",
 )
 async def list_users(
     role: str | None = Query(default=None),
@@ -47,6 +49,8 @@ async def list_users(
     response_model=APIResponse[UserRead],
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(require_role("admin"))],
+    summary="Create a user",
+    description="Invites a new user into the current tenant. Returns 409 if the email is already taken.",
 )
 async def create_user(
     data: UserCreate,
@@ -59,7 +63,12 @@ async def create_user(
         return APIResponse(data=UserRead.model_validate(user))
 
 
-@router.get("/{id}", response_model=APIResponse[UserRead])
+@router.get(
+    "/{id}",
+    response_model=APIResponse[UserRead],
+    summary="Get a user",
+    description="Returns a single user. Admins may fetch any user; other roles may only fetch their own profile.",
+)
 async def get_user(
     id: str,
     db: AsyncSession = Depends(get_db),
@@ -76,7 +85,12 @@ async def get_user(
     return APIResponse(data=UserRead.model_validate(user))
 
 
-@router.patch("/{id}", response_model=APIResponse[UserRead])
+@router.patch(
+    "/{id}",
+    response_model=APIResponse[UserRead],
+    summary="Update a user",
+    description="Partially updates a user's profile. Users may edit their own record; admins may edit any.",
+)
 async def update_user(
     id: str,
     data: UserUpdate,
@@ -93,6 +107,8 @@ async def update_user(
     "/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(require_role("admin"))],
+    summary="Delete a user",
+    description="Soft-deletes a user from the tenant. Requires admin role.",
 )
 async def delete_user(
     id: str,

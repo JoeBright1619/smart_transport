@@ -61,10 +61,64 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await engine.dispose()
 
 
+_TAGS_METADATA = [
+    {
+        "name": "auth",
+        "description": "Registration, login, token refresh, and logout.",
+    },
+    {
+        "name": "users",
+        "description": "Manage users within a tenant. Admins can invite and remove members.",
+    },
+    {
+        "name": "vehicles",
+        "description": "Fleet vehicle registry — create, track status, and retire buses.",
+    },
+    {
+        "name": "routes",
+        "description": "Bus routes with ordered stops. Routes are shared across all authenticated roles.",
+    },
+    {
+        "name": "drivers",
+        "description": "Driver profiles, licence/certification tracking, and status management.",
+    },
+    {
+        "name": "trips",
+        "description": "Trip scheduling and lifecycle (scheduled → active → completed/cancelled).",
+    },
+    {
+        "name": "alerts",
+        "description": "System-generated alerts for vehicles and routes. Supports acknowledgement.",
+    },
+    {
+        "name": "maintenance",
+        "description": "Vehicle maintenance records — schedule, track, and complete service jobs.",
+    },
+    {
+        "name": "analytics",
+        "description": "Aggregated fleet KPIs and daily breakdown for a configurable date window.",
+    },
+    {
+        "name": "arrivals",
+        "description": "Real-time ETA estimates for active vehicles approaching a stop.",
+    },
+    {
+        "name": "superadmin",
+        "description": "Platform-level management: tenant suspension, impersonation, and global analytics.",
+    },
+]
+
+
 def create_app() -> FastAPI:
     app = FastAPI(
         title="Smart Transport API",
         version="0.1.0",
+        description=(
+            "Multi-tenant public-transport management platform. "
+            "Covers fleet, drivers, routes, trips, maintenance, real-time tracking, "
+            "alerts, and analytics."
+        ),
+        openapi_tags=_TAGS_METADATA,
         lifespan=lifespan,
     )
 

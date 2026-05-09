@@ -23,6 +23,8 @@ router = APIRouter(tags=["superadmin"])
     "/tenants",
     response_model=PaginatedResponse[SuperadminTenantRead],
     dependencies=[Depends(require_role("superadmin"))],
+    summary="List all tenants",
+    description="Returns a paginated list of every tenant on the platform. Filter by `isActive`.",
 )
 async def list_tenants(
     is_active: bool | None = Query(default=None, alias="isActive"),
@@ -43,6 +45,8 @@ async def list_tenants(
     "/tenants/{id}",
     response_model=APIResponse[SuperadminTenantDetail],
     dependencies=[Depends(require_role("superadmin"))],
+    summary="Get a tenant",
+    description="Returns detailed information about a single tenant including user count and activity stats.",
 )
 async def get_tenant(
     id: str,
@@ -56,6 +60,8 @@ async def get_tenant(
     "/tenants/{id}",
     response_model=APIResponse[SuperadminTenantDetail],
     dependencies=[Depends(require_role("superadmin"))],
+    summary="Suspend or reactivate a tenant",
+    description="Sets `isActive` on a tenant. Suspending blocks all users of that tenant from logging in.",
 )
 async def update_tenant(
     id: str,
@@ -81,6 +87,11 @@ async def update_tenant(
     "/tenants/{id}/impersonate",
     response_model=APIResponse[ImpersonationResponse],
     dependencies=[Depends(require_role("superadmin"))],
+    summary="Impersonate a tenant admin",
+    description=(
+        "Issues a short-lived access token scoped to the tenant's first admin user, "
+        "allowing a superadmin to act on behalf of that tenant for support purposes."
+    ),
 )
 async def impersonate_tenant(
     id: str,
@@ -100,6 +111,11 @@ async def impersonate_tenant(
     "/analytics",
     response_model=APIResponse[PlatformAnalytics],
     dependencies=[Depends(require_role("superadmin"))],
+    summary="Get platform analytics",
+    description=(
+        "Returns platform-wide metrics: total tenants, users, vehicles, trips, and alerts "
+        "across all tenants for the given date window."
+    ),
 )
 async def get_analytics(
     from_date: date | None = Query(default=None, alias="from"),

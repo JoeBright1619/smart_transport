@@ -148,6 +148,11 @@ async def _get_refresh_token_record(db: AsyncSession, raw_token: str) -> Refresh
     "/register",
     status_code=status.HTTP_201_CREATED,
     response_model=APIResponse[RegisterResponse],
+    summary="Register a new tenant",
+    description=(
+        "Creates a new tenant organisation together with its first admin user. "
+        "Returns an access token and sets a `refresh_token` HttpOnly cookie."
+    ),
 )
 async def register(
     data: RegisterRequest,
@@ -185,7 +190,15 @@ async def register(
     )
 
 
-@router.post("/login", response_model=APIResponse[TokenResponse])
+@router.post(
+    "/login",
+    response_model=APIResponse[TokenResponse],
+    summary="Log in",
+    description=(
+        "Authenticates a user by email and password. "
+        "Returns a short-lived access token and sets a `refresh_token` HttpOnly cookie."
+    ),
+)
 async def login(
     data: LoginRequest,
     response: Response,
@@ -226,7 +239,15 @@ async def login(
     )
 
 
-@router.post("/refresh", response_model=APIResponse[RefreshTokenResponse])
+@router.post(
+    "/refresh",
+    response_model=APIResponse[RefreshTokenResponse],
+    summary="Refresh access token",
+    description=(
+        "Issues a new access token using the `refresh_token` HttpOnly cookie. "
+        "The old refresh token is revoked and a new one is set in the cookie."
+    ),
+)
 async def refresh(
     request: Request,
     response: Response,
@@ -269,7 +290,12 @@ async def refresh(
     )
 
 
-@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+@router.post(
+    "/logout",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Log out",
+    description="Revokes the current refresh token and clears the `refresh_token` cookie.",
+)
 async def logout(
     request: Request,
     response: Response,

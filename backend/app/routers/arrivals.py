@@ -11,7 +11,15 @@ from app.services import arrival_service
 router = APIRouter(prefix="/api/v1/arrivals", tags=["arrivals"])
 
 
-@router.get("", response_model=APIResponse[list[ArrivalRead]])
+@router.get(
+    "",
+    response_model=APIResponse[list[ArrivalRead]],
+    summary="Get predicted arrivals for a stop",
+    description=(
+        "Returns ETA estimates for all active vehicles currently heading toward the given stop. "
+        "ETAs are calculated using the Haversine formula from each vehicle's last known GPS position."
+    ),
+)
 async def get_arrivals(
     stop_id: str = Query(alias="stopId"),
     db: AsyncSession = Depends(get_db),

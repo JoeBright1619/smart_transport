@@ -15,6 +15,8 @@ router = APIRouter(prefix="/api/v1/routes", tags=["routes"])
 @router.get(
     "",
     response_model=PaginatedResponse[RouteRead],
+    summary="List routes",
+    description="Returns a paginated list of bus routes with their stops. Filter by `isActive`.",
 )
 async def list_routes(
     is_active: bool | None = Query(default=None, alias="isActive"),
@@ -38,6 +40,8 @@ async def list_routes(
     response_model=APIResponse[RouteRead],
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(require_role("admin", "operator"))],
+    summary="Create a route",
+    description="Creates a new bus route with at least one ordered stop.",
 )
 async def create_route(
     data: RouteCreate,
@@ -53,6 +57,8 @@ async def create_route(
 @router.get(
     "/{id}",
     response_model=APIResponse[RouteRead],
+    summary="Get a route",
+    description="Returns a single route with all of its ordered stops.",
 )
 async def get_route(
     id: str,
@@ -68,6 +74,8 @@ async def get_route(
     "/{id}",
     response_model=APIResponse[RouteRead],
     dependencies=[Depends(require_role("admin", "operator"))],
+    summary="Update a route",
+    description="Partially updates a route. Providing `stops` replaces the full stop list.",
 )
 async def update_route(
     id: str,
@@ -87,6 +95,8 @@ async def update_route(
     "/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(require_role("admin"))],
+    summary="Delete a route",
+    description="Permanently deletes a route and its associated stops.",
 )
 async def delete_route(
     id: str,

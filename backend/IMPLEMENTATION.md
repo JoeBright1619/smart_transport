@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 12.1 — OpenAPI Annotations
+**Next task:** Task 12.2 — Run Linter & Full Test Suite
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -826,7 +826,7 @@ Add `summary=`, `description=`, and `tags=[]` to every router and endpoint so th
 **Branch:** `chore/openapi-annotations`
 **Commit:** `Add OpenAPI descriptions and examples to all endpoints`
 
-- [ ] Task 12.1 complete
+- [x] Task 12.1 complete
 
 ---
 

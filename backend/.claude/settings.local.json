@@ -3,7 +3,9 @@
     "allow": [
       "Bash(pre-commit run *)",
       "Bash(python -m pytest --collect-only)",
-      "Bash(python -m pytest --collect-only -q)"
+      "Bash(python -m pytest --collect-only -q)",
+      "Bash(Get-ChildItem -Path \"d:\\\\projects\\\\final year project\\\\smart_transport\\\\backend\" -Recurse)",
+      "Bash(Select-Object FullName)"
     ]
   }
 }

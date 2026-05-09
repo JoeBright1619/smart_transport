@@ -16,6 +16,8 @@ router = APIRouter(prefix="/api/v1/drivers", tags=["drivers"])
     "",
     response_model=PaginatedResponse[DriverRead],
     dependencies=[Depends(require_role("admin", "operator", "dispatcher"))],
+    summary="List drivers",
+    description="Returns a paginated list of drivers. Filter by `status` (available, on-trip, off-duty).",
 )
 async def list_drivers(
     status_filter: str | None = Query(default=None, alias="status"),
@@ -38,6 +40,8 @@ async def list_drivers(
     response_model=APIResponse[DriverRead],
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(require_role("admin", "operator"))],
+    summary="Create a driver",
+    description="Registers a new driver with licence and certification details.",
 )
 async def create_driver(
     data: DriverCreate,
@@ -56,6 +60,8 @@ async def create_driver(
     "/{id}",
     response_model=APIResponse[DriverRead],
     dependencies=[Depends(require_role("admin", "operator", "dispatcher"))],
+    summary="Get a driver",
+    description="Returns a single driver profile including rating and trip count.",
 )
 async def get_driver(
     id: str,
@@ -70,6 +76,8 @@ async def get_driver(
     "/{id}",
     response_model=APIResponse[DriverRead],
     dependencies=[Depends(require_role("admin", "operator"))],
+    summary="Update a driver",
+    description="Partially updates a driver's profile, status, or assigned vehicle.",
 )
 async def update_driver(
     id: str,
@@ -89,6 +97,8 @@ async def update_driver(
     "/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(require_role("admin"))],
+    summary="Delete a driver",
+    description="Removes a driver. Returns 400 if the driver is currently on a trip.",
 )
 async def delete_driver(
     id: str,

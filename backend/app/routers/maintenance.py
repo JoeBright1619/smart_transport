@@ -20,6 +20,8 @@ router = APIRouter(prefix="/api/v1/maintenance", tags=["maintenance"])
     "",
     response_model=PaginatedResponse[MaintenanceRead],
     dependencies=[Depends(require_role("admin", "operator"))],
+    summary="List maintenance records",
+    description="Returns a paginated list of vehicle maintenance records. Filter by vehicleId or status.",
 )
 async def list_maintenance_records(
     vehicle_id: str | None = Query(default=None, alias="vehicleId"),
@@ -43,6 +45,8 @@ async def list_maintenance_records(
     response_model=APIResponse[MaintenanceRead],
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(require_role("admin", "operator"))],
+    summary="Create a maintenance record",
+    description="Schedules a maintenance job for a vehicle with type, description, date, and cost.",
 )
 async def create_maintenance_record(
     data: MaintenanceCreate,
@@ -61,6 +65,8 @@ async def create_maintenance_record(
     "/{id}",
     response_model=APIResponse[MaintenanceRead],
     dependencies=[Depends(require_role("admin", "operator"))],
+    summary="Get a maintenance record",
+    description="Returns a single maintenance record by ID.",
 )
 async def get_maintenance_record(
     id: str,
@@ -75,6 +81,8 @@ async def get_maintenance_record(
     "/{id}",
     response_model=APIResponse[MaintenanceRead],
     dependencies=[Depends(require_role("admin", "operator"))],
+    summary="Update a maintenance record",
+    description="Updates status, completion date, or cost of a maintenance record.",
 )
 async def update_maintenance_record(
     id: str,

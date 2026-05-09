@@ -15,6 +15,8 @@ router = APIRouter(prefix="/api/v1/alerts", tags=["alerts"])
     "",
     response_model=PaginatedResponse[AlertRead],
     dependencies=[Depends(require_role("admin", "operator", "dispatcher"))],
+    summary="List alerts",
+    description="Returns a paginated list of system alerts. Filter by severity, type, or acknowledgement status.",
 )
 async def list_alerts(
     severity: str | None = Query(default=None),
@@ -38,6 +40,8 @@ async def list_alerts(
     "/{id}/acknowledge",
     response_model=APIResponse[AlertRead],
     dependencies=[Depends(require_role("admin", "operator", "dispatcher"))],
+    summary="Acknowledge an alert",
+    description="Marks an alert as acknowledged. Idempotent — acknowledging an already-acknowledged alert is a no-op.",
 )
 async def acknowledge_alert(
     id: str,

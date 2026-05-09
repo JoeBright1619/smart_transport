@@ -17,6 +17,11 @@ router = APIRouter(prefix="/api/v1/analytics", tags=["analytics"])
     "",
     response_model=APIResponse[AnalyticsResponseData],
     dependencies=[Depends(require_role("admin", "operator"))],
+    summary="Get fleet analytics",
+    description=(
+        "Returns aggregated KPIs and a per-day breakdown for the given date window. "
+        "Defaults to the last 7 days when `from`/`to` are omitted."
+    ),
 )
 async def get_analytics(
     from_date: date | None = Query(default=None, alias="from"),

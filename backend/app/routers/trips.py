@@ -16,6 +16,8 @@ router = APIRouter(prefix="/api/v1/trips", tags=["trips"])
     "",
     response_model=PaginatedResponse[TripRead],
     dependencies=[Depends(require_role("admin", "operator", "dispatcher"))],
+    summary="List trips",
+    description="Returns a paginated list of trips. Filter by status, vehicleId, driverId, or routeId.",
 )
 async def list_trips(
     status_filter: str | None = Query(default=None, alias="status"),
@@ -41,6 +43,8 @@ async def list_trips(
     response_model=APIResponse[TripRead],
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(require_role("admin", "dispatcher"))],
+    summary="Create a trip",
+    description="Schedules a new trip assigning a vehicle, driver, and route with start/end times.",
 )
 async def create_trip(
     data: TripCreate,
@@ -57,6 +61,8 @@ async def create_trip(
     "/{id}",
     response_model=APIResponse[TripRead],
     dependencies=[Depends(require_role("admin", "operator", "dispatcher"))],
+    summary="Get a trip",
+    description="Returns a single trip with timing and status details.",
 )
 async def get_trip(
     id: str,
@@ -71,6 +77,12 @@ async def get_trip(
     "/{id}",
     response_model=APIResponse[TripRead],
     dependencies=[Depends(require_role("admin", "dispatcher"))],
+    summary="Update trip status",
+    description=(
+        "Advances a trip through its lifecycle. "
+        "Valid transitions: scheduled → active → completed or cancelled. "
+        "Returns 400 for invalid transitions."
+    ),
 )
 async def update_trip(
     id: str,

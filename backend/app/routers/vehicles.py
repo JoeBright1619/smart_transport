@@ -16,6 +16,8 @@ router = APIRouter(prefix="/api/v1/vehicles", tags=["vehicles"])
     "",
     response_model=PaginatedResponse[VehicleRead],
     dependencies=[Depends(require_role("admin", "operator", "dispatcher"))],
+    summary="List vehicles",
+    description="Returns a paginated list of fleet vehicles. Filter by `status` or `routeId`.",
 )
 async def list_vehicles(
     status_filter: str | None = Query(default=None, alias="status"),
@@ -39,6 +41,8 @@ async def list_vehicles(
     response_model=APIResponse[VehicleRead],
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(require_role("admin", "operator"))],
+    summary="Create a vehicle",
+    description="Adds a new vehicle to the fleet. Registration number must be unique within the tenant.",
 )
 async def create_vehicle(
     data: VehicleCreate,
@@ -57,6 +61,8 @@ async def create_vehicle(
     "/{id}",
     response_model=APIResponse[VehicleRead],
     dependencies=[Depends(require_role("admin", "operator", "dispatcher"))],
+    summary="Get a vehicle",
+    description="Returns a single vehicle including its current GPS location if available.",
 )
 async def get_vehicle(
     id: str,
@@ -71,6 +77,8 @@ async def get_vehicle(
     "/{id}",
     response_model=APIResponse[VehicleRead],
     dependencies=[Depends(require_role("admin", "operator"))],
+    summary="Update a vehicle",
+    description="Partially updates vehicle fields such as status, fuel level, assigned route, or driver.",
 )
 async def update_vehicle(
     id: str,
@@ -90,6 +98,8 @@ async def update_vehicle(
     "/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(require_role("admin"))],
+    summary="Delete a vehicle",
+    description="Removes a vehicle from the fleet. Returns 409 if the vehicle is currently active.",
 )
 async def delete_vehicle(
     id: str,
