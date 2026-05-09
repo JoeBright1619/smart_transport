@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 11.3 — Resource CRUD Tests
+**Next task:** Task 12.1 — OpenAPI Annotations
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -810,7 +810,7 @@ Files: `test_auth.py`, `test_users.py`, `test_vehicles.py`, `test_routes.py`, `t
 **Branch:** `test/crud-coverage`
 **Commit:** `Add CRUD test coverage for all resource endpoints`
 
-- [ ] Task 11.3 complete
+- [x] Task 11.3 complete
 
 ---
 
