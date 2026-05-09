@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 11.2 — Tenant Isolation Tests (`tests/test_tenant_isolation.py`)
+**Next task:** Task 11.3 — Resource CRUD Tests
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -793,7 +793,7 @@ This is the most important test file. All tests must pass before considering the
 **Branch:** `test/tenant-isolation`
 **Commit:** `Add cross-tenant data isolation tests for all resources`
 
-- [ ] Task 11.2 complete
+- [x] Task 11.2 complete
 
 ---
 
