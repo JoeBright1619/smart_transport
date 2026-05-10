@@ -80,7 +80,7 @@ async def list_tenants(
 
 
 async def get_tenant_detail(db: AsyncSession, tenant_id: str) -> SuperadminTenantDetail:
-    tenant = await db.get(Tenant, tenant_id)
+    tenant = await db.scalar(select(Tenant).where(Tenant.id == tenant_id))
     if tenant is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

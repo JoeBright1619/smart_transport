@@ -165,7 +165,7 @@ async def test_delete_happy_path(client, admin, vehicle):
     r = await client.delete(
         f"/api/v1/vehicles/{vehicle.id}", headers=auth_headers(admin)
     )
-    assert r.status_code == 200
+    assert r.status_code == 204
     r2 = await client.get(f"/api/v1/vehicles/{vehicle.id}", headers=auth_headers(admin))
     assert r2.status_code == 404
 

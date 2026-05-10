@@ -348,7 +348,7 @@ async def _link_drivers_to_vehicles(
         driver = drivers[drv_id]
         if driver.vehicle_id != veh_id:
             driver.vehicle_id = veh_id
-            _log(f"linked driver {drv_id} → vehicle {veh_id}")
+            _log(f"linked driver {drv_id} -> vehicle {veh_id}")
         else:
             _log(f"driver {drv_id} already linked to vehicle {veh_id}")
 

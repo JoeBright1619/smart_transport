@@ -54,11 +54,11 @@ async def create_maintenance_record(
     current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    async with db.begin():
-        record = await maintenance_service.create_maintenance_record(
-            db, data, tenant.id, current_user.id
-        )
-        return APIResponse(data=MaintenanceRead.model_validate(record))
+    record = await maintenance_service.create_maintenance_record(
+        db, data, tenant.id, current_user.id
+    )
+    await db.commit()
+    return APIResponse(data=MaintenanceRead.model_validate(record))
 
 
 @router.get(
@@ -91,8 +91,8 @@ async def update_maintenance_record(
     current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    async with db.begin():
-        record = await maintenance_service.update_maintenance_record(
-            db, id, data, tenant.id, current_user.id
-        )
-        return APIResponse(data=MaintenanceRead.model_validate(record))
+    record = await maintenance_service.update_maintenance_record(
+        db, id, data, tenant.id, current_user.id
+    )
+    await db.commit()
+    return APIResponse(data=MaintenanceRead.model_validate(record))

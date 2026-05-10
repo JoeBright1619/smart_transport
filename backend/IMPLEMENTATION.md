@@ -842,7 +842,7 @@ Run `ruff check .` and fix all linting errors. Run `pytest --cov=app --cov-repor
 **Branch:** `chore/lint-and-tests`
 **Commit:** `Fix linting errors and achieve ≥80% test coverage`
 
-- [ ] Task 12.2 complete
+- [x] Task 12.2 complete
 
 ---
 

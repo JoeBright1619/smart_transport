@@ -37,7 +37,7 @@ class RouteCreate(APIModel):
     color: str = Field(
         min_length=4, max_length=9, json_schema_extra={"example": "#3B82F6"}
     )
-    stops: list[StopCreate]
+    stops: list[StopCreate] = Field(min_length=1)
 
 
 class RouteUpdate(APIModel):

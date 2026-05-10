@@ -45,7 +45,7 @@ async def alert(db, tenant, vehicle):
         is_acknowledged=False,
     )
     db.add(a)
-    await db.flush()
+    await db.commit()
     return a
 
 

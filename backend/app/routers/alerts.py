@@ -48,6 +48,6 @@ async def acknowledge_alert(
     db: AsyncSession = Depends(get_db),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    async with db.begin():
-        alert = await alert_service.acknowledge_alert(db, id, tenant.id)
-        return APIResponse(data=AlertRead.model_validate(alert))
+    alert = await alert_service.acknowledge_alert(db, id, tenant.id)
+    await db.commit()
+    return APIResponse(data=AlertRead.model_validate(alert))

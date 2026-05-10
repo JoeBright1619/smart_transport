@@ -1,0 +1,9 @@
+[run]
+source = app
+
+[report]
+omit =
+    */tests/*
+    */__pycache__/*
+    */.venv/*
+    app/core/seed.py

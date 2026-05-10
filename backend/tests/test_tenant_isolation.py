@@ -62,7 +62,7 @@ def make_trip(db: AsyncSession):
             is_deleted=False,
         )
         db.add(trip)
-        await db.flush()
+        await db.commit()
         return trip
 
     return _create
@@ -82,7 +82,7 @@ def make_maintenance(db: AsyncSession):
             is_deleted=False,
         )
         db.add(record)
-        await db.flush()
+        await db.commit()
         return record
 
     return _create
@@ -101,7 +101,7 @@ def make_alert(db: AsyncSession):
             is_acknowledged=False,
         )
         db.add(alert)
-        await db.flush()
+        await db.commit()
         return alert
 
     return _create

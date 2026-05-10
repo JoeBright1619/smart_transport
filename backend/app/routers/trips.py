@@ -52,9 +52,9 @@ async def create_trip(
     current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    async with db.begin():
-        trip = await trip_service.create_trip(db, data, tenant.id, current_user.id)
-        return APIResponse(data=TripRead.model_validate(trip))
+    trip = await trip_service.create_trip(db, data, tenant.id, current_user.id)
+    await db.commit()
+    return APIResponse(data=TripRead.model_validate(trip))
 
 
 @router.get(
@@ -91,6 +91,6 @@ async def update_trip(
     current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    async with db.begin():
-        trip = await trip_service.update_trip(db, id, data, tenant.id, current_user.id)
-        return APIResponse(data=TripRead.model_validate(trip))
+    trip = await trip_service.update_trip(db, id, data, tenant.id, current_user.id)
+    await db.commit()
+    return APIResponse(data=TripRead.model_validate(trip))

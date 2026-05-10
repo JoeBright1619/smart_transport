@@ -49,9 +49,9 @@ async def create_route(
     current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    async with db.begin():
-        route = await route_service.create_route(db, data, tenant.id, current_user.id)
-        return APIResponse(data=RouteRead.model_validate(route))
+    route = await route_service.create_route(db, data, tenant.id, current_user.id)
+    await db.commit()
+    return APIResponse(data=RouteRead.model_validate(route))
 
 
 @router.get(
@@ -84,11 +84,9 @@ async def update_route(
     current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    async with db.begin():
-        route = await route_service.update_route(
-            db, id, data, tenant.id, current_user.id
-        )
-        return APIResponse(data=RouteRead.model_validate(route))
+    route = await route_service.update_route(db, id, data, tenant.id, current_user.id)
+    await db.commit()
+    return APIResponse(data=RouteRead.model_validate(route))
 
 
 @router.delete(
@@ -104,5 +102,5 @@ async def delete_route(
     current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    async with db.begin():
-        await route_service.delete_route(db, id, tenant.id, current_user.id)
+    await route_service.delete_route(db, id, tenant.id, current_user.id)
+    await db.commit()

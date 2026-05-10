@@ -49,11 +49,9 @@ async def create_driver(
     current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    async with db.begin():
-        driver = await driver_service.create_driver(
-            db, data, tenant.id, current_user.id
-        )
-        return APIResponse(data=DriverRead.model_validate(driver))
+    driver = await driver_service.create_driver(db, data, tenant.id, current_user.id)
+    await db.commit()
+    return APIResponse(data=DriverRead.model_validate(driver))
 
 
 @router.get(
@@ -86,11 +84,11 @@ async def update_driver(
     current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    async with db.begin():
-        driver = await driver_service.update_driver(
-            db, id, data, tenant.id, current_user.id
-        )
-        return APIResponse(data=DriverRead.model_validate(driver))
+    driver = await driver_service.update_driver(
+        db, id, data, tenant.id, current_user.id
+    )
+    await db.commit()
+    return APIResponse(data=DriverRead.model_validate(driver))
 
 
 @router.delete(
@@ -106,5 +104,5 @@ async def delete_driver(
     current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    async with db.begin():
-        await driver_service.delete_driver(db, id, tenant.id, current_user.id)
+    await driver_service.delete_driver(db, id, tenant.id, current_user.id)
+    await db.commit()

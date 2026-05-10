@@ -69,6 +69,8 @@ class Driver(Base):
     )
 
     tenant: Mapped["Tenant"] = relationship("Tenant")
-    vehicle: Mapped["Vehicle | None"] = relationship("Vehicle")
+    vehicle: Mapped["Vehicle | None"] = relationship(
+        "Vehicle", foreign_keys="[Driver.vehicle_id]"
+    )
 
     __table_args__ = (Index("idx_drivers_tenant_id", "tenant_id"),)

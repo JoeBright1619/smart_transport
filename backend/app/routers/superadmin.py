@@ -73,14 +73,14 @@ async def update_tenant(
         tenant = await superadmin_service.get_tenant_detail(db, id)
         return APIResponse(data=tenant)
 
-    async with db.begin():
-        tenant = await superadmin_service.update_tenant_status(
-            db,
-            id,
-            data.is_active,
-            current_user.id,
-        )
-        return APIResponse(data=tenant)
+    tenant = await superadmin_service.update_tenant_status(
+        db,
+        id,
+        data.is_active,
+        current_user.id,
+    )
+    await db.commit()
+    return APIResponse(data=tenant)
 
 
 @router.post(
@@ -98,13 +98,13 @@ async def impersonate_tenant(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> APIResponse[ImpersonationResponse]:
-    async with db.begin():
-        token = await superadmin_service.impersonate_tenant_admin(
-            db,
-            id,
-            current_user.id,
-        )
-        return APIResponse(data=ImpersonationResponse(access_token=token))
+    token = await superadmin_service.impersonate_tenant_admin(
+        db,
+        id,
+        current_user.id,
+    )
+    await db.commit()
+    return APIResponse(data=ImpersonationResponse(access_token=token))
 
 
 @router.get(

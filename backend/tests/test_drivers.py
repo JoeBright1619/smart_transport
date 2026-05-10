@@ -154,7 +154,7 @@ async def test_patch_returns_403_for_dispatcher(client, dispatcher, driver):
 
 async def test_delete_happy_path(client, admin, driver):
     r = await client.delete(f"/api/v1/drivers/{driver.id}", headers=auth_headers(admin))
-    assert r.status_code == 200
+    assert r.status_code == 204
 
 
 async def test_delete_returns_401_without_token(client, driver):

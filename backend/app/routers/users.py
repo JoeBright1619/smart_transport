@@ -58,9 +58,9 @@ async def create_user(
     current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    async with db.begin():
-        user = await user_service.create_user(db, data, tenant.id, current_user)
-        return APIResponse(data=UserRead.model_validate(user))
+    user = await user_service.create_user(db, data, tenant.id, current_user)
+    await db.commit()
+    return APIResponse(data=UserRead.model_validate(user))
 
 
 @router.get(
@@ -98,9 +98,9 @@ async def update_user(
     current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    async with db.begin():
-        user = await user_service.update_user(db, id, data, tenant.id, current_user)
-        return APIResponse(data=UserRead.model_validate(user))
+    user = await user_service.update_user(db, id, data, tenant.id, current_user)
+    await db.commit()
+    return APIResponse(data=UserRead.model_validate(user))
 
 
 @router.delete(
@@ -116,5 +116,5 @@ async def delete_user(
     current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    async with db.begin():
-        await user_service.delete_user(db, id, tenant.id, current_user)
+    await user_service.delete_user(db, id, tenant.id, current_user)
+    await db.commit()

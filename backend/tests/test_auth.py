@@ -105,4 +105,4 @@ async def test_refresh_without_cookie_returns_401(client):
 async def test_logout_clears_cookie(client):
     await client.post("/auth/register", json=_REGISTER_PAYLOAD)
     r = await client.post("/auth/logout")
-    assert r.status_code == 200
+    assert r.status_code == 204

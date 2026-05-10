@@ -176,7 +176,7 @@ async def test_delete_happy_path(client, admin, target_user):
     r = await client.delete(
         f"/api/v1/users/{target_user.id}", headers=auth_headers(admin)
     )
-    assert r.status_code == 200
+    assert r.status_code == 204
 
 
 async def test_delete_returns_401_without_token(client, target_user):

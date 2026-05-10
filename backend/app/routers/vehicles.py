@@ -50,11 +50,9 @@ async def create_vehicle(
     current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    async with db.begin():
-        vehicle = await vehicle_service.create_vehicle(
-            db, data, tenant.id, current_user.id
-        )
-        return APIResponse(data=VehicleRead.model_validate(vehicle))
+    vehicle = await vehicle_service.create_vehicle(db, data, tenant.id, current_user.id)
+    await db.commit()
+    return APIResponse(data=VehicleRead.model_validate(vehicle))
 
 
 @router.get(
@@ -87,11 +85,12 @@ async def update_vehicle(
     current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    async with db.begin():
-        vehicle = await vehicle_service.update_vehicle(
-            db, id, data, tenant.id, current_user.id
-        )
-        return APIResponse(data=VehicleRead.model_validate(vehicle))
+    vehicle = await vehicle_service.update_vehicle(
+        db, id, data, tenant.id, current_user.id
+    )
+    await db.commit()
+    await db.refresh(vehicle)
+    return APIResponse(data=VehicleRead.model_validate(vehicle))
 
 
 @router.delete(
@@ -107,5 +106,5 @@ async def delete_vehicle(
     current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    async with db.begin():
-        await vehicle_service.delete_vehicle(db, id, tenant.id, current_user.id)
+    await vehicle_service.delete_vehicle(db, id, tenant.id, current_user.id)
+    await db.commit()

@@ -159,7 +159,7 @@ async def test_patch_returns_403_for_passenger(client, passenger, route):
 
 async def test_delete_happy_path(client, admin, route):
     r = await client.delete(f"/api/v1/routes/{route.id}", headers=auth_headers(admin))
-    assert r.status_code == 200
+    assert r.status_code == 204
     r2 = await client.get(f"/api/v1/routes/{route.id}", headers=auth_headers(admin))
     assert r2.status_code == 404
 

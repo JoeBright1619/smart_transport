@@ -141,8 +141,8 @@ async def delete_vehicle(
 
     if vehicle.status == "active":
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=_error_detail("BAD_REQUEST", "Cannot delete an active vehicle"),
+            status_code=status.HTTP_409_CONFLICT,
+            detail=_error_detail("CONFLICT", "Cannot delete an active vehicle"),
         )
 
     vehicle.is_deleted = True

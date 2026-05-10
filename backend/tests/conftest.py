@@ -28,37 +28,29 @@ _TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 # ---------------------------------------------------------------------------
 
 
-@pytest.fixture(scope="session")
-def test_engine():
-    return create_async_engine(
+@pytest_asyncio.fixture
+async def test_engine():
+    engine = create_async_engine(
         _TEST_DB_URL,
         echo=False,
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
+    yield engine
+    await engine.dispose()
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture
 async def _tables(test_engine):
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
-    async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
 
 
 @pytest_asyncio.fixture
 async def db(test_engine, _tables) -> AsyncGenerator[AsyncSession, None]:
-    async with test_engine.connect() as conn:
-        await conn.begin()
-        session = AsyncSession(
-            bind=conn,
-            expire_on_commit=False,
-            join_transaction_mode="create_savepoint",
-        )
+    async with AsyncSession(test_engine, expire_on_commit=False) as session:
         yield session
-        await session.close()
-        await conn.rollback()
 
 
 # ---------------------------------------------------------------------------
@@ -114,7 +106,7 @@ def make_tenant(db: AsyncSession):
             is_active=is_active,
         )
         db.add(tenant)
-        await db.flush()
+        await db.commit()
         return tenant
 
     return _create
@@ -139,7 +131,7 @@ def make_user(db: AsyncSession):
             is_deleted=False,
         )
         db.add(user)
-        await db.flush()
+        await db.commit()
         return user
 
     return _create
@@ -171,7 +163,7 @@ def make_vehicle(db: AsyncSession):
             is_deleted=False,
         )
         db.add(vehicle)
-        await db.flush()
+        await db.commit()
         return vehicle
 
     return _create
@@ -196,7 +188,7 @@ def make_route(db: AsyncSession):
             is_deleted=False,
         )
         db.add(route)
-        await db.flush()
+        await db.commit()
         return route
 
     return _create
@@ -224,7 +216,7 @@ def make_driver(db: AsyncSession):
             is_deleted=False,
         )
         db.add(driver)
-        await db.flush()
+        await db.commit()
         return driver
 
     return _create

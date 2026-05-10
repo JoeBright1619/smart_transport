@@ -33,7 +33,7 @@ async def stop(db, tenant):
         is_deleted=False,
     )
     db.add(s)
-    await db.flush()
+    await db.commit()
     return s
 
 
@@ -41,7 +41,7 @@ async def stop(db, tenant):
 async def active_vehicle_at_stop(db, make_vehicle, make_route, tenant, stop):
     route = await make_route(tenant_id=tenant.id)
     db.add(RouteStop(route_id=route.id, stop_id=stop.id, stop_order=1))
-    await db.flush()
+    await db.commit()
     vehicle = await make_vehicle(
         tenant_id=tenant.id,
         status="active",
@@ -51,7 +51,7 @@ async def active_vehicle_at_stop(db, make_vehicle, make_route, tenant, stop):
     )
     # Give the vehicle a speed so ETA can be calculated
     vehicle.speed = 30
-    await db.flush()
+    await db.commit()
     return vehicle
 
 
