@@ -18,17 +18,12 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   register: (payload: {
-    companyName?: string;
-    contactEmail?: string;
-    adminFullName?: string;
-    adminEmail?: string;
+    companyName: string;
+    contactEmail: string;
+    adminFullName: string;
+    adminEmail: string;
     adminPhone?: string;
-    fullName?: string;
-    email?: string;
     password: string;
-    role?: User['role'];
-    phone?: string;
-    company?: string;
   }) => Promise<{ ok: true } | { ok: false; reason: 'email_taken' }>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
@@ -145,11 +140,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register: AuthContextType['register'] = async (payload) => {
     try {
       await authService.registerTenant({
-        companyName: payload.companyName ?? payload.company ?? '',
-        contactEmail: payload.contactEmail ?? payload.adminEmail ?? payload.email ?? '',
-        adminFullName: payload.adminFullName ?? payload.fullName ?? '',
-        adminEmail: payload.adminEmail ?? payload.email ?? '',
-        adminPhone: payload.adminPhone ?? payload.phone,
+        companyName: payload.companyName,
+        contactEmail: payload.contactEmail,
+        adminFullName: payload.adminFullName,
+        adminEmail: payload.adminEmail,
+        adminPhone: payload.adminPhone,
         password: payload.password,
       });
 
