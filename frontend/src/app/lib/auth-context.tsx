@@ -1,113 +1,189 @@
-// Authentication context for user management
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { ApiError, clearStoredToken, getStoredToken, setStoredToken } from './api-client';
+import type { AuthUserSummary } from './api-types';
 import type { User } from './types';
-import { mockUsers } from './mock-data';
+import * as authService from '../services/auth.service';
 
-type StoredRegisteredUser = User & { password: string };
+type JwtPayload = {
+  userId?: string;
+  tenantId?: string | null;
+  role?: User['role'];
+  email?: string | null;
+  full_name?: string | null;
+  fullName?: string | null;
+  exp?: number;
+};
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   register: (payload: {
-    fullName: string;
-    email: string;
+    companyName?: string;
+    contactEmail?: string;
+    adminFullName?: string;
+    adminEmail?: string;
+    adminPhone?: string;
+    fullName?: string;
+    email?: string;
     password: string;
     role?: User['role'];
     phone?: string;
     company?: string;
   }) => Promise<{ ok: true } | { ok: false; reason: 'email_taken' }>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const REGISTERED_USERS_STORAGE_KEY = 'transport-registered-users';
+const LEGACY_USER_STORAGE_KEY = 'transport-user';
+const LEGACY_REGISTERED_USERS_STORAGE_KEY = 'transport-registered-users';
 
-function readRegisteredUsers(): StoredRegisteredUser[] {
-  const raw = localStorage.getItem(REGISTERED_USERS_STORAGE_KEY);
-  if (!raw) return [];
+function removeLegacyAuthStorage(): void {
+  localStorage.removeItem(LEGACY_USER_STORAGE_KEY);
+  localStorage.removeItem(LEGACY_REGISTERED_USERS_STORAGE_KEY);
+}
+
+function decodeJwt(token: string): JwtPayload | null {
+  const [, payload] = token.split('.');
+
+  if (!payload) return null;
+
   try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed as StoredRegisteredUser[];
+    const normalizedPayload = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const paddedPayload = normalizedPayload.padEnd(
+      normalizedPayload.length + ((4 - (normalizedPayload.length % 4)) % 4),
+      '=',
+    );
+
+    return JSON.parse(atob(paddedPayload)) as JwtPayload;
   } catch {
-    return [];
+    return null;
   }
 }
 
-function writeRegisteredUsers(users: StoredRegisteredUser[]) {
-  localStorage.setItem(REGISTERED_USERS_STORAGE_KEY, JSON.stringify(users));
+function isExpired(payload: JwtPayload): boolean {
+  if (!payload.exp) return false;
+  return payload.exp * 1000 <= Date.now();
+}
+
+function userFromAuthSummary(summary: AuthUserSummary): User {
+  return {
+    id: summary.id,
+    email: summary.email ?? '',
+    fullName: summary.full_name ?? summary.email ?? 'User',
+    role: summary.role,
+  };
+}
+
+function userFromTokenPayload(payload: JwtPayload): User | null {
+  if (!payload.userId || !payload.role || isExpired(payload)) return null;
+
+  const email = payload.email ?? '';
+
+  return {
+    id: payload.userId,
+    email,
+    fullName: payload.full_name ?? payload.fullName ?? (email || 'User'),
+    role: payload.role,
+    company: payload.tenantId ?? undefined,
+  };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    // Check for stored user on mount
-    const storedUser = localStorage.getItem('transport-user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    removeLegacyAuthStorage();
+
+    const token = getStoredToken();
+    if (!token) return;
+
+    const decodedUser = userFromTokenPayload(decodeJwt(token) ?? {});
+    if (decodedUser) {
+      setUser(decodedUser);
     }
+
+    let cancelled = false;
+
+    authService
+      .refresh()
+      .then((response) => {
+        if (cancelled) return;
+
+        setStoredToken(response.access_token);
+        const refreshedUser = userFromTokenPayload(decodeJwt(response.access_token) ?? {});
+        setUser(refreshedUser);
+      })
+      .catch(() => {
+        if (cancelled) return;
+
+        clearStoredToken();
+        setUser(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Mock authentication - in production, this would call an API
-    const foundUser = mockUsers.find(u => u.email === email);
-    if (foundUser && password === 'password') {
-      setUser(foundUser);
-      localStorage.setItem('transport-user', JSON.stringify(foundUser));
+    try {
+      const response = await authService.login(email, password);
+      setStoredToken(response.access_token);
+      setUser(userFromAuthSummary(response.user));
       return true;
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        return false;
+      }
+
+      throw error;
     }
-
-     const registeredUsers = readRegisteredUsers();
-     const foundRegisteredUser = registeredUsers.find(u => u.email === email);
-     if (foundRegisteredUser && foundRegisteredUser.password === password) {
-       // Strip password before storing current session user
-       const { password: _password, ...safeUser } = foundRegisteredUser;
-       setUser(safeUser);
-       localStorage.setItem('transport-user', JSON.stringify(safeUser));
-       return true;
-     }
-
-    return false;
   };
 
   const register: AuthContextType['register'] = async (payload) => {
-    const normalizedEmail = payload.email.trim().toLowerCase();
-    const fullName = payload.fullName.trim();
+    try {
+      await authService.registerTenant({
+        companyName: payload.companyName ?? payload.company ?? '',
+        contactEmail: payload.contactEmail ?? payload.adminEmail ?? payload.email ?? '',
+        adminFullName: payload.adminFullName ?? payload.fullName ?? '',
+        adminEmail: payload.adminEmail ?? payload.email ?? '',
+        adminPhone: payload.adminPhone ?? payload.phone,
+        password: payload.password,
+      });
 
-    const emailTaken =
-      mockUsers.some(u => u.email.toLowerCase() === normalizedEmail) ||
-      readRegisteredUsers().some(u => u.email.toLowerCase() === normalizedEmail);
+      return { ok: true };
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 409) {
+        return { ok: false, reason: 'email_taken' };
+      }
 
-    if (emailTaken) return { ok: false, reason: 'email_taken' };
-
-    const newUser: StoredRegisteredUser = {
-      id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}`,
-      email: normalizedEmail,
-      fullName,
-      role: payload.role ?? 'operator',
-      phone: payload.phone?.trim() || undefined,
-      company: payload.company?.trim() || undefined,
-      password: payload.password,
-    };
-
-    const registeredUsers = readRegisteredUsers();
-    writeRegisteredUsers([newUser, ...registeredUsers]);
-    return { ok: true };
+      throw error;
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('transport-user');
+  const logout = async (): Promise<void> => {
+    try {
+      await authService.logout();
+    } finally {
+      clearStoredToken();
+      setUser(null);
+    }
   };
 
-  return (
-    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user }}>
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({
+      user,
+      login,
+      register,
+      logout,
+      isAuthenticated: !!user,
+    }),
+    [user],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

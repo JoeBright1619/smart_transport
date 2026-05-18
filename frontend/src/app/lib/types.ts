@@ -1,6 +1,6 @@
 // Type definitions for the transport system
 
-export type UserRole = 'admin' | 'operator' | 'dispatcher' | 'passenger';
+export type UserRole = 'superadmin' | 'admin' | 'operator' | 'dispatcher' | 'passenger';
 
 export interface User {
   id: string;
