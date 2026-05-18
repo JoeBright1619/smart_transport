@@ -1,6 +1,113 @@
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors and IDEs
+.idea/
+.vscode/
 .vs/
-__pycache__/
-*.py[cod]
-.venv/
-backend/.venv/
+*.swp
+*.swo
+*.swn
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Local assistant/tool settings
+.claude/settings.local.json
+**/.claude/settings.local.json
+
+# Environment files and local secrets
 .env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+backend/.venv/
+
+# Python bytecode and caches
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+**/.pytest_cache/
+.mypy_cache/
+**/.mypy_cache/
+.ruff_cache/
+**/.ruff_cache/
+.pyre/
+.pytype/
+.hypothesis/
+.tox/
+.nox/
+
+# Python packaging/build output
+build/
+dist/
+site/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+MANIFEST
+
+# Test, coverage, and reports
+.coverage
+.coverage.*
+coverage/
+htmlcov/
+*.cover
+.coverage
+coverage.xml
+junit.xml
+test-results/
+playwright-report/
+
+# Node dependencies and frontend build output
+node_modules/
+**/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+frontend/.cache/
+frontend/.parcel-cache/
+frontend/.next/
+frontend/out/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Local databases and runtime state
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.pid
+*.seed
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.orig
+*.rej
+
+# Accidental shell/version artifacts
+=*
+backend/=*

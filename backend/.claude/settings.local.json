@@ -5,7 +5,12 @@
       "Bash(python -m pytest --collect-only)",
       "Bash(python -m pytest --collect-only -q)",
       "Bash(Get-ChildItem -Path \"d:\\\\projects\\\\final year project\\\\smart_transport\\\\backend\" -Recurse)",
-      "Bash(Select-Object FullName)"
+      "Bash(Select-Object FullName)",
+      "Bash(python -m ruff check .)",
+      "Bash(python -m pytest --cov=app --cov-report=term-missing -x)",
+      "Bash(pip install *)",
+      "Bash(pip show *)",
+      "Bash(python -m ruff check tests/ --select ALL)"
     ]
   }
 }
