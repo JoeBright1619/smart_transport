@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 3.10 — Superadmin Service (`services/superadmin.service.ts`)
+**Next task:** Task 4.1 — Dashboard Page (`pages/Dashboard.tsx`)
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -507,7 +507,7 @@ Endpoints from `superadmin` router: `GET /superadmin/tenants`, `GET /superadmin/
 
 **Suggested commit:** `Add superadmin API service for tenant management and analytics`
 
-- [ ] Task 3.10 complete
+- [x] Task 3.10 complete
 
 ---
 
@@ -825,9 +825,9 @@ Now that all pages use `api-types.ts`, audit `lib/types.ts` for types that are n
 |---|---|---|
 | Phase 1 — Foundation | 3 tasks | 3 / 3 |
 | Phase 2 — Auth Integration | 3 tasks | 3 / 3 |
-| Phase 3 — API Services Layer | 10 tasks | 9 / 10 |
+| Phase 3 — API Services Layer | 10 tasks | 10 / 10 |
 | Phase 4 — Page Integration | 9 tasks | 0 / 9 |
 | Phase 5 — Real-Time Tracking | 3 tasks | 0 / 3 |
 | Phase 6 — New Pages | 2 tasks | 0 / 2 |
 | Phase 7 — Final Polish | 3 tasks | 0 / 3 |
-| **Total** | **33 tasks** | **15 / 33** |
+| **Total** | **33 tasks** | **16 / 33** |

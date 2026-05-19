@@ -325,21 +325,19 @@ export interface TenantRead {
 }
 
 export interface TenantDetail extends TenantRead {
-  active_vehicles: number;
-  trips_last_30d: number;
+  updated_at: string;
 }
 
 export interface SuperadminAnalytics {
   total_tenants: number;
   active_tenants: number;
   total_vehicles: number;
-  total_trips: number;
-  total_users: number;
+  total_trips_today: number;
+  total_passengers_today: number;
 }
 
 export interface ImpersonateResponse {
   access_token: string;
-  tenant_id: string;
 }
 
 // WebSocket
