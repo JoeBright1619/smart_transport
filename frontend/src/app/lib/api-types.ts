@@ -305,9 +305,12 @@ export interface ArrivalEstimate {
   vehicle_id: string;
   registration_number: string;
   route_id: string;
-  distance_km: number;
+  route_name: string;
+  distance_to_stop_km: number;
+  current_speed_kmh: number;
   eta_minutes: number | null;
-  status: 'approaching' | 'stopped';
+  estimated_arrival_time: string | null;
+  status: string;
 }
 
 // Superadmin
