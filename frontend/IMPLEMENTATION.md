@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 3.5 — Trips Service (`services/trips.service.ts`)
+**Next task:** Task 3.6 — Alerts Service (`services/alerts.service.ts`)
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -429,7 +429,7 @@ Endpoints: `GET /api/v1/trips`, `POST /api/v1/trips`, `GET /api/v1/trips/{id}`, 
 
 **Suggested commit:** `Add trips API service for scheduling and status transitions`
 
-- [ ] Task 3.5 complete
+- [x] Task 3.5 complete
 
 ---
 
@@ -825,9 +825,9 @@ Now that all pages use `api-types.ts`, audit `lib/types.ts` for types that are n
 |---|---|---|
 | Phase 1 — Foundation | 3 tasks | 3 / 3 |
 | Phase 2 — Auth Integration | 3 tasks | 3 / 3 |
-| Phase 3 — API Services Layer | 10 tasks | 4 / 10 |
+| Phase 3 — API Services Layer | 10 tasks | 5 / 10 |
 | Phase 4 — Page Integration | 9 tasks | 0 / 9 |
 | Phase 5 — Real-Time Tracking | 3 tasks | 0 / 3 |
 | Phase 6 — New Pages | 2 tasks | 0 / 2 |
 | Phase 7 — Final Polish | 3 tasks | 0 / 3 |
-| **Total** | **33 tasks** | **10 / 33** |
+| **Total** | **33 tasks** | **11 / 33** |
