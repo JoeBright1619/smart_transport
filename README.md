@@ -272,4 +272,5 @@ http://localhost:8000/docs
 - Work can be done directly on the current branch for a solo workflow.
 - Keep `frontend/.env.local` and `backend/.env` local; commit only `.env.example` files.
 - The frontend still contains mock data while migration is in progress. Remove it only after every page has been connected to backend services.
+- Keep files small and focused. Frontend pages should mostly compose smaller components/hooks/helpers and should be split before they grow beyond the guideline limit.
 - If login fails, check that the backend is running on port `8000`, CORS allows `http://localhost:5173`, and the seed data has been created.

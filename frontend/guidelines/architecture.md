@@ -84,7 +84,14 @@ Do not rename, remove, or add routes without updating this table.
 ## Code Rules
 
 - React functional components with TypeScript strictly (`strict: true`). No class components.
-- Files under 200 lines. Extract sub-components or helpers when approaching the limit.
+- Files should stay under 200 lines. If a page approaches that limit, split it before adding more behavior.
+- Page integrations must not become monoliths. Extract reusable UI sections, form dialogs, table rows, hooks, mappers, and formatting helpers into nearby files.
+- Prefer a page folder when a route needs multiple pieces:
+  - `PageName.tsx` or `PageName/index.tsx` for composition only
+  - `components/` for page-specific cards, tables, dialogs, and rows
+  - `hooks/` for data fetching and mutation orchestration
+  - `helpers.ts` for pure formatting, mapping, and small calculations
+- Keep route/page components focused on layout and orchestration. Business logic, API mapping, and repeated rendering patterns belong outside the main page file.
 - All new component files: `.tsx` extension. Utilities and hooks: `.ts` extension.
 - Prefer importing existing `components/ui/` primitives over creating new ones.
 - Only create a new component when functionality genuinely cannot be reused.

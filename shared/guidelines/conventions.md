@@ -34,6 +34,8 @@
 ## Code Quality Rules
 
 - **One responsibility per function** — max ~50 lines per function, ~200–300 lines per file
+- **Split large files early** — when a frontend page, backend router, service, or test file approaches the line limit, extract focused components, hooks, helpers, schemas, or test fixtures before adding new behavior
+- **Keep orchestration thin** — top-level pages/routes should compose smaller pieces; data fetching, formatting, API mappers, forms, table rows, and repeated UI sections should live in focused reusable modules
 - **No wildcard imports** — `from module import *` is forbidden in Python
 - **No hard-coded secrets** — use environment variables for all credentials and config
 - **No `TODO` / `FIXME`** without a linked GitHub issue
