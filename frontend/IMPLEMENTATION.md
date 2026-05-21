@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 5.2 — Update Vehicle Tracking Page (`pages/VehicleTracking.tsx`)
+**Next task:** Task 6.1 — Administration Page: Users CRUD (`pages/Administration.tsx`)
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -706,7 +706,7 @@ Also call `vehiclesService.listVehicles()` on mount to seed the initial vehicle 
 
 **Suggested commit:** `Replace simulated vehicle tracking with live WebSocket positions`
 
-- [ ] Task 5.2 complete
+- [x] Task 5.2 complete
 
 ---
 
@@ -717,7 +717,7 @@ Delete `src/app/lib/use-vehicle-simulation.ts` — it is no longer used after Ta
 
 **Suggested commit:** `Remove obsolete client-side GPS simulation hook`
 
-- [ ] Task 5.3 complete
+- [x] Task 5.3 complete
 
 ---
 
@@ -827,7 +827,7 @@ Now that all pages use `api-types.ts`, audit `lib/types.ts` for types that are n
 | Phase 2 — Auth Integration | 3 tasks | 3 / 3 |
 | Phase 3 — API Services Layer | 10 tasks | 10 / 10 |
 | Phase 4 — Page Integration | 9 tasks | 9 / 9 |
-| Phase 5 — Real-Time Tracking | 3 tasks | 0 / 3 |
+| Phase 5 — Real-Time Tracking | 3 tasks | 3 / 3 |
 | Phase 6 — New Pages | 2 tasks | 0 / 2 |
 | Phase 7 — Final Polish | 3 tasks | 0 / 3 |
-| **Total** | **33 tasks** | **25 / 33** |
+| **Total** | **33 tasks** | **28 / 33** |

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import { Icon } from 'leaflet';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -6,9 +6,10 @@ import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { mockRoutes, mockDrivers } from '../../lib/mock-data';
-import { Search, Gauge, Battery, AlertCircle } from 'lucide-react';
-import type { Vehicle } from '../../lib/types';
-import { useVehicleSimulation } from '../../lib/use-vehicle-simulation';
+import { Search, Gauge, Battery, AlertCircle, WifiOff } from 'lucide-react';
+import type { VehicleRead } from '../../lib/api-types';
+import { listVehicles } from '../../services/vehicles.service';
+import { VehicleTrackingSocket } from '../../lib/ws-client';
 
 // Create custom icon for vehicles
 const createVehicleIcon = (status: string) => {
@@ -31,10 +32,99 @@ const createVehicleIcon = (status: string) => {
 };
 
 export function VehicleTracking() {
-  const vehicles = useVehicleSimulation();
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [vehicles, setVehicles] = useState<VehicleRead[]>([]);
+  const [selectedVehicle, setSelectedVehicle] = useState<VehicleRead | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
+  const socketRef = useRef<VehicleTrackingSocket | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    let reconnectTimer: number;
+
+    const initialize = async () => {
+      try {
+        const data = await listVehicles({ pageSize: 100 });
+        if (mounted) {
+          setVehicles(data.items);
+        }
+      } catch (err) {
+        console.error('Failed to load initial vehicles', err);
+      }
+    };
+
+    initialize();
+
+    const connectWs = () => {
+      if (!mounted) return;
+      setConnectionStatus('connecting');
+
+      socketRef.current = new VehicleTrackingSocket(
+        (msg) => {
+          if (msg.type === 'vehicle_positions') {
+            setVehicles(prevVehicles => {
+              const updated = [...prevVehicles];
+              msg.vehicles.forEach(pos => {
+                const idx = updated.findIndex(v => v.id === pos.vehicleId);
+                if (idx !== -1) {
+                  updated[idx] = {
+                    ...updated[idx],
+                    currentLocation: { lat: pos.lat, lng: pos.lng },
+                    speed: pos.speed,
+                    heading: pos.heading,
+                    fuel: pos.fuel,
+                    status: pos.status,
+                    engineStatus: (pos as any).engineStatus || updated[idx].engineStatus,
+                    lastUpdate: pos.timestamp,
+                  };
+                }
+              });
+              return updated;
+            });
+
+            setSelectedVehicle(prev => {
+              if (!prev) return prev;
+              const pos = msg.vehicles.find(v => v.vehicleId === prev.id);
+              if (pos) {
+                return {
+                  ...prev,
+                  currentLocation: { lat: pos.lat, lng: pos.lng },
+                  speed: pos.speed,
+                  heading: pos.heading,
+                  fuel: pos.fuel,
+                  status: pos.status,
+                  engineStatus: (pos as any).engineStatus || prev.engineStatus,
+                  lastUpdate: pos.timestamp,
+                };
+              }
+              return prev;
+            });
+          }
+        },
+        undefined,
+        () => {
+          if (mounted) {
+            setConnectionStatus('disconnected');
+            reconnectTimer = window.setTimeout(connectWs, 5000);
+          }
+        }
+      );
+
+      socketRef.current.connect();
+      setConnectionStatus('connected');
+    };
+
+    connectWs();
+
+    return () => {
+      mounted = false;
+      clearTimeout(reconnectTimer);
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, []);
 
   const filteredVehicles = useMemo(() => {
     return vehicles.filter(vehicle => {
@@ -50,9 +140,17 @@ export function VehicleTracking() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Vehicle Tracking</h1>
-        <p className="text-slate-600">Real-time GPS tracking of all fleet vehicles</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold">Vehicle Tracking</h1>
+          <p className="text-slate-600">Real-time GPS tracking of all fleet vehicles</p>
+        </div>
+        {connectionStatus === 'disconnected' && (
+          <Badge variant="destructive" className="flex items-center gap-1">
+            <WifiOff className="size-3" />
+            Disconnected — reconnecting…
+          </Badge>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -123,7 +221,7 @@ export function VehicleTracking() {
                         {vehicle.status}
                       </Badge>
                     </div>
-                    {vehicle.status === 'active' && (
+                    {vehicle.status === 'active' && vehicle.speed !== null && vehicle.fuel !== null && (
                       <div className="mt-2 flex items-center gap-3 text-xs text-slate-600">
                         <span className="flex items-center gap-1">
                           <Gauge className="size-3" />
@@ -162,6 +260,8 @@ export function VehicleTracking() {
 
                 {/* Vehicle markers */}
                 {filteredVehicles.map((vehicle) => {
+                  if (!vehicle.currentLocation) return null;
+
                   const driver = mockDrivers.find(d => d.id === vehicle.driverId);
                   const route = mockRoutes.find(r => r.id === vehicle.routeId);
 
@@ -184,7 +284,7 @@ export function VehicleTracking() {
                           {driver && (
                             <p className="text-sm mt-1">Driver: {driver.name}</p>
                           )}
-                          {vehicle.status === 'active' && (
+                          {vehicle.status === 'active' && vehicle.speed !== null && vehicle.fuel !== null && (
                             <div className="mt-2 space-y-1 text-sm">
                               <p>Speed: {Math.round(vehicle.speed)} km/h</p>
                               <p>Fuel: {vehicle.fuel}%</p>
@@ -234,7 +334,7 @@ export function VehicleTracking() {
                       <p className="text-xs text-slate-500">Status</p>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge>{selectedVehicle.status}</Badge>
-                        {selectedVehicle.status === 'active' && (
+                        {selectedVehicle.status === 'active' && selectedVehicle.speed !== null && (
                           <span className="text-sm">{Math.round(selectedVehicle.speed)} km/h</span>
                         )}
                       </div>
@@ -242,10 +342,12 @@ export function VehicleTracking() {
                     <div>
                       <p className="text-xs text-slate-500">Fuel & Engine</p>
                       <div className="flex items-center gap-3 mt-1">
-                        <span className="flex items-center gap-1 text-sm">
-                          <Battery className="size-4" />
-                          {selectedVehicle.fuel}%
-                        </span>
+                        {selectedVehicle.fuel !== null && (
+                          <span className="flex items-center gap-1 text-sm">
+                            <Battery className="size-4" />
+                            {selectedVehicle.fuel}%
+                          </span>
+                        )}
                         <span className="flex items-center gap-1 text-sm">
                           <AlertCircle className={`size-4 ${
                             selectedVehicle.engineStatus === 'good' ? 'text-green-500' :
