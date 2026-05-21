@@ -33,6 +33,7 @@ interface AuthContextType {
   }) => Promise<{ ok: true } | { ok: false; reason: 'email_taken' }>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
+  isInitializing: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -78,7 +79,7 @@ function userFromAuthSummary(summary: AuthUserSummary): User {
 }
 
 function userFromTokenPayload(payload: JwtPayload): User | null {
-  if (!payload.userId || !payload.role || isExpired(payload)) return null;
+  if (!payload.userId || !payload.role) return null;
 
   const email = payload.email ?? '';
 
@@ -93,43 +94,48 @@ function userFromTokenPayload(payload: JwtPayload): User | null {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
     removeLegacyAuthStorage();
 
-    const token = getStoredToken();
-    if (!token) return;
-
-    const tokenAtStart = token;
-    const payload = decodeJwt(token) ?? {};
-    const decodedUser = userFromTokenPayload(payload);
-
-    if (!decodedUser) {
-      clearStoredToken();
-      return;
-    }
-
-    setUser(decodedUser);
-
-    if (!isExpired(payload)) return;
-
     let cancelled = false;
 
-    refreshAccessToken()
-      .then((accessToken) => {
-        if (cancelled || getStoredToken() !== tokenAtStart) return;
+    async function bootstrapSession() {
+      const token = getStoredToken();
+      const payload = token ? decodeJwt(token) : null;
+
+      if (token && payload && !isExpired(payload)) {
+        const decodedUser = userFromTokenPayload(payload);
+        if (decodedUser) {
+          setUser(decodedUser);
+          setIsInitializing(false);
+          return;
+        }
+      }
+
+      try {
+        const accessToken = await refreshAccessToken();
+        if (cancelled) return;
 
         const refreshedUser = userFromTokenPayload(decodeJwt(accessToken) ?? {});
         if (refreshedUser) {
           setUser(refreshedUser);
+        } else {
+          clearStoredToken();
         }
-      })
-      .catch(() => {
-        if (cancelled || getStoredToken() !== tokenAtStart) return;
-
+      } catch {
+        if (cancelled) return;
         clearStoredToken();
         setUser(null);
-      });
+      } finally {
+        if (!cancelled) {
+          setIsInitializing(false);
+        }
+      }
+    }
+
+    void bootstrapSession();
 
     return () => {
       cancelled = true;
@@ -188,8 +194,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       register,
       logout,
       isAuthenticated: !!user,
+      isInitializing,
     }),
-    [user],
+    [user, isInitializing],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
