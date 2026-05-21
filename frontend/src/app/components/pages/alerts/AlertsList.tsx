@@ -1,0 +1,92 @@
+import type { AlertRead } from '../../../lib/api-types';
+import { Badge } from '../../ui/badge';
+import { Button } from '../../ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { alertIcon, CheckCircle, severityBadgeVariant, severityColor } from './alert-helpers';
+
+type AlertsListProps = {
+  title: string;
+  alerts: AlertRead[];
+  acknowledgingAlertId: string | null;
+  onAcknowledge: (alert: AlertRead) => void;
+};
+
+export function AlertsList({
+  title,
+  alerts,
+  acknowledgingAlertId,
+  onAcknowledge,
+}: AlertsListProps) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {alerts.length === 0 ? (
+          <div className="py-8 text-center text-slate-500">
+            <CheckCircle className="mx-auto mb-3 size-12 text-green-500" />
+            <p>No alerts found</p>
+          </div>
+        ) : (
+          alerts.map((alert) => (
+            <AlertRow
+              key={alert.id}
+              alert={alert}
+              disabled={acknowledgingAlertId === alert.id}
+              onAcknowledge={onAcknowledge}
+            />
+          ))
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function AlertRow({
+  alert,
+  disabled,
+  onAcknowledge,
+}: {
+  alert: AlertRead;
+  disabled: boolean;
+  onAcknowledge: (alert: AlertRead) => void;
+}) {
+  const Icon = alertIcon(alert.type);
+  const muted = alert.isAcknowledged;
+
+  return (
+    <div className={`rounded-lg border p-4 ${muted ? 'bg-slate-50' : ''}`}>
+      <div className="flex items-start gap-3">
+        <div className={muted ? 'text-slate-400' : severityColor(alert.severity)}>
+          <Icon className="size-5" />
+        </div>
+        <div className="flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className={`font-medium ${muted ? 'text-slate-700' : ''}`}>{alert.title}</p>
+              <p className="mt-1 text-sm text-slate-600">{alert.message}</p>
+              <div className="mt-2 flex items-center gap-2">
+                <p className="text-xs text-slate-400">{new Date(alert.createdAt).toLocaleString()}</p>
+                {muted && (
+                  <>
+                    <CheckCircle className="size-3 text-green-600" />
+                    <span className="text-xs text-green-600">Acknowledged</span>
+                  </>
+                )}
+              </div>
+            </div>
+            <Badge variant={muted ? 'outline' : severityBadgeVariant(alert.severity)}>
+              {alert.severity}
+            </Badge>
+          </div>
+          {!muted && (
+            <Button size="sm" variant="outline" className="mt-3" disabled={disabled} onClick={() => onAcknowledge(alert)}>
+              {disabled ? 'Acknowledging...' : 'Acknowledge'}
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
