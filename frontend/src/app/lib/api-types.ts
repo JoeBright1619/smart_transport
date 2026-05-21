@@ -249,15 +249,15 @@ export type MaintenanceStatus = 'scheduled' | 'in-progress' | 'completed';
 
 export interface MaintenanceRead {
   id: string;
-  vehicle_id: string;
+  vehicleId: string;
   type: MaintenanceType;
   description: string;
-  scheduled_date: string;
-  completed_date: string | null;
+  scheduledDate: string;
+  completedDate: string | null;
   cost: number;
   status: MaintenanceStatus;
-  next_due: string | null;
-  created_at: string;
+  nextDue: string | null;
+  createdAt: string;
 }
 
 export interface MaintenanceCreate {
