@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 import pytest
 
 from app.models.alert import Alert
+from app.models.trip import Trip
+from app.services import alert_service
 from tests.conftest import auth_headers
 
 
@@ -101,3 +104,149 @@ async def test_acknowledge_returns_404_unknown(client, admin):
         headers=auth_headers(admin),
     )
     assert r.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# Unit tests for alert_service
+# ---------------------------------------------------------------------------
+
+
+async def test_auto_generate_delay(db, tenant, vehicle, make_driver):
+    driver = await make_driver(tenant_id=tenant.id)
+    # Case 1: no active trip
+    alert = await alert_service.auto_generate(db, tenant.id, "delay", vehicle.id)
+    assert alert is None
+
+    # Case 2: active trip but delay <= 5
+    trip1 = Trip(
+        id="trip-1",
+        tenant_id=tenant.id,
+        vehicle_id=vehicle.id,
+        route_id="route-1",
+        driver_id=driver.id,
+        scheduled_start=datetime.now(timezone.utc),
+        scheduled_end=datetime.now(timezone.utc),
+        status="active",
+        passengers=10,
+        delay=3,
+        is_deleted=False,
+    )
+    db.add(trip1)
+    await db.commit()
+
+    alert = await alert_service.auto_generate(db, tenant.id, "delay", vehicle.id)
+    assert alert is None
+
+    # Case 3: active trip with delay > 5
+    trip1.delay = 10
+    await db.commit()
+    alert = await alert_service.auto_generate(db, tenant.id, "delay", vehicle.id)
+    assert alert is not None
+    assert alert.type == "delay"
+    assert alert.severity == "medium"
+    assert "10 minutes" in alert.message
+
+    # Case 4: duplicate suppression (same type + vehicle + unacknowledged)
+    alert2 = await alert_service.auto_generate(db, tenant.id, "delay", vehicle.id)
+    assert alert2 is None
+
+
+async def test_auto_generate_breakdown(db, tenant, vehicle):
+    # Case 1: engine status not critical
+    vehicle.engine_status = "good"
+    await db.commit()
+    alert = await alert_service.auto_generate(db, tenant.id, "breakdown", vehicle.id)
+    assert alert is None
+
+    # Case 2: engine status critical
+    vehicle.engine_status = "critical"
+    await db.commit()
+    alert = await alert_service.auto_generate(db, tenant.id, "breakdown", vehicle.id)
+    assert alert is not None
+    assert alert.type == "breakdown"
+    assert alert.severity == "critical"
+
+
+async def test_auto_generate_speeding(db, tenant, vehicle):
+    # Case 1: speed <= 80
+    vehicle.speed = 75
+    await db.commit()
+    alert = await alert_service.auto_generate(db, tenant.id, "speeding", vehicle.id)
+    assert alert is None
+
+    # Case 2: speed > 80
+    vehicle.speed = 85
+    await db.commit()
+    alert = await alert_service.auto_generate(db, tenant.id, "speeding", vehicle.id)
+    assert alert is not None
+    assert alert.type == "speeding"
+    assert alert.severity == "high"
+
+
+async def test_auto_generate_geofence(db, tenant, vehicle):
+    alert = await alert_service.auto_generate(db, tenant.id, "geofence", vehicle.id)
+    assert alert is not None
+    assert alert.type == "geofence"
+    assert alert.severity == "medium"
+
+
+async def test_auto_generate_info(db, tenant, vehicle):
+    alert = await alert_service.auto_generate(db, tenant.id, "info", vehicle.id)
+    assert alert is not None
+    assert alert.type == "info"
+    assert alert.severity == "low"
+
+
+async def test_auto_generate_maintenance(db, tenant, vehicle):
+    alert = await alert_service.auto_generate(db, tenant.id, "maintenance", vehicle.id)
+    assert alert is not None
+    assert alert.type == "maintenance"
+    assert alert.severity == "high"
+
+
+async def test_auto_generate_unknown_type(db, tenant, vehicle):
+    alert = await alert_service.auto_generate(db, tenant.id, "unknown", vehicle.id)
+    assert alert is None
+    alert_no_veh = await alert_service.auto_generate(db, tenant.id, "delay", None)
+    assert alert_no_veh is None
+
+
+async def test_get_alerts_filtering_logic(db, tenant):
+    # Clear existing alerts
+    await db.execute(Alert.__table__.delete())
+
+    a1 = Alert(
+        id="a1",
+        tenant_id=tenant.id,
+        type="speeding",
+        severity="high",
+        title="T1",
+        message="M1",
+        is_acknowledged=False,
+    )
+    a2 = Alert(
+        id="a2",
+        tenant_id=tenant.id,
+        type="delay",
+        severity="medium",
+        title="T2",
+        message="M2",
+        is_acknowledged=True,
+    )
+    db.add_all([a1, a2])
+    await db.commit()
+
+    # Filter by severity
+    res, total = await alert_service.get_alerts(db, tenant.id, severity="high")
+    assert total == 1
+    assert res[0].id == "a1"
+
+    # Filter by type
+    res, total = await alert_service.get_alerts(db, tenant.id, type_filter="delay")
+    assert total == 1
+    assert res[0].id == "a2"
+
+    # Filter by acknowledged
+    res, total = await alert_service.get_alerts(db, tenant.id, is_acknowledged=False)
+    assert total == 1
+    assert res[0].id == "a1"
