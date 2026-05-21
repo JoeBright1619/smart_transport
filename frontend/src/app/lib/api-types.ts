@@ -18,34 +18,34 @@ export interface ApiResponse<T> {
 
 export type PaginatedResponse<T> = ApiResponse<T[]>;
 
-// Auth
+// Auth (JSON field names match backend APIModel camelCase serialization)
 export interface AuthUserSummary {
   id: string;
   email: string | null;
-  full_name: string | null;
+  fullName: string | null;
   role: UserRole;
-  tenant_id: string | null;
+  tenantId: string | null;
 }
 
 export interface AuthTenantSummary {
   id: string;
   name: string;
-  is_active: boolean;
+  isActive: boolean;
 }
 
 export interface RegisterResponse {
   tenant: AuthTenantSummary;
   user: AuthUserSummary;
-  access_token: string;
+  accessToken: string;
 }
 
 export interface TokenResponse {
-  access_token: string;
+  accessToken: string;
   user: AuthUserSummary;
 }
 
 export interface RefreshTokenResponse {
-  access_token: string;
+  accessToken: string;
 }
 
 // Users
@@ -88,17 +88,17 @@ export interface VehicleLocation {
 
 export interface VehicleRead {
   id: string;
-  registration_number: string;
+  registrationNumber: string;
   model: string;
   capacity: number;
   status: VehicleStatus;
   speed: number | null;
   heading: number | null;
   fuel: number | null;
-  engine_status: EngineStatus;
-  current_location: VehicleLocation | null;
-  route_id: string | null;
-  driver_id: string | null;
+  engineStatus: EngineStatus;
+  currentLocation: VehicleLocation | null;
+  routeId: string | null;
+  driverId: string | null;
   lastUpdate: string;
 }
 
@@ -237,10 +237,10 @@ export interface AlertRead {
   severity: AlertSeverity;
   title: string;
   message: string;
-  vehicle_id: string | null;
-  driver_id: string | null;
-  is_acknowledged: boolean;
-  created_at: string;
+  vehicleId: string | null;
+  driverId: string | null;
+  isAcknowledged: boolean;
+  createdAt: string;
 }
 
 // Maintenance
@@ -337,7 +337,7 @@ export interface SuperadminAnalytics {
 }
 
 export interface ImpersonateResponse {
-  access_token: string;
+  accessToken: string;
 }
 
 // WebSocket

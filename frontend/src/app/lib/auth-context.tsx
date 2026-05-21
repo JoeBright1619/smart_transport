@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { ApiError, clearStoredToken, getStoredToken, setStoredToken } from './api-client';
+import {
+  ApiError,
+  clearStoredToken,
+  getStoredToken,
+  refreshAccessToken,
+  setStoredToken,
+} from './api-client';
 import type { AuthUserSummary } from './api-types';
 import type { User } from './types';
 import * as authService from '../services/auth.service';
@@ -66,7 +72,7 @@ function userFromAuthSummary(summary: AuthUserSummary): User {
   return {
     id: summary.id,
     email: summary.email ?? '',
-    fullName: summary.full_name ?? summary.email ?? 'User',
+    fullName: summary.fullName ?? summary.email ?? 'User',
     role: summary.role,
   };
 }
@@ -94,24 +100,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const token = getStoredToken();
     if (!token) return;
 
-    const decodedUser = userFromTokenPayload(decodeJwt(token) ?? {});
-    if (decodedUser) {
-      setUser(decodedUser);
+    const tokenAtStart = token;
+    const payload = decodeJwt(token) ?? {};
+    const decodedUser = userFromTokenPayload(payload);
+
+    if (!decodedUser) {
+      clearStoredToken();
+      return;
     }
+
+    setUser(decodedUser);
+
+    if (!isExpired(payload)) return;
 
     let cancelled = false;
 
-    authService
-      .refresh()
-      .then((response) => {
-        if (cancelled) return;
+    refreshAccessToken()
+      .then((accessToken) => {
+        if (cancelled || getStoredToken() !== tokenAtStart) return;
 
-        setStoredToken(response.access_token);
-        const refreshedUser = userFromTokenPayload(decodeJwt(response.access_token) ?? {});
-        setUser(refreshedUser);
+        const refreshedUser = userFromTokenPayload(decodeJwt(accessToken) ?? {});
+        if (refreshedUser) {
+          setUser(refreshedUser);
+        }
       })
       .catch(() => {
-        if (cancelled) return;
+        if (cancelled || getStoredToken() !== tokenAtStart) return;
 
         clearStoredToken();
         setUser(null);
@@ -125,7 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       const response = await authService.login(email, password);
-      setStoredToken(response.access_token);
+      setStoredToken(response.accessToken);
       setUser(userFromAuthSummary(response.user));
       return true;
     } catch (error) {

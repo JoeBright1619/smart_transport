@@ -237,13 +237,13 @@ export function Dashboard() {
                     <div className="flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-sm font-medium">{alert.title}</p>
-                        <Badge variant={alert.is_acknowledged ? 'secondary' : 'default'} className="text-xs">
+                        <Badge variant={alert.isAcknowledged ? 'secondary' : 'default'} className="text-xs">
                           {alert.severity}
                         </Badge>
                       </div>
                       <p className="mt-1 text-xs text-slate-600">{alert.message}</p>
                       <p className="mt-1 text-xs text-slate-400">
-                        {new Date(alert.created_at).toLocaleTimeString()}
+                        {new Date(alert.createdAt).toLocaleTimeString()}
                       </p>
                     </div>
                   </div>
@@ -278,7 +278,7 @@ export function Dashboard() {
                     <div className="flex items-center gap-3">
                       <div className={`size-2 rounded-full ${statusDotClass(vehicle.status)}`} />
                       <div>
-                        <p className="text-sm font-medium">{vehicle.registration_number}</p>
+                        <p className="text-sm font-medium">{vehicle.registrationNumber}</p>
                         <p className="text-xs text-slate-500">{vehicle.model}</p>
                       </div>
                     </div>

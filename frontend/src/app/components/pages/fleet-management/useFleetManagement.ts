@@ -68,7 +68,7 @@ export function useFleetManagement() {
       vehicles.filter((vehicle) => {
         const query = searchTerm.toLowerCase();
         return (
-          vehicle.registration_number.toLowerCase().includes(query) ||
+          vehicle.registrationNumber.toLowerCase().includes(query) ||
           vehicle.model.toLowerCase().includes(query)
         );
       }),
@@ -117,7 +117,7 @@ export function useFleetManagement() {
   };
 
   const deleteVehicle = async (vehicle: VehicleRead) => {
-    const confirmed = window.confirm(`Delete vehicle ${vehicle.registration_number}?`);
+    const confirmed = window.confirm(`Delete vehicle ${vehicle.registrationNumber}?`);
     if (!confirmed) return;
 
     setUpdatingVehicleId(vehicle.id);

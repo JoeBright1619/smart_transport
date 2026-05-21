@@ -33,7 +33,7 @@ export function VehicleTableRow({
 
   return (
     <TableRow>
-      <TableCell className="font-medium">{vehicle.registration_number}</TableCell>
+      <TableCell className="font-medium">{vehicle.registrationNumber}</TableCell>
       <TableCell>{vehicle.model}</TableCell>
       <TableCell>{vehicle.capacity}</TableCell>
       <TableCell>
@@ -56,7 +56,7 @@ export function VehicleTableRow({
       </TableCell>
       <TableCell>
         <AssignmentSelect
-          value={vehicle.driver_id}
+          value={vehicle.driverId}
           items={drivers.map((driver) => ({ id: driver.id, label: driver.name }))}
           disabled={disabled}
           onChange={(driverId) => void updateVehicle(vehicle.id, { driver_id: driverId })}
@@ -64,7 +64,7 @@ export function VehicleTableRow({
       </TableCell>
       <TableCell>
         <AssignmentSelect
-          value={vehicle.route_id}
+          value={vehicle.routeId}
           items={routes.map((route) => ({ id: route.id, label: route.number }))}
           disabled={disabled}
           onChange={(routeId) => void updateVehicle(vehicle.id, { route_id: routeId })}
@@ -83,14 +83,14 @@ export function VehicleTableRow({
       <TableCell>
         <Badge
           variant={
-            vehicle.engine_status === 'good'
+            vehicle.engineStatus === 'good'
               ? 'default'
-              : vehicle.engine_status === 'warning'
+              : vehicle.engineStatus === 'warning'
                 ? 'outline'
                 : 'destructive'
           }
         >
-          {vehicle.engine_status}
+          {vehicle.engineStatus}
         </Badge>
       </TableCell>
       <TableCell>{formatRelativeTime(vehicle.lastUpdate)}</TableCell>

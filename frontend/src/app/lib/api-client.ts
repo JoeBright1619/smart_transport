@@ -89,6 +89,25 @@ const refreshClient = axios.create({
   withCredentials: true,
 });
 
+let refreshPromise: Promise<string> | null = null;
+
+export async function refreshAccessToken(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = refreshClient
+      .post<ApiResponse<RefreshTokenResponse>>('/auth/refresh')
+      .then((response) => {
+        const token = response.data.data.accessToken;
+        setStoredToken(token);
+        return token;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+
+  return refreshPromise;
+}
+
 apiClient.interceptors.request.use((config) => {
   const token = getStoredToken();
 
@@ -110,10 +129,7 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const response = await refreshClient.post<ApiResponse<RefreshTokenResponse>>('/auth/refresh');
-        const token = response.data.data.access_token;
-
-        setStoredToken(token);
+        const token = await refreshAccessToken();
         setAuthorizationHeader(originalRequest, token);
 
         return apiClient(originalRequest);

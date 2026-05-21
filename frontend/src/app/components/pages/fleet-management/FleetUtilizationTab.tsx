@@ -25,15 +25,15 @@ export function FleetUtilizationTab({
             return (
               <div key={vehicle.id}>
                 <div className="mb-1 flex items-center justify-between">
-                  <span className="text-sm font-medium">{vehicle.registration_number}</span>
+                  <span className="text-sm font-medium">{vehicle.registrationNumber}</span>
                   <span className="text-sm text-slate-600">{utilization}%</span>
                 </div>
                 <div className="h-2 w-full rounded-full bg-slate-200">
                   <div className="h-full rounded-full bg-blue-600" style={{ width: `${utilization}%` }} />
                 </div>
                 <p className="mt-1 text-xs text-slate-500">
-                  {driversById.get(vehicle.driver_id ?? '')?.name ?? 'No driver'} -{' '}
-                  {routesById.get(vehicle.route_id ?? '')?.number ?? 'No route'}
+                  {driversById.get(vehicle.driverId ?? '')?.name ?? 'No driver'} -{' '}
+                  {routesById.get(vehicle.routeId ?? '')?.number ?? 'No route'}
                 </p>
               </div>
             );
@@ -52,7 +52,7 @@ export function FleetUtilizationTab({
               return (
                 <div key={vehicle.id}>
                   <div className="mb-1 flex items-center justify-between">
-                    <span className="text-sm font-medium">{vehicle.registration_number}</span>
+                    <span className="text-sm font-medium">{vehicle.registrationNumber}</span>
                     <span className="text-sm text-slate-600">{fuel}%</span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-slate-200">

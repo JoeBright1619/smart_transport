@@ -34,8 +34,8 @@ export function fuelBarClass(fuel: number | null): string {
 }
 
 export function formatLocation(vehicle: VehicleRead): string {
-  if (!vehicle.current_location) return '-';
-  const { lat, lng } = vehicle.current_location;
+  if (!vehicle.currentLocation) return '-';
+  const { lat, lng } = vehicle.currentLocation;
   return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 }
 
