@@ -166,14 +166,14 @@ export type DriverStatus = 'available' | 'on-trip' | 'off-duty';
 export interface DriverRead {
   id: string;
   name: string;
-  license_number: string;
+  licenseNumber: string;
   phone: string;
   rating: number;
-  total_trips: number;
+  totalTrips: number;
   status: DriverStatus;
-  vehicle_id: string | null;
-  certification_expiry: string;
-  created_at: string;
+  vehicleId: string | null;
+  certificationExpiry: string;
+  createdAt: string;
 }
 
 export interface DriverCreate {

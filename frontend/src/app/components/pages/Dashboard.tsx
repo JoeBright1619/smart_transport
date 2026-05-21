@@ -11,6 +11,7 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Skeleton } from '../ui/skeleton';
+import React from 'react';
 
 type DashboardState = {
   analytics: AnalyticsData | null;

@@ -19,6 +19,7 @@ import {
 import { cn } from '../ui/utils';
 import { useAuth } from '../../lib/auth-context';
 import { Button } from '../ui/button';
+import React from 'react';
 
 const navigation = [
   {
