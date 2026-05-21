@@ -196,17 +196,17 @@ export type TripStatus = 'scheduled' | 'active' | 'completed' | 'cancelled';
 
 export interface TripRead {
   id: string;
-  vehicle_id: string;
-  route_id: string;
-  driver_id: string;
-  scheduled_start: string;
-  actual_start: string | null;
-  scheduled_end: string;
-  actual_end: string | null;
+  vehicleId: string;
+  routeId: string;
+  driverId: string;
+  scheduledStart: string;
+  actualStart: string | null;
+  scheduledEnd: string;
+  actualEnd: string | null;
   status: TripStatus;
   passengers: number;
   delay: number;
-  created_at: string;
+  createdAt: string;
 }
 
 export interface TripCreate {

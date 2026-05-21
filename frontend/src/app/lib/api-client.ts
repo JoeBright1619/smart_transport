@@ -19,6 +19,12 @@ type ErrorEnvelope = {
     code?: string;
     message?: string;
   };
+  detail?: {
+    error?: {
+      code?: string;
+      message?: string;
+    };
+  };
 };
 
 export class ApiError extends Error {
@@ -34,7 +40,7 @@ export class ApiError extends Error {
 
   static fromAxiosError(error: AxiosError<ErrorEnvelope>): ApiError {
     const status = error.response?.status;
-    const envelope = error.response?.data?.error;
+    const envelope = error.response?.data?.error ?? error.response?.data?.detail?.error;
 
     return new ApiError(
       envelope?.message ?? error.message ?? 'An unexpected API error occurred',
