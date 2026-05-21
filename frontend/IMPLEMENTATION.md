@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 6.2 — Superadmin Portal (new route + page)
+**Next task:** Task 7.1 — Remove Mock Data File
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -761,7 +761,7 @@ Add a superadmin-only section of the app, visible only when `user.role === 'supe
 
 **Suggested commit:** `Add superadmin portal for tenant management and platform analytics`
 
-- [ ] Task 6.2 complete
+- [x] Task 6.2 complete
 
 ---
 
