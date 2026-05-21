@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 6.1 — Administration Page: Users CRUD (`pages/Administration.tsx`)
+**Next task:** Task 6.2 — Superadmin Portal (new route + page)
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -738,7 +738,7 @@ The current `Administration.tsx` contains placeholder UI. Replace it with a real
 
 **Suggested commit:** `Implement administration user management with backend CRUD`
 
-- [ ] Task 6.1 complete
+- [x] Task 6.1 complete
 
 ---
 
@@ -828,6 +828,6 @@ Now that all pages use `api-types.ts`, audit `lib/types.ts` for types that are n
 | Phase 3 — API Services Layer | 10 tasks | 10 / 10 |
 | Phase 4 — Page Integration | 9 tasks | 9 / 9 |
 | Phase 5 — Real-Time Tracking | 3 tasks | 3 / 3 |
-| Phase 6 — New Pages | 2 tasks | 0 / 2 |
+| Phase 6 — New Pages | 2 tasks | 1 / 2 |
 | Phase 7 — Final Polish | 3 tasks | 0 / 3 |
-| **Total** | **33 tasks** | **28 / 33** |
+| **Total** | **33 tasks** | **29 / 33** |
