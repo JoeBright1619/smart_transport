@@ -3,7 +3,9 @@ import React from 'react';
 import { MainLayout } from './components/layout/MainLayout';
 import { LoginPage } from './components/pages/LoginPage';
 import { RegisterPage } from './components/pages/RegisterPage';
-import { Dashboard } from './components/pages/Dashboard';
+import { RoleHomeRedirect } from './components/RoleHomeRedirect';
+import { SuperadminRoute } from './components/SuperadminRoute';
+import { SuperadminPortal } from './components/pages/SuperadminPortal';
 import { VehicleTracking } from './components/pages/VehicleTracking';
 import { FleetManagement } from './components/pages/FleetManagement';
 import { RouteManagement } from './components/pages/RouteManagement';
@@ -31,7 +33,15 @@ export const router = createBrowserRouter([
     path: '/',
     element: <ProtectedRoute><MainLayout /></ProtectedRoute>,
     children: [
-      { index: true, Component: Dashboard },
+      { index: true, Component: RoleHomeRedirect },
+      {
+        path: 'superadmin',
+        element: (
+          <SuperadminRoute>
+            <SuperadminPortal />
+          </SuperadminRoute>
+        ),
+      },
       { path: 'tracking', Component: VehicleTracking },
       { path: 'fleet', Component: FleetManagement },
       { path: 'routes', Component: RouteManagement },

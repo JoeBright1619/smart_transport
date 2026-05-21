@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router';
+import { Link, Navigate } from 'react-router';
 import { AlertTriangle, Bus, CheckCircle, Clock, TrendingUp, Users } from 'lucide-react';
 import type { AlertRead, AnalyticsData, VehicleRead, VehicleStatus } from '../../lib/api-types';
+import { useAuth } from '../../lib/auth-context';
+import type { UserRole } from '../../lib/types';
 import * as alertsService from '../../services/alerts.service';
 import * as analyticsService from '../../services/analytics.service';
 import * as vehiclesService from '../../services/vehicles.service';
@@ -21,6 +23,12 @@ const initialDashboardState: DashboardState = {
   alerts: [],
   vehicles: [],
 };
+
+const ANALYTICS_ROLES: UserRole[] = ['admin', 'operator'];
+
+function canViewAnalytics(role: UserRole | undefined): boolean {
+  return role !== undefined && ANALYTICS_ROLES.includes(role);
+}
 
 function severityClass(severity: AlertRead['severity']): string {
   if (severity === 'critical') return 'text-red-500';
@@ -83,9 +91,11 @@ function DashboardSkeleton() {
 }
 
 export function Dashboard() {
+  const { user } = useAuth();
   const [dashboard, setDashboard] = useState<DashboardState>(initialDashboardState);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const showAnalytics = canViewAnalytics(user?.role);
 
   const fetchDashboard = useCallback(async () => {
     setLoading(true);
@@ -93,7 +103,7 @@ export function Dashboard() {
 
     try {
       const [analytics, alerts, vehicles] = await Promise.all([
-        analyticsService.getAnalytics(),
+        showAnalytics ? analyticsService.getAnalytics() : Promise.resolve(null),
         alertsService.listAlerts({ pageSize: 5, isAcknowledged: false }),
         vehiclesService.listVehicles({ pageSize: 100 }),
       ]);
@@ -108,11 +118,12 @@ export function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showAnalytics]);
 
   useEffect(() => {
+    if (user?.role === 'superadmin') return;
     void fetchDashboard();
-  }, [fetchDashboard]);
+  }, [fetchDashboard, user?.role]);
 
   const fleetCounts = useMemo(
     () =>
@@ -130,6 +141,10 @@ export function Dashboard() {
   const totalVehicles = dashboard.vehicles.length;
   const activeVehicles = fleetCounts.active;
   const fleetUtilization = totalVehicles > 0 ? Math.round((activeVehicles / totalVehicles) * 100) : 0;
+
+  if (user?.role === 'superadmin') {
+    return <Navigate to="/superadmin" replace />;
+  }
 
   if (loading) {
     return <DashboardSkeleton />;
@@ -174,46 +189,59 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Total Trips</CardTitle>
-            <Clock className="size-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analyticsSummary?.totalTrips ?? 0}</div>
-            <p className="text-xs text-slate-500">
-              Avg delay: {analyticsSummary?.avgDelay ?? 0} min
-            </p>
-          </CardContent>
-        </Card>
+        {showAnalytics ? (
+          <>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-slate-600">Total Trips</CardTitle>
+                <Clock className="size-4 text-green-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{analyticsSummary?.totalTrips ?? 0}</div>
+                <p className="text-xs text-slate-500">
+                  Avg delay: {analyticsSummary?.avgDelay ?? 0} min
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">On-Time Performance</CardTitle>
-            <CheckCircle className="size-4 text-emerald-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analyticsSummary?.onTimePercentage ?? 0}%</div>
-            <p className="text-xs text-slate-500">
-              {dashboard.alerts.length} unacknowledged alerts
-            </p>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-slate-600">On-Time Performance</CardTitle>
+                <CheckCircle className="size-4 text-emerald-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{analyticsSummary?.onTimePercentage ?? 0}%</div>
+                <p className="text-xs text-slate-500">Last 7 days</p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Total Passengers</CardTitle>
-            <Users className="size-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {(analyticsSummary?.totalPassengers ?? 0).toLocaleString()}
-            </div>
-            <p className="text-xs text-slate-500">
-              {(analyticsSummary?.totalRevenue ?? 0).toLocaleString()} RWF revenue
-            </p>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-slate-600">Total Passengers</CardTitle>
+                <Users className="size-4 text-purple-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {(analyticsSummary?.totalPassengers ?? 0).toLocaleString()}
+                </div>
+                <p className="text-xs text-slate-500">
+                  {(analyticsSummary?.totalRevenue ?? 0).toLocaleString()} RWF revenue
+                </p>
+              </CardContent>
+            </Card>
+          </>
+        ) : (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">Open Alerts</CardTitle>
+              <AlertTriangle className="size-4 text-orange-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{dashboard.alerts.length}</div>
+              <p className="text-xs text-slate-500">Unacknowledged alerts</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -319,12 +347,14 @@ export function Dashboard() {
                 Dispatch Control
               </Button>
             </Link>
-            <Link to="/analytics">
-              <Button variant="outline" className="w-full justify-start">
-                <TrendingUp className="mr-2 size-4" />
-                View Analytics
-              </Button>
-            </Link>
+            {showAnalytics && (
+              <Link to="/analytics">
+                <Button variant="outline" className="w-full justify-start">
+                  <TrendingUp className="mr-2 size-4" />
+                  View Analytics
+                </Button>
+              </Link>
+            )}
             <Link to="/maintenance">
               <Button variant="outline" className="w-full justify-start">
                 <AlertTriangle className="mr-2 size-4" />

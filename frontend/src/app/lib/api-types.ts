@@ -317,23 +317,23 @@ export interface ArrivalEstimate {
 export interface TenantRead {
   id: string;
   name: string;
-  contact_email: string;
-  is_active: boolean;
-  created_at: string;
-  vehicle_count: number;
-  user_count: number;
+  contactEmail: string;
+  isActive: boolean;
+  createdAt: string;
+  vehicleCount: number;
+  userCount: number;
 }
 
 export interface TenantDetail extends TenantRead {
-  updated_at: string;
+  updatedAt: string;
 }
 
 export interface SuperadminAnalytics {
-  total_tenants: number;
-  active_tenants: number;
-  total_vehicles: number;
-  total_trips_today: number;
-  total_passengers_today: number;
+  totalTenants: number;
+  activeTenants: number;
+  totalVehicles: number;
+  totalTripsToday: number;
+  totalPassengersToday: number;
 }
 
 export interface ImpersonateResponse {

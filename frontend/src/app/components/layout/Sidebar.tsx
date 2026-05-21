@@ -13,13 +13,20 @@ import {
   Smartphone,
   UserCog,
   Shield,
-  LogOut
+  LogOut,
+  Building2,
 } from 'lucide-react';
 import { cn } from '../ui/utils';
 import { useAuth } from '../../lib/auth-context';
 import { Button } from '../ui/button';
 
 const navigation = [
+  {
+    name: 'Platform Admin',
+    href: '/superadmin',
+    icon: Building2,
+    roles: ['superadmin'],
+  },
   { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'operator', 'dispatcher'] },
   { name: 'Vehicle Tracking', href: '/tracking', icon: MapPin, roles: ['admin', 'operator', 'dispatcher'] },
   { name: 'Fleet Management', href: '/fleet', icon: Bus, roles: ['admin', 'operator'] },

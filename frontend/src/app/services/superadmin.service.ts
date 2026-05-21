@@ -42,7 +42,7 @@ export async function getTenant(id: string): Promise<TenantDetail> {
 
 export async function updateTenant(
   id: string,
-  data: { is_active: boolean },
+  data: { isActive: boolean },
 ): Promise<TenantDetail> {
   const response = await apiClient.patch<ApiResponse<TenantDetail>>(
     `/superadmin/tenants/${id}`,
