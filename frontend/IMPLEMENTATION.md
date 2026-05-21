@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 5.1 — WebSocket client (`lib/ws-client.ts`)
+**Next task:** Task 5.2 — Update Vehicle Tracking Page (`pages/VehicleTracking.tsx`)
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -685,7 +685,7 @@ class VehicleTrackingSocket {
 
 **Suggested commit:** `Add authenticated WebSocket client for live vehicle tracking`
 
-- [ ] Task 5.1 complete
+- [x] Task 5.1 complete
 
 ---
 
