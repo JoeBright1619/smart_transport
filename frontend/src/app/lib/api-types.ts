@@ -54,17 +54,17 @@ export type TenantUserRole = 'admin' | 'operator' | 'dispatcher' | 'passenger';
 
 export interface UserRead {
   id: string;
-  tenant_id: string | null;
-  full_name: string;
+  tenantId: string | null;
+  fullName: string;
   email: string;
   role: UserRole;
   phone: string | null;
-  is_deleted: boolean;
-  created_at: string;
+  isDeleted: boolean;
+  createdAt: string;
 }
 
 export interface UserCreate {
-  full_name: string;
+  fullName: string;
   email: string;
   role: TenantUserRole;
   phone?: string;
@@ -72,7 +72,7 @@ export interface UserCreate {
 }
 
 export interface UserUpdate {
-  full_name?: string;
+  fullName?: string;
   phone?: string;
   role?: TenantUserRole;
 }
@@ -103,7 +103,7 @@ export interface VehicleRead {
 }
 
 export interface VehicleCreate {
-  registration_number: string;
+  registrationNumber: string;
   model: string;
   capacity: number;
   status?: VehicleStatus;
@@ -112,8 +112,8 @@ export interface VehicleCreate {
 export interface VehicleUpdate {
   status?: VehicleStatus;
   fuel?: number;
-  route_id?: string | null;
-  driver_id?: string | null;
+  routeId?: string | null;
+  driverId?: string | null;
 }
 
 // Routes & Stops
@@ -139,8 +139,8 @@ export interface RouteRead {
   distance: number;
   duration: number;
   color: string;
-  is_active: boolean;
-  created_at: string;
+  isActive: boolean;
+  createdAt: string;
   stops: StopRead[];
 }
 
@@ -155,7 +155,7 @@ export interface RouteCreate {
 
 export interface RouteUpdate {
   name?: string;
-  is_active?: boolean;
+  isActive?: boolean;
   color?: string;
   stops?: StopCreate[];
 }
@@ -178,17 +178,17 @@ export interface DriverRead {
 
 export interface DriverCreate {
   name: string;
-  license_number: string;
+  licenseNumber: string;
   phone: string;
-  certification_expiry: string;
+  certificationExpiry: string;
 }
 
 export interface DriverUpdate {
   name?: string;
   phone?: string;
   status?: DriverStatus;
-  vehicle_id?: string | null;
-  certification_expiry?: string;
+  vehicleId?: string | null;
+  certificationExpiry?: string;
 }
 
 // Trips
@@ -210,11 +210,11 @@ export interface TripRead {
 }
 
 export interface TripCreate {
-  vehicle_id: string;
-  route_id: string;
-  driver_id: string;
-  scheduled_start: string;
-  scheduled_end: string;
+  vehicleId: string;
+  routeId: string;
+  driverId: string;
+  scheduledStart: string;
+  scheduledEnd: string;
 }
 
 export interface TripUpdate {
@@ -261,18 +261,19 @@ export interface MaintenanceRead {
 }
 
 export interface MaintenanceCreate {
-  vehicle_id: string;
+  vehicleId: string;
   type: MaintenanceType;
   description: string;
-  scheduled_date: string;
+  scheduledDate: string;
   cost: number;
+  nextDue?: string;
 }
 
 export interface MaintenanceUpdate {
   status?: MaintenanceStatus;
   cost?: number;
-  completed_date?: string;
-  next_due?: string;
+  completedDate?: string;
+  nextDue?: string;
 }
 
 // Analytics

@@ -31,11 +31,11 @@ export const initialScheduleTripFormState: ScheduleTripFormState = {
 
 export function buildTripCreatePayload(form: ScheduleTripFormState): TripCreate {
   return {
-    vehicle_id: form.vehicleId,
-    route_id: form.routeId,
-    driver_id: form.driverId,
-    scheduled_start: new Date(form.scheduledStart).toISOString(),
-    scheduled_end: new Date(form.scheduledEnd).toISOString(),
+    vehicleId: form.vehicleId,
+    routeId: form.routeId,
+    driverId: form.driverId,
+    scheduledStart: new Date(form.scheduledStart).toISOString(),
+    scheduledEnd: new Date(form.scheduledEnd).toISOString(),
   };
 }
 

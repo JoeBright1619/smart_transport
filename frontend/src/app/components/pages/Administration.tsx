@@ -22,7 +22,7 @@ export function Administration() {
   const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'superadmin';
 
   const [formData, setFormData] = useState({
-    full_name: '',
+    fullName: '',
     email: '',
     role: 'passenger' as TenantUserRole,
     phone: '',
@@ -30,7 +30,7 @@ export function Administration() {
   });
 
   const [editData, setEditData] = useState({
-    full_name: '',
+    fullName: '',
     phone: '',
     role: 'passenger' as TenantUserRole,
   });
@@ -56,7 +56,7 @@ export function Administration() {
     try {
       await createUser(formData);
       setIsAddOpen(false);
-      setFormData({ full_name: '', email: '', role: 'passenger', phone: '', password: '' });
+      setFormData({ fullName: '', email: '', role: 'passenger', phone: '', password: '' });
       loadUsers();
     } catch (err) {
       console.error(err);
@@ -66,7 +66,7 @@ export function Administration() {
 
   const openEdit = (u: UserRead) => {
     setEditingUser(u);
-    setEditData({ full_name: u.full_name, phone: u.phone || '', role: u.role as TenantUserRole });
+    setEditData({ fullName: u.fullName, phone: u.phone || '', role: u.role as TenantUserRole });
     setIsEditOpen(true);
   };
 
@@ -84,7 +84,7 @@ export function Administration() {
   };
 
   const handleDelete = async (u: UserRead) => {
-    if (window.confirm(`Are you sure you want to remove ${u.full_name}?`)) {
+    if (window.confirm(`Are you sure you want to remove ${u.fullName}?`)) {
       try {
         await deleteUser(u.id);
         loadUsers();
@@ -118,8 +118,8 @@ export function Administration() {
                 <Input
                   placeholder="Full Name"
                   required
-                  value={formData.full_name}
-                  onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                 />
                 <Input
                   type="email"
@@ -192,7 +192,7 @@ export function Administration() {
                 <TableBody>
                   {users.map((u) => (
                     <TableRow key={u.id}>
-                      <TableCell className="font-medium">{u.full_name}</TableCell>
+                      <TableCell className="font-medium">{u.fullName}</TableCell>
                       <TableCell>{u.email}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="capitalize">
@@ -200,7 +200,7 @@ export function Administration() {
                         </Badge>
                       </TableCell>
                       <TableCell>{u.phone || '—'}</TableCell>
-                      <TableCell>{new Date(u.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>{new Date(u.createdAt).toLocaleDateString()}</TableCell>
                       {isAdmin && (
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" onClick={() => openEdit(u)}>
@@ -237,8 +237,8 @@ export function Administration() {
             <Input
               placeholder="Full Name"
               required
-              value={editData.full_name}
-              onChange={(e) => setEditData({ ...editData, full_name: e.target.value })}
+              value={editData.fullName}
+              onChange={(e) => setEditData({ ...editData, fullName: e.target.value })}
             />
             <Input
               placeholder="Phone"

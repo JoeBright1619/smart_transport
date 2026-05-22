@@ -17,11 +17,11 @@ export type RegisterTenantPayload = {
 
 export async function registerTenant(payload: RegisterTenantPayload): Promise<RegisterResponse> {
   const response = await apiClient.post<ApiResponse<RegisterResponse>>('/auth/register', {
-    company_name: payload.companyName,
-    contact_email: payload.contactEmail,
-    admin_full_name: payload.adminFullName,
-    admin_email: payload.adminEmail,
-    admin_phone: payload.adminPhone,
+    companyName: payload.companyName,
+    contactEmail: payload.contactEmail,
+    adminFullName: payload.adminFullName,
+    adminEmail: payload.adminEmail,
+    adminPhone: payload.adminPhone,
     password: payload.password,
   });
 

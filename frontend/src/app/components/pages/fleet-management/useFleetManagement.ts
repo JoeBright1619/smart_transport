@@ -13,14 +13,14 @@ import * as vehiclesService from '../../../services/vehicles.service';
 import { getFleetStats } from './fleet-helpers';
 
 export type FleetFormState = {
-  registration_number: string;
+  registrationNumber: string;
   model: string;
   capacity: string;
   status: VehicleCreate['status'];
 };
 
 export const initialFleetFormState: FleetFormState = {
-  registration_number: '',
+  registrationNumber: '',
   model: '',
   capacity: '',
   status: 'idle',
@@ -85,7 +85,7 @@ export function useFleetManagement() {
 
     try {
       await vehiclesService.createVehicle({
-        registration_number: form.registration_number.trim(),
+        registrationNumber: form.registrationNumber.trim(),
         model: form.model.trim(),
         capacity: Number(form.capacity),
         status: form.status,

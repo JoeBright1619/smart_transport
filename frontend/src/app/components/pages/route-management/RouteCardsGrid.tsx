@@ -15,8 +15,8 @@ export function RouteCardsGrid({ routes }: { routes: RouteRead[] }) {
                 </Badge>
                 <CardTitle className="text-base">{route.name}</CardTitle>
               </div>
-              <Badge variant={route.is_active ? 'default' : 'secondary'}>
-                {route.is_active ? 'Active' : 'Inactive'}
+              <Badge variant={route.isActive ? 'default' : 'secondary'}>
+                {route.isActive ? 'Active' : 'Inactive'}
               </Badge>
             </div>
           </CardHeader>

@@ -30,9 +30,9 @@ export const statusLabels: Record<DriverStatus, string> = {
 export function buildDriverCreatePayload(form: DriverFormState): DriverCreate {
   return {
     name: form.name.trim(),
-    license_number: form.licenseNumber.trim(),
+    licenseNumber: form.licenseNumber.trim(),
     phone: form.phone.trim(),
-    certification_expiry: form.certificationExpiry,
+    certificationExpiry: form.certificationExpiry,
   };
 }
 

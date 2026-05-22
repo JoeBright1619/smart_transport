@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router';
 import { AlertTriangle, Bus, CheckCircle, Clock, TrendingUp, Users } from 'lucide-react';
-import type { AlertRead, AnalyticsData, VehicleRead, VehicleStatus } from '../../lib/api-types';
+import type { AlertRead, AnalyticsData, UserRole, VehicleRead, VehicleStatus } from '../../lib/api-types';
 import { useAuth } from '../../lib/auth-context';
-import type { UserRole } from '../../lib/types';
 import * as alertsService from '../../services/alerts.service';
 import * as analyticsService from '../../services/analytics.service';
 import * as vehiclesService from '../../services/vehicles.service';

@@ -55,8 +55,8 @@ export function RoutesTable({
                       <TableCell>{route.distance} km</TableCell>
                       <TableCell>{route.duration} min</TableCell>
                       <TableCell>
-                        <Badge variant={route.is_active ? 'default' : 'secondary'}>
-                          {route.is_active ? 'Active' : 'Inactive'}
+                        <Badge variant={route.isActive ? 'default' : 'secondary'}>
+                          {route.isActive ? 'Active' : 'Inactive'}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -65,9 +65,9 @@ export function RoutesTable({
                             variant="outline"
                             size="sm"
                             disabled={disabled}
-                            onClick={() => void onUpdateRoute(route.id, { is_active: !route.is_active })}
+                            onClick={() => void onUpdateRoute(route.id, { isActive: !route.isActive })}
                           >
-                            {route.is_active ? 'Deactivate' : 'Activate'}
+                            {route.isActive ? 'Deactivate' : 'Activate'}
                           </Button>
                           <Button
                             variant="ghost"

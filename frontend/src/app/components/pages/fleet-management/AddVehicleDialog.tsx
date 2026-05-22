@@ -46,14 +46,14 @@ export function AddVehicleDialog({
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="registration_number">Registration</Label>
+              <Label htmlFor="registrationNumber">Registration</Label>
               <Input
-                id="registration_number"
-                value={form.registration_number}
+                id="registrationNumber"
+                value={form.registrationNumber}
                 onChange={(event) =>
                   setForm((current) => ({
                     ...current,
-                    registration_number: event.target.value,
+                    registrationNumber: event.target.value,
                   }))
                 }
                 required

@@ -46,7 +46,7 @@ export function getRouteStats(routes: RouteRead[]): RouteStats {
 
   return {
     totalRoutes,
-    activeRoutes: routes.filter((route) => route.is_active).length,
+    activeRoutes: routes.filter((route) => route.isActive).length,
     totalDistance: routes.reduce((sum, route) => sum + route.distance, 0),
     avgDuration: totalRoutes > 0 ? Math.round(totalDuration / totalRoutes) : 0,
     totalStops: routes.reduce((sum, route) => sum + route.stops.length, 0),

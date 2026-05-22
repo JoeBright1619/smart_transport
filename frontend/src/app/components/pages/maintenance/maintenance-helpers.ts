@@ -40,12 +40,12 @@ export const initialMaintenanceFormState: MaintenanceFormState = {
 
 export function buildMaintenanceCreatePayload(form: MaintenanceFormState): MaintenanceCreate {
   return {
-    vehicle_id: form.vehicleId,
+    vehicleId: form.vehicleId,
     type: form.type,
     description: form.description.trim(),
-    scheduled_date: form.scheduledDate,
+    scheduledDate: form.scheduledDate,
     cost: Number(form.cost),
-    next_due: form.nextDue || undefined,
+    nextDue: form.nextDue || undefined,
   };
 }
 

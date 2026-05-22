@@ -59,7 +59,7 @@ export function VehicleTableRow({
           value={vehicle.driverId}
           items={drivers.map((driver) => ({ id: driver.id, label: driver.name }))}
           disabled={disabled}
-          onChange={(driverId) => void updateVehicle(vehicle.id, { driver_id: driverId })}
+          onChange={(driverId) => void updateVehicle(vehicle.id, { driverId })}
         />
       </TableCell>
       <TableCell>
@@ -67,7 +67,7 @@ export function VehicleTableRow({
           value={vehicle.routeId}
           items={routes.map((route) => ({ id: route.id, label: route.number }))}
           disabled={disabled}
-          onChange={(routeId) => void updateVehicle(vehicle.id, { route_id: routeId })}
+          onChange={(routeId) => void updateVehicle(vehicle.id, { routeId })}
           widthClass="w-32"
         />
       </TableCell>

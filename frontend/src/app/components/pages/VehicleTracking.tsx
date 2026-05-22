@@ -194,8 +194,8 @@ export function VehicleTracking() {
           <CardContent className="max-h-[600px] overflow-y-auto">
             <div className="space-y-2">
               {filteredVehicles.map((vehicle) => {
-                const driver = drivers.find(d => d.id === vehicle.driver_id);
-                const route = routes.find(r => r.id === vehicle.route_id);
+                const driver = drivers.find(d => d.id === vehicle.driverId);
+                const route = routes.find(r => r.id === vehicle.routeId);
 
                 return (
                   <div
@@ -271,8 +271,8 @@ export function VehicleTracking() {
                 {filteredVehicles.map((vehicle) => {
                   if (!vehicle.currentLocation) return null;
 
-                  const driver = drivers.find(d => d.id === vehicle.driver_id);
-                  const route = routes.find(r => r.id === vehicle.route_id);
+                  const driver = drivers.find(d => d.id === vehicle.driverId);
+                  const route = routes.find(r => r.id === vehicle.routeId);
 
                   return (
                     <Marker
