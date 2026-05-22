@@ -3,18 +3,23 @@ import { Bell, Search, Cloud } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { mockAlerts } from '../../lib/mock-data';
+import { listAlerts } from '../../services/alerts.service';
 
 export function Header() {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const unacknowledgedAlerts = mockAlerts.filter(a => !a.acknowledged).length;
+  const [unacknowledgedCount, setUnacknowledgedCount] = useState(0);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
-
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    listAlerts({ isAcknowledged: false, pageSize: 100 })
+      .then(res => setUnacknowledgedCount(res.total))
+      .catch(() => {});
   }, []);
 
   return (
@@ -37,9 +42,9 @@ export function Header() {
 
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="size-5" />
-          {unacknowledgedAlerts > 0 && (
+          {unacknowledgedCount > 0 && (
             <Badge className="absolute -right-1 -top-1 size-5 p-0 flex items-center justify-center text-xs">
-              {unacknowledgedAlerts}
+              {unacknowledgedCount}
             </Badge>
           )}
         </Button>

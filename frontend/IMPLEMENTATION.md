@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 7.1 — Remove Mock Data File
+**Next task:** Task 7.2 — Global Error & Loading States
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -782,7 +782,7 @@ Before deleting:
 
 **Suggested commit:** `Remove mock data dependency and align demo credentials with seed data`
 
-- [ ] Task 7.1 complete
+- [x] Task 7.1 complete
 
 ---
 

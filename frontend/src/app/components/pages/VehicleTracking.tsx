@@ -5,10 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { mockRoutes, mockDrivers } from '../../lib/mock-data';
 import { Search, Gauge, Battery, AlertCircle, WifiOff } from 'lucide-react';
-import type { VehicleRead } from '../../lib/api-types';
+import type { VehicleRead, RouteRead, DriverRead } from '../../lib/api-types';
 import { listVehicles } from '../../services/vehicles.service';
+import { listRoutes } from '../../services/routes.service';
+import { listDrivers } from '../../services/drivers.service';
 import { VehicleTrackingSocket } from '../../lib/ws-client';
 
 // Create custom icon for vehicles
@@ -33,6 +34,8 @@ const createVehicleIcon = (status: string) => {
 
 export function VehicleTracking() {
   const [vehicles, setVehicles] = useState<VehicleRead[]>([]);
+  const [routes, setRoutes] = useState<RouteRead[]>([]);
+  const [drivers, setDrivers] = useState<DriverRead[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleRead | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -45,12 +48,18 @@ export function VehicleTracking() {
 
     const initialize = async () => {
       try {
-        const data = await listVehicles({ pageSize: 100 });
+        const [vehicleData, routeData, driverData] = await Promise.all([
+          listVehicles({ pageSize: 100 }),
+          listRoutes({ pageSize: 100 }),
+          listDrivers({ pageSize: 100 }),
+        ]);
         if (mounted) {
-          setVehicles(data.items);
+          setVehicles(vehicleData.items);
+          setRoutes(routeData.items);
+          setDrivers(driverData.items);
         }
       } catch (err) {
-        console.error('Failed to load initial vehicles', err);
+        console.error('Failed to load initial tracking data', err);
       }
     };
 
@@ -185,8 +194,8 @@ export function VehicleTracking() {
           <CardContent className="max-h-[600px] overflow-y-auto">
             <div className="space-y-2">
               {filteredVehicles.map((vehicle) => {
-                const driver = mockDrivers.find(d => d.id === vehicle.driverId);
-                const route = mockRoutes.find(r => r.id === vehicle.routeId);
+                const driver = drivers.find(d => d.id === vehicle.driver_id);
+                const route = routes.find(r => r.id === vehicle.route_id);
 
                 return (
                   <div
@@ -262,8 +271,8 @@ export function VehicleTracking() {
                 {filteredVehicles.map((vehicle) => {
                   if (!vehicle.currentLocation) return null;
 
-                  const driver = mockDrivers.find(d => d.id === vehicle.driverId);
-                  const route = mockRoutes.find(r => r.id === vehicle.routeId);
+                  const driver = drivers.find(d => d.id === vehicle.driver_id);
+                  const route = routes.find(r => r.id === vehicle.route_id);
 
                   return (
                     <Marker
@@ -301,10 +310,10 @@ export function VehicleTracking() {
                 })}
 
                 {/* Draw route lines */}
-                {mockRoutes.map((route) => {
+                {routes.map((route) => {
                   const routeCoordinates: [number, number][] = route.stops.map(stop => [
-                    stop.location.lat,
-                    stop.location.lng
+                    stop.lat,
+                    stop.lng
                   ]);
 
                   return (

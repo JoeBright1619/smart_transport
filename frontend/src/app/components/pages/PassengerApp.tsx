@@ -1,40 +1,70 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { mockRoutes, mockStops, mockVehicles } from '../../lib/mock-data';
+import type { RouteRead, StopRead, ArrivalEstimate } from '../../lib/api-types';
+import { listRoutes } from '../../services/routes.service';
+import { getArrivals } from '../../services/arrivals.service';
 import { MapPin, Clock, Navigation, Star, Heart, Search, Bus } from 'lucide-react';
 
 export function PassengerApp() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [routes, setRoutes] = useState<RouteRead[]>([]);
+  const [allStops, setAllStops] = useState<StopRead[]>([]);
   const [selectedStop, setSelectedStop] = useState<string | null>(null);
-  const [favoriteStops] = useState<string[]>(['stop-1', 'stop-3', 'stop-6']);
+  const [arrivals, setArrivals] = useState<ArrivalEstimate[]>([]);
+  const [favoriteStops, setFavoriteStops] = useState<string[]>([]);
 
-  const filteredStops = mockStops.filter(stop =>
+  useEffect(() => {
+    listRoutes({ isActive: true, pageSize: 100 })
+      .then(res => {
+        setRoutes(res.items);
+        const stopMap = new Map<string, StopRead>();
+        res.items.forEach(route => {
+          route.stops.forEach(stop => stopMap.set(stop.id, stop));
+        });
+        setAllStops(Array.from(stopMap.values()));
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!selectedStop) {
+      setArrivals([]);
+      return;
+    }
+
+    const fetchArrivals = () => {
+      getArrivals(selectedStop)
+        .then(data => {
+          const sorted = [...data].sort((a, b) => {
+            if (a.etaMinutes === null) return 1;
+            if (b.etaMinutes === null) return -1;
+            return (a.etaMinutes ?? 0) - (b.etaMinutes ?? 0);
+          });
+          setArrivals(sorted);
+        })
+        .catch(() => {});
+    };
+
+    fetchArrivals();
+    const interval = setInterval(fetchArrivals, 10000);
+    return () => clearInterval(interval);
+  }, [selectedStop]);
+
+  const filteredStops = allStops.filter(stop =>
     stop.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Calculate estimated arrival times (simulated)
-  const getEstimatedArrival = (stopId: string, routeId: string) => {
-    const vehicle = mockVehicles.find(v => v.routeId === routeId && v.status === 'active');
-    if (!vehicle) return null;
+  const favoriteStopsList = allStops.filter(s => favoriteStops.includes(s.id));
+  const selectedStopName = allStops.find(s => s.id === selectedStop)?.name;
 
-    // Simulate ETA calculation
-    const baseETA = Math.floor(Math.random() * 15) + 5;
-    return baseETA;
+  const toggleFavorite = (stopId: string) => {
+    setFavoriteStops(prev =>
+      prev.includes(stopId) ? prev.filter(id => id !== stopId) : [...prev, stopId]
+    );
   };
-
-  const stopArrivals = selectedStop
-    ? mockRoutes
-        .filter(route => route.stops.some(s => s.id === selectedStop))
-        .map(route => {
-          const eta = getEstimatedArrival(selectedStop, route.id);
-          const vehicle = mockVehicles.find(v => v.routeId === route.id && v.status === 'active');
-          return { route, eta, vehicle };
-        })
-        .filter(item => item.eta !== null)
-    : [];
 
   return (
     <div className="max-w-5xl mx-auto pb-20 px-4 space-y-6">
@@ -64,21 +94,20 @@ export function PassengerApp() {
         {/* Left: Favorite & Nearby Stops */}
         <div className="space-y-6">
           {/* Favorite Stops */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Heart className="size-5 text-red-500" />
-                Favorite Stops
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {mockStops
-                  .filter(stop => favoriteStops.includes(stop.id))
-                  .map(stop => (
+          {favoriteStopsList.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Heart className="size-5 text-red-500" />
+                  Favorite Stops
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {favoriteStopsList.map(stop => (
                     <Button
                       key={stop.id}
-                      variant={selectedStop === stop.id ? "default" : "outline"}
+                      variant={selectedStop === stop.id ? 'default' : 'outline'}
                       className="w-full justify-start"
                       onClick={() => setSelectedStop(stop.id)}
                     >
@@ -86,9 +115,10 @@ export function PassengerApp() {
                       {stop.name}
                     </Button>
                   ))}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Nearby Stops */}
           <Card>
@@ -101,9 +131,10 @@ export function PassengerApp() {
             <CardContent>
               <div className="space-y-2">
                 {filteredStops.map(stop => {
-                  const routesAtStop = mockRoutes.filter(r =>
+                  const routesAtStop = routes.filter(r =>
                     r.stops.some(s => s.id === stop.id)
                   );
+                  const isFavorite = favoriteStops.includes(stop.id);
 
                   return (
                     <div
@@ -132,9 +163,12 @@ export function PassengerApp() {
                             ))}
                           </div>
                         </div>
-                        {favoriteStops.includes(stop.id) && (
-                          <Heart className="size-4 fill-red-500 text-red-500" />
-                        )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleFavorite(stop.id); }}
+                          className="ml-2 p-1"
+                        >
+                          <Heart className={`size-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-slate-300'}`} />
+                        </button>
                       </div>
                     </div>
                   );
@@ -147,50 +181,68 @@ export function PassengerApp() {
         {/* Right: Next Arrivals + Service Info */}
         <div className="space-y-6">
           {/* Arrival Times for Selected Stop */}
-          {selectedStop && stopArrivals.length > 0 && (
+          {selectedStop && arrivals.length > 0 && (
             <Card className="border-blue-200 bg-blue-50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Clock className="size-5 text-blue-600" />
-                  Next Arrivals at {mockStops.find(s => s.id === selectedStop)?.name}
+                  Next Arrivals at {selectedStopName}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {stopArrivals.map(({ route, eta, vehicle }) => (
-                    <div key={route.id} className="rounded-lg bg-white p-4 shadow-sm">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <Badge style={{ backgroundColor: route.color }} className="text-white">
-                              Route {route.number}
-                            </Badge>
-                            <p className="font-medium">{route.name}</p>
-                          </div>
-                          {vehicle && (
-                            <p className="text-xs text-slate-500 mt-1">
-                              Vehicle: {vehicle.registrationNumber}
-                            </p>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold text-blue-600">{eta}</p>
-                          <p className="text-xs text-slate-500">minutes</p>
-                        </div>
-                      </div>
+                  {arrivals.map((arrival) => {
+                    const route = routes.find(r => r.id === arrival.routeId);
 
-                      <div className="flex items-center justify-between mt-3 pt-3 border-t">
-                        <div className="flex items-center gap-4 text-xs text-slate-600">
-                          <span>{route.distance} km</span>
-                          <span>~{route.duration} min trip</span>
+                    return (
+                      <div key={arrival.vehicleId} className="rounded-lg bg-white p-4 shadow-sm">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              {route && (
+                                <Badge style={{ backgroundColor: route.color }} className="text-white">
+                                  Route {route.number}
+                                </Badge>
+                              )}
+                              <p className="font-medium">{arrival.routeName}</p>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-1">
+                              Vehicle: {arrival.registrationNumber}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            {arrival.etaMinutes !== null ? (
+                              <>
+                                <p className="text-2xl font-bold text-blue-600">{arrival.etaMinutes}</p>
+                                <p className="text-xs text-slate-500">minutes</p>
+                              </>
+                            ) : (
+                              <Badge variant="secondary">Stopped</Badge>
+                            )}
+                          </div>
                         </div>
-                        <Button size="sm" variant="outline">
-                          View Route
-                        </Button>
+
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                          <div className="flex items-center gap-4 text-xs text-slate-600">
+                            <span>{arrival.distanceToStopKm != null ? `${arrival.distanceToStopKm.toFixed(1)} km away` : ''}</span>
+                            {route && <span>~{route.duration} min trip</span>}
+                          </div>
+                          <Badge variant={arrival.status === 'active' ? 'default' : 'secondary'}>
+                            {arrival.status === 'active' ? 'approaching' : arrival.status}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {selectedStop && arrivals.length === 0 && (
+            <Card className="border-blue-200 bg-blue-50">
+              <CardContent className="pt-6 text-center text-sm text-slate-500">
+                No vehicles currently approaching this stop.
               </CardContent>
             </Card>
           )}
