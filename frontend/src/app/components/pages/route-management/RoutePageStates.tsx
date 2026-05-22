@@ -1,6 +1,6 @@
-import { Button } from '../../ui/button';
-import { Card, CardContent, CardHeader } from '../../ui/card';
+import { Card, CardHeader, CardContent } from '../../ui/card';
 import { Skeleton } from '../../ui/skeleton';
+import { ErrorMessage } from '../../ui/error-message';
 
 export function RouteLoadingState() {
   return (
@@ -28,21 +28,5 @@ export function RouteLoadingState() {
 }
 
 export function RouteErrorState({ error, onRetry }: { error: string; onRetry: () => void }) {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Route Management</h1>
-        <p className="text-slate-600">Manage bus routes and stops</p>
-      </div>
-      <Card>
-        <CardContent className="flex flex-col items-start gap-4 p-6">
-          <div>
-            <p className="font-medium text-red-700">Unable to load routes</p>
-            <p className="mt-1 text-sm text-slate-600">{error}</p>
-          </div>
-          <Button onClick={onRetry}>Retry</Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  return <ErrorMessage error={error} onRetry={onRetry} />;
 }

@@ -1,6 +1,6 @@
-import { Button } from '../../ui/button';
 import { Card, CardContent, CardHeader } from '../../ui/card';
 import { Skeleton } from '../../ui/skeleton';
+import { ErrorMessage } from '../../ui/error-message';
 
 export function FleetLoadingState() {
   return (
@@ -37,21 +37,5 @@ export function FleetLoadingState() {
 }
 
 export function FleetErrorState({ error, onRetry }: { error: string; onRetry: () => void }) {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Fleet Management</h1>
-        <p className="text-slate-600">Comprehensive fleet monitoring and control</p>
-      </div>
-      <Card>
-        <CardContent className="flex flex-col items-start gap-4 p-6">
-          <div>
-            <p className="font-medium text-red-700">Unable to load fleet data</p>
-            <p className="mt-1 text-sm text-slate-600">{error}</p>
-          </div>
-          <Button onClick={onRetry}>Retry</Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  return <ErrorMessage error={error} onRetry={onRetry} />;
 }

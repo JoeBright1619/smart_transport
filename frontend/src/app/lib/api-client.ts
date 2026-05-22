@@ -4,6 +4,7 @@ import axios, {
   type AxiosRequestHeaders,
   type InternalAxiosRequestConfig,
 } from 'axios';
+import { toast } from 'sonner';
 import type { ApiResponse, RefreshTokenResponse } from './api-types';
 
 export const ACCESS_TOKEN_KEY = 'st-access-token';
@@ -141,6 +142,7 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         clearStoredToken();
+        toast.error('Session expired — please log in again');
         redirectToLogin();
         return Promise.reject(
           refreshError instanceof AxiosError

@@ -11,7 +11,7 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Skeleton } from '../ui/skeleton';
-import React from 'react';
+import { ErrorMessage } from '../ui/error-message';
 
 type DashboardState = {
   analytics: AnalyticsData | null;
@@ -152,23 +152,7 @@ export function Dashboard() {
   }
 
   if (error) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Fleet Dashboard</h1>
-          <p className="text-slate-600">Real-time overview of your transport operations</p>
-        </div>
-        <Card>
-          <CardContent className="flex flex-col items-start gap-4 p-6">
-            <div>
-              <p className="font-medium text-red-700">Unable to load dashboard data</p>
-              <p className="mt-1 text-sm text-slate-600">{error}</p>
-            </div>
-            <Button onClick={() => void fetchDashboard()}>Retry</Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <ErrorMessage error={error} onRetry={() => void fetchDashboard()} />;
   }
 
   return (

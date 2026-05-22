@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 7.2 — Global Error & Loading States
+**Next task:** Task 7.3 — TypeScript Type Cleanup
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -798,7 +798,7 @@ Add consistent UX polish across all integrated pages:
 
 **Suggested commit:** `Add reusable loading and error states with session expiry feedback`
 
-- [ ] Task 7.2 complete
+- [x] Task 7.2 complete
 
 ---
 
