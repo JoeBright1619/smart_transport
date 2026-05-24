@@ -1,7 +1,10 @@
+import { FileDown } from 'lucide-react';
+import { Button } from '../ui/button';
 import { AnalyticsChartsTabs } from './analytics/AnalyticsChartsTabs';
 import { AnalyticsDateRange } from './analytics/AnalyticsDateRange';
 import { AnalyticsErrorState, AnalyticsLoadingState } from './analytics/AnalyticsPageStates';
 import { AnalyticsStatsCards } from './analytics/AnalyticsStatsCards';
+import { exportAnalyticsPDF } from './analytics/analytics-pdf';
 import { useAnalyticsPage } from './analytics/useAnalyticsPage';
 
 export function Analytics() {
@@ -26,12 +29,29 @@ export function Analytics() {
           <h1 className="text-2xl font-bold">Analytics & Reporting</h1>
           <p className="text-slate-600">Performance metrics and operational insights</p>
         </div>
-        <AnalyticsDateRange
-          from={analytics.from}
-          to={analytics.to}
-          onFromChange={analytics.setFrom}
-          onToChange={analytics.setTo}
-        />
+        <div className="flex items-center gap-2">
+          <AnalyticsDateRange
+            from={analytics.from}
+            to={analytics.to}
+            onFromChange={analytics.setFrom}
+            onToChange={analytics.setTo}
+          />
+          <Button
+            variant="outline"
+            onClick={() =>
+              exportAnalyticsPDF({
+                data: analytics.data!,
+                routePerformance: analytics.routePerformance,
+                fleetStatus: analytics.fleetStatus,
+                from: analytics.from,
+                to: analytics.to,
+              })
+            }
+          >
+            <FileDown className="mr-2 size-4" />
+            Export PDF
+          </Button>
+        </div>
       </div>
 
       <AnalyticsStatsCards
