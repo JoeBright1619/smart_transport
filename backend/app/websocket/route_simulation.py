@@ -7,9 +7,11 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.geo_math import haversine_distance
+from app.core.geo_math import bearing, haversine_distance, move_along_bearing
 from app.models.route import RouteStop, Stop
 from app.models.vehicle import Vehicle
+
+TICK_SECONDS = 5
 
 _state: dict[str, dict[str, Any]] = {}
 
@@ -42,6 +44,46 @@ async def load_route_stops(db: AsyncSession, route_id: str) -> list[StopPoint]:
         StopPoint(id=stop_id, name=name, lat=lat, lng=lng)
         for stop_id, name, lat, lng in rows
     ]
+
+
+async def advance_vehicle(
+    db: AsyncSession, vehicle: Vehicle, now: datetime
+) -> dict[str, float | int] | None:
+    """Advance a vehicle one simulation tick toward the next route stop."""
+    if vehicle.route_id is None or vehicle.lat is None or vehicle.lng is None:
+        return None
+
+    stops = await load_route_stops(db, vehicle.route_id)
+    if len(stops) < 2:
+        return None
+
+    state = get_or_init_state(vehicle.id, len(stops))
+    target = stops[int(state["next_stop_index"])]
+    dist_m = haversine_distance(vehicle.lat, vehicle.lng, target.lat, target.lng)
+    advance_m = (vehicle.speed or 20) * 1000 / 3600 * TICK_SECONDS
+
+    if dist_m <= advance_m or dist_m < 30:
+        lat = target.lat
+        lng = target.lng
+        speed = 0
+        heading = vehicle.heading or 0
+        state["next_stop_index"] = (int(state["next_stop_index"]) + 1) % len(stops)
+
+        if state["next_stop_index"] == 0:
+            state["loop_count"] = int(state.get("loop_count", 0)) + 1
+            state["trip_started_at"] = now
+    else:
+        brg = bearing(vehicle.lat, vehicle.lng, target.lat, target.lng)
+        lat, lng = move_along_bearing(vehicle.lat, vehicle.lng, brg, advance_m)
+        speed = vehicle.speed or 20
+        heading = int(brg)
+
+    return {
+        "lat": lat,
+        "lng": lng,
+        "speed": speed,
+        "heading": heading,
+    }
 
 
 def get_or_init_state(vehicle_id: str, stop_count: int) -> dict[str, Any]:

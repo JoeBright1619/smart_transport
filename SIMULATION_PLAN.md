@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 2.1 — Segment-Following Movement
+**Next task:** Task 2.2 — Wire Simulation into `tracking.py`
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -237,7 +237,7 @@ Returns `None` if the vehicle has no route or its route has no stops.
 
 **Suggested commit:** `Implement segment-following movement along route stops`
 
-- [ ] Task 2.1 complete
+- [x] Task 2.1 complete
 
 ---
 
