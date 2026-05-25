@@ -5,12 +5,14 @@
 > - After completing a task, tick its checkbox: `[ ]` → `[x]`
 > - Keep the **Current Task Pointer** below updated after each completed task.
 > - **DO NOT proceed to the next task without explicit user approval.**
+> - Keep implementation files to approximately **200 lines**. If a file would grow much larger,
+>   split the functionality into focused modules wherever practical.
 
 ---
 
 ## Current Task Pointer
 
-**Next task:** Task 1.2 — Route Simulation Module
+**Next task:** Task 2.1 — Segment-Following Movement
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -181,7 +183,7 @@ tracks where each vehicle is on its route, and provides the single public functi
 
 **Suggested commit:** `Add route simulation module with in-memory vehicle route state`
 
-- [ ] Task 1.2 complete
+- [x] Task 1.2 complete
 
 ---
 
