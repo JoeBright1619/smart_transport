@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 2.3 — Seed Vehicles at Route Start Positions
+**Next task:** Task 3.1 — Speed Variation Near Stops
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -310,7 +310,7 @@ start at the **first stop of its assigned route**.
 
 **Suggested commit:** `Reset active vehicle positions to route start stops in seed`
 
-- [ ] Task 2.3 complete
+- [x] Task 2.3 complete
 
 ---
 
