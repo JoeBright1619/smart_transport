@@ -11,12 +11,13 @@ from sqlalchemy import select
 
 from app.core.database import AsyncSessionLocal
 from app.core.security import decode_access_token
+from app.models.alert import Alert
 from app.models.telemetry import Telemetry
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.models.vehicle import Vehicle
 from app.websocket.manager import manager
-from app.websocket.route_simulation import advance_vehicle
+from app.websocket.route_simulation import LOW_FUEL_THRESHOLD, advance_vehicle
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -204,11 +205,29 @@ async def _simulate_vehicle_positions(tenant_id: str) -> None:
 
         for vehicle in vehicles:
             now = datetime.now(timezone.utc)
+            prev_fuel_before = vehicle.fuel or 100
             updates = await advance_vehicle(db, vehicle, now)
             if updates:
                 vehicle.lat = updates["lat"]
                 vehicle.lng = updates["lng"]
                 vehicle.speed = updates["speed"]
                 vehicle.heading = updates["heading"]
+                vehicle.fuel = updates["fuel"]
+                if updates.get("fuel", 100) < LOW_FUEL_THRESHOLD:
+                    if prev_fuel_before >= LOW_FUEL_THRESHOLD:
+                        db.add(
+                            Alert(
+                                tenant_id=tenant_id,
+                                type="maintenance",
+                                severity="high",
+                                title=f"Low Fuel: {vehicle.registration_number}",
+                                message=(
+                                    f"{vehicle.registration_number} fuel is below "
+                                    f"{LOW_FUEL_THRESHOLD}%."
+                                ),
+                                vehicle_id=vehicle.id,
+                                is_acknowledged=False,
+                            )
+                        )
 
         await db.commit()

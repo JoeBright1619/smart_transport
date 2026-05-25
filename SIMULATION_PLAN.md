@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 3.2 — Fuel Consumption and Low-Fuel Alert
+**Next task:** Task 3.3 — Automatic Trip Record Creation
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -413,7 +413,7 @@ refuel the vehicle automatically when it completes a loop back to its first stop
 
 **Suggested commit:** `Add fuel consumption with low-fuel alert and depot auto-refuel`
 
-- [ ] Task 3.2 complete
+- [x] Task 3.2 complete
 
 ---
 

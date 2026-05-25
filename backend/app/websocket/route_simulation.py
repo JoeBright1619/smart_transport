@@ -15,6 +15,8 @@ from app.models.vehicle import Vehicle
 TICK_SECONDS = 5
 OPEN_ROAD_SPEED = 35
 DECEL_START_DIST = 250
+FUEL_CONSUMPTION_PCT_PER_KM = 1.0
+LOW_FUEL_THRESHOLD = 15
 
 _state: dict[str, dict[str, Any]] = {}
 
@@ -93,11 +95,21 @@ async def advance_vehicle(
         speed = new_speed
         heading = int(brg)
 
+    km_this_tick = new_speed * TICK_SECONDS / 3600
+    fuel_drop = km_this_tick * FUEL_CONSUMPTION_PCT_PER_KM
+    new_fuel = max(0, (vehicle.fuel or 100) - fuel_drop)
+
+    if state["next_stop_index"] == 0 and state["loop_count"] > 0:
+        new_fuel = 100.0
+
+    vehicle.fuel = int(new_fuel)
+
     return {
         "lat": lat,
         "lng": lng,
         "speed": speed,
         "heading": heading,
+        "fuel": int(new_fuel),
     }
 
 
