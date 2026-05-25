@@ -15,8 +15,8 @@
   "data": [
     {
       "id": "ten-uuid",
-      "name": "Kigali Express Ltd",
-      "contactEmail": "admin@kigaliexpress.rw",
+      "name": "EcoFleet Ltd",
+      "contactEmail": "admin@ecofleet.rw",
       "isActive": true,
       "vehicleCount": 12,
       "userCount": 8,
@@ -36,8 +36,8 @@
 {
   "data": {
     "id": "ten-uuid",
-    "name": "Kigali Express Ltd",
-    "contactEmail": "admin@kigaliexpress.rw",
+    "name": "EcoFleet Ltd",
+    "contactEmail": "admin@ecofleet.rw",
     "isActive": true,
     "vehicleCount": 12,
     "userCount": 8,
@@ -71,7 +71,7 @@ Creates a short-lived (1 hour) impersonation token for supporting a tenant.
 
 **Notes:**
 - The impersonation JWT payload includes `impersonatedBy: <superadmin_user_id>` to distinguish it from a regular token
-- The impersonated session must be clearly labelled in the frontend (e.g., "Viewing as Kigali Express Ltd")
+- The impersonated session must be clearly labelled in the frontend (e.g., "Viewing as EcoFleet Ltd")
 
 ---
 

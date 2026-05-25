@@ -91,7 +91,7 @@ export function RegisterPage() {
                     <Building2 className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                     <Input
                       id="companyName"
-                      placeholder="e.g. Kigali Express Ltd"
+                      placeholder="e.g. EcoFleet Ltd"
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
                       className="pl-10"

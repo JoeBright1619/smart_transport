@@ -18,7 +18,7 @@ class UserBase(APIModel):
     email: str = Field(
         min_length=3,
         max_length=255,
-        json_schema_extra={"example": "paul@kigaliexpress.rw"},
+        json_schema_extra={"example": "paul@ecofleet.rw"},
     )
     role: TenantUserRole = Field(json_schema_extra={"example": "dispatcher"})
     phone: str | None = Field(
@@ -60,7 +60,7 @@ class UserRead(APIModel):
         default=None, json_schema_extra={"example": "ten-uuid"}
     )
     full_name: str = Field(json_schema_extra={"example": "Marie Umutesi"})
-    email: str = Field(json_schema_extra={"example": "marie@kigaliexpress.rw"})
+    email: str = Field(json_schema_extra={"example": "marie@ecofleet.rw"})
     role: UserRole = Field(json_schema_extra={"example": "operator"})
     phone: str | None = Field(
         default=None, json_schema_extra={"example": "+250788234567"}

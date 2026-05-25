@@ -8,12 +8,12 @@ class RegisterRequest(APIModel):
     company_name: str = Field(
         min_length=1,
         max_length=255,
-        json_schema_extra={"example": "Kigali Express Ltd"},
+        json_schema_extra={"example": "EcoFleet Ltd"},
     )
     contact_email: str = Field(
         min_length=3,
         max_length=255,
-        json_schema_extra={"example": "admin@kigaliexpress.rw"},
+        json_schema_extra={"example": "admin@ecofleet.rw"},
     )
     admin_full_name: str = Field(
         min_length=1,
@@ -23,7 +23,7 @@ class RegisterRequest(APIModel):
     admin_email: str = Field(
         min_length=3,
         max_length=255,
-        json_schema_extra={"example": "jean@kigaliexpress.rw"},
+        json_schema_extra={"example": "jean@ecofleet.rw"},
     )
     admin_phone: str | None = Field(
         default=None,
@@ -41,7 +41,7 @@ class LoginRequest(APIModel):
     email: str = Field(
         min_length=3,
         max_length=255,
-        json_schema_extra={"example": "jean@kigaliexpress.rw"},
+        json_schema_extra={"example": "jean@ecofleet.rw"},
     )
     password: str = Field(
         min_length=1,
@@ -52,14 +52,14 @@ class LoginRequest(APIModel):
 
 class AuthTenantSummary(APIModel):
     id: str = Field(json_schema_extra={"example": "ten-uuid"})
-    name: str = Field(json_schema_extra={"example": "Kigali Express Ltd"})
+    name: str = Field(json_schema_extra={"example": "EcoFleet Ltd"})
     is_active: bool = Field(default=True, json_schema_extra={"example": True})
 
 
 class AuthUserSummary(APIModel):
     id: str = Field(json_schema_extra={"example": "user-uuid"})
     email: str | None = Field(
-        default=None, json_schema_extra={"example": "jean@kigaliexpress.rw"}
+        default=None, json_schema_extra={"example": "jean@ecofleet.rw"}
     )
     full_name: str | None = Field(
         default=None, json_schema_extra={"example": "Jean Claude Mugabo"}

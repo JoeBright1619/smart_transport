@@ -123,7 +123,7 @@ python -m app.core.seed
 Expected output:
 ```
 [seed] Superadmin created: superadmin@platform.local
-[seed] Demo tenant created: Kigali Express Ltd (ten-demo-001)
+[seed] Demo tenant created: EcoFleet Ltd (ten-demo-001)
 [seed] Users seeded: 4
 [seed] Routes seeded: 2 (6 stops total)
 [seed] Drivers seeded: 3
@@ -166,10 +166,10 @@ Open `http://localhost:5173` and log in with the demo credentials:
 
 | Role | Email | Password |
 |---|---|---|
-| Admin | `admin@kigaliexpress.rw` | `Password123!` |
-| Operator | `operator@kigaliexpress.rw` | `Password123!` |
-| Dispatcher | `dispatcher@kigaliexpress.rw` | `Password123!` |
-| Passenger | `passenger@kigaliexpress.rw` | `Password123!` |
+| Admin | `admin@ecofleet.rw` | `Password123!` |
+| Operator | `operator@ecofleet.rw` | `Password123!` |
+| Dispatcher | `dispatcher@ecofleet.rw` | `Password123!` |
+| Passenger | `passenger@ecofleet.rw` | `Password123!` |
 | Superadmin | `superadmin@platform.local` | `Admin@123456` |
 
 Check that:

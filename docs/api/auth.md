@@ -11,10 +11,10 @@ Register a new tenant and their first admin user in one step.
 **Request:**
 ```json
 {
-  "companyName": "Kigali Express Ltd",
-  "contactEmail": "admin@kigaliexpress.rw",
+  "companyName": "EcoFleet Ltd",
+  "contactEmail": "admin@ecofleet.rw",
   "adminFullName": "Jean Claude Mugabo",
-  "adminEmail": "jean@kigaliexpress.rw",
+  "adminEmail": "jean@ecofleet.rw",
   "adminPhone": "+250788123456",
   "password": "SecurePass123!"
 }
@@ -23,8 +23,8 @@ Register a new tenant and their first admin user in one step.
 ```json
 {
   "data": {
-    "tenant": { "id": "ten-uuid", "name": "Kigali Express Ltd", "isActive": true },
-    "user": { "id": "user-uuid", "email": "jean@kigaliexpress.rw", "role": "admin" },
+    "tenant": { "id": "ten-uuid", "name": "EcoFleet Ltd", "isActive": true },
+    "user": { "id": "user-uuid", "email": "jean@ecofleet.rw", "role": "admin" },
     "accessToken": "<jwt>"
   }
 }
@@ -34,7 +34,7 @@ Register a new tenant and their first admin user in one step.
 ---
 
 ## `POST /auth/login`
-**Request:** `{ "email": "jean@kigaliexpress.rw", "password": "SecurePass123!" }`
+**Request:** `{ "email": "jean@ecofleet.rw", "password": "SecurePass123!" }`
 
 **Response `200`:**
 ```json

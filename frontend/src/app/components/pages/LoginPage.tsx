@@ -96,9 +96,9 @@ export function LoginPage() {
             <p className="text-xs font-medium text-slate-700 mb-2">Demo Accounts:</p>
             <div className="space-y-1 text-xs text-slate-600">
               <p><strong>Superadmin:</strong> superadmin@platform.local</p>
-              <p><strong>Admin:</strong> admin@kigaliexpress.rw</p>
-              <p><strong>Operator:</strong> operator@kigaliexpress.rw</p>
-              <p><strong>Dispatcher:</strong> dispatcher@kigaliexpress.rw</p>
+              <p><strong>Admin:</strong> admin@ecofleet.rw</p>
+              <p><strong>Operator:</strong> operator@ecofleet.rw</p>
+              <p><strong>Dispatcher:</strong> dispatcher@ecofleet.rw</p>
               <p className="mt-2 text-slate-500">
                 Superadmin password: Admin@123456 · Others: Password123!
               </p>

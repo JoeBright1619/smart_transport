@@ -2,8 +2,6 @@
 
 Smart Transport is a full-stack public transport management system for a multi-tenant fleet operation. It combines a FastAPI backend with a React/Vite frontend for managing vehicles, routes, stops, drivers, trips, alerts, maintenance, analytics, arrivals, authentication, and live vehicle tracking.
 
-The project is built as a final-year project and is currently in the backend-integration phase: the backend API is implemented, the frontend UI exists, and frontend screens are being connected to the backend incrementally.
-
 ## Features
 
 - Multi-tenant authentication with JWT access tokens and HttpOnly refresh-token cookies
@@ -13,6 +11,8 @@ The project is built as a final-year project and is currently in the backend-int
 - Arrival estimate and WebSocket vehicle tracking endpoints
 - Superadmin tenant management endpoints
 - React dashboard UI with routing, protected pages, maps, tables, forms, and toast feedback
+- Live vehicle tracking map with real-time WebSocket updates
+- Analytics page with trend charts, route performance, fleet analysis, and PDF export
 
 ## Tech Stack
 
@@ -25,6 +25,7 @@ The project is built as a final-year project and is currently in the backend-int
 | Frontend | React, Vite, TypeScript, React Router |
 | UI | Radix UI, Tailwind CSS, Lucide icons |
 | Maps / charts | Leaflet, React Leaflet, Recharts |
+| PDF export | jsPDF, jspdf-autotable |
 | Tooling | Docker Compose, pytest, Ruff |
 
 ## Repository Structure
@@ -35,23 +36,24 @@ smart_transport/
   frontend/             React/Vite frontend application
   docs/                 Architecture, setup, API notes, seed plan, roadmap
   shared/               Shared planning and conventions
-  docker-compose.yml    Local PostgreSQL, Redis, and backend services
+  docker-compose.yml    PostgreSQL, Redis, and backend services
 ```
 
 ## Prerequisites
 
-- Python 3.11+
 - Node.js 18+
 - Docker Desktop
 - Git
 
 ## Environment Files
 
-Backend:
+Backend — copy the example and leave values as-is for Docker:
 
 ```bash
 cp backend/.env.example backend/.env
 ```
+
+> **Important:** Do not change `DATABASE_URL` or `REDIS_URL` in `backend/.env`. Those variables are only read when running the backend outside Docker. The Docker Compose setup injects its own values via `environment:` in `docker-compose.yml` and the backend container connects to the `db` and `redis` services automatically.
 
 Frontend:
 
@@ -59,14 +61,16 @@ Frontend:
 cp frontend/.env.example frontend/.env.local
 ```
 
-Default frontend values:
+Default frontend values (no changes needed for local development):
 
 ```env
 VITE_API_BASE_URL=http://localhost:8000
 VITE_WS_URL=ws://localhost:8000
 ```
 
-## Quick Start With Docker
+## Quick Start
+
+### 1. Start the backend services
 
 From the repository root:
 
@@ -74,14 +78,32 @@ From the repository root:
 docker compose up -d
 ```
 
-This starts PostgreSQL, Redis, and the backend API on:
+This starts PostgreSQL, Redis, and the FastAPI backend. Services are available at:
 
-- API: `http://localhost:8000`
-- API docs: `http://localhost:8000/docs`
-- PostgreSQL: `localhost:5432`
-- Redis: `localhost:6379`
+| Service | URL |
+|---|---|
+| API | `http://localhost:8000` |
+| API docs (Swagger) | `http://localhost:8000/docs` |
+| PostgreSQL | `localhost:5432` |
+| Redis | `localhost:6379` |
 
-Then start the frontend separately:
+### 2. Run database migrations
+
+```bash
+docker compose exec backend alembic upgrade head
+```
+
+### 3. Seed demo data
+
+```bash
+docker compose exec backend python -m app.core.seed
+```
+
+This seeds 5 tenants, 8 vehicles, 6 routes, 8 drivers, 5 active trips, 90 days of historical trips (~900 records), 90 days of analytics records, maintenance records, and alerts.
+
+> **Warning:** Always run the seed command inside the container using `docker compose exec backend ...`. Running `python -m app.core.seed` directly from your local terminal connects to your local PostgreSQL (if any) instead of the Docker database, and the data will not appear in the app.
+
+### 4. Start the frontend
 
 ```bash
 cd frontend
@@ -89,82 +111,7 @@ npm install
 npm run dev
 ```
 
-Frontend runs at:
-
-```text
-http://localhost:5173
-```
-
-## Manual Backend Setup
-
-Start PostgreSQL and Redis:
-
-```bash
-docker compose up -d db redis
-```
-
-Create and activate a Python virtual environment:
-
-```bash
-cd backend
-python -m venv .venv
-```
-
-Windows:
-
-```bash
-.venv\Scripts\activate
-```
-
-macOS / Linux:
-
-```bash
-source .venv/bin/activate
-```
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Run migrations:
-
-```bash
-alembic upgrade head
-```
-
-Seed demo data:
-
-```bash
-python -m app.core.seed
-```
-
-Start the backend:
-
-```bash
-uvicorn main:app --reload --port 8000
-```
-
-## Frontend Setup
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Build for production:
-
-```bash
-npm run build
-```
-
-Preview the production build:
-
-```bash
-npm run preview
-```
+Frontend runs at `http://localhost:5173`.
 
 ## Demo Credentials
 
@@ -173,64 +120,77 @@ After seeding, these accounts are available:
 | Role | Email | Password |
 |---|---|---|
 | Superadmin | `superadmin@platform.local` | `Admin@123456` |
-| Admin | `admin@kigaliexpress.rw` | `Password123!` |
-| Operator | `operator@kigaliexpress.rw` | `Password123!` |
-| Dispatcher | `dispatcher@kigaliexpress.rw` | `Password123!` |
-| Passenger | `passenger@kigaliexpress.rw` | `Password123!` |
+| Admin | `admin@ecofleet.rw` | `Password123!` |
+| Operator | `operator@ecofleet.rw` | `Password123!` |
+| Dispatcher | `dispatcher@ecofleet.rw` | `Password123!` |
+| Passenger | `passenger@ecofleet.rw` | `Password123!` |
 
-## Current Frontend Integration Status
+## Frontend Integration Status
 
-The backend is implemented and exposes the API surface. The frontend is being connected in phases from `frontend/IMPLEMENTATION.md`.
+All 33 frontend–backend integration tasks are complete. The frontend communicates entirely with the real backend API — no mock data remains.
 
-Completed so far:
+Completed:
 
-- Frontend environment variables
-- Axios installation
-- Backend-aligned API TypeScript types
-- Shared Axios API client with JWT injection and refresh handling
-- Auth service for register, login, refresh, and logout
-- Auth context migrated away from mock localStorage auth
-
-Still in progress:
-
-- Register page tenant-registration UX
-- Resource service files for users, vehicles, routes, drivers, trips, alerts, maintenance, analytics, arrivals, and superadmin
-- Replacing page-level mock data with real API calls
-- Live WebSocket tracking integration
-- Final removal of `mock-data.ts`
+- Frontend environment variables and Axios client setup
+- Backend-aligned TypeScript types (camelCase throughout)
+- JWT injection, token refresh, and session expiry handling
+- Auth context, login, register, and logout flows
+- All resource service files: users, vehicles, routes, stops, drivers, trips, alerts, maintenance, analytics, arrivals, and superadmin
+- All pages connected to real API: Dashboard, Fleet Management, Route Management, Driver Management, Trip Management, Dispatch, Alerts, Maintenance, Analytics, Vehicle Tracking, and Superadmin
+- Live WebSocket vehicle tracking
+- Analytics PDF export
 
 ## Useful Commands
 
-Backend:
+Docker (run from repository root):
 
 ```bash
-cd backend
-pytest
-pytest --cov=app --cov-report=term-missing
-ruff check .
-alembic upgrade head
-python -m app.core.seed
-uvicorn main:app --reload --port 8000
+docker compose up -d                                      # start all services
+docker compose ps                                         # check running containers
+docker compose logs -f backend                            # stream backend logs
+docker compose down                                       # stop all services
+docker compose down -v                                    # stop and delete volumes (wipes database)
 ```
 
-Frontend:
+Database migrations (inside container):
 
 ```bash
-cd frontend
-npm install
-npm run dev
-npm run build
-npm run preview
+docker compose exec backend alembic upgrade head          # apply all migrations
+docker compose exec backend alembic current               # show current revision
+docker compose exec backend alembic history               # show migration history
 ```
 
-Docker:
+Seed and test data (inside container):
 
 ```bash
-docker compose up -d
-docker compose ps
-docker compose logs -f backend
-docker compose down
+docker compose exec backend python -m app.core.seed       # seed demo data
+docker compose exec backend pytest                        # run test suite
+docker compose exec backend pytest --cov=app --cov-report=term-missing
+docker compose exec backend ruff check .                  # lint check
 ```
+
+Frontend (run from `frontend/` directory):
+
+```bash
+npm install        # install dependencies
+npm run dev        # start dev server at http://localhost:5173
+npm run build      # production build
+npm run preview    # preview production build locally
+npm run typecheck  # TypeScript type check
+```
+
+## Connecting to Databases
+
+**pgAdmin (PostgreSQL):**
+
+1. Open pgAdmin and add a new server.
+2. Host: `localhost`, Port: `5432`
+3. Database: `transport_db`, Username: `transport`, Password: `transport`
+
+**RedisInsight:**
+
+1. Open RedisInsight and add a new connection.
+2. Host: `localhost`, Port: `6379` (no password by default)
 
 ## API Notes
 
@@ -251,11 +211,7 @@ Backend responses use a consistent envelope:
 }
 ```
 
-Interactive OpenAPI docs are available at:
-
-```text
-http://localhost:8000/docs
-```
+All JSON field names use camelCase (the backend serializes via response aliases). Interactive OpenAPI docs are available at `http://localhost:8000/docs`.
 
 ## More Documentation
 
@@ -265,12 +221,12 @@ http://localhost:8000/docs
 - [MVP scope](docs/MVP-Scope.md)
 - [Seed plan](docs/Seed-Plan.md)
 - [Roadmap](docs/Roadmap.md)
-- [Frontend backend-integration plan](frontend/IMPLEMENTATION.md)
+- [Frontend integration plan](frontend/IMPLEMENTATION.md)
+- [Simulation plan](SIMULATION_PLAN.md)
 
-## Notes For Development
+## Development Notes
 
-- Work can be done directly on the current branch for a solo workflow.
 - Keep `frontend/.env.local` and `backend/.env` local; commit only `.env.example` files.
-- The frontend still contains mock data while migration is in progress. Remove it only after every page has been connected to backend services.
-- Keep files small and focused. Frontend pages should mostly compose smaller components/hooks/helpers and should be split before they grow beyond the guideline limit.
-- If login fails, check that the backend is running on port `8000`, CORS allows `http://localhost:5173`, and the seed data has been created.
+- Keep files small and focused. Frontend pages should mostly compose smaller components, hooks, and helpers.
+- If login fails, check that Docker containers are running (`docker compose ps`), CORS allows `http://localhost:5173`, and seed data has been created with `docker compose exec backend python -m app.core.seed`.
+- The `pgdata` Docker volume persists the database across restarts. Use `docker compose down -v` only if you want a clean slate.

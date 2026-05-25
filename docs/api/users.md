@@ -15,7 +15,7 @@
     {
       "id": "user-uuid",
       "fullName": "Marie Umutesi",
-      "email": "marie@kigaliexpress.rw",
+      "email": "marie@ecofleet.rw",
       "role": "operator",
       "phone": "+250788234567",
       "isDeleted": false,
@@ -35,7 +35,7 @@
 ```json
 {
   "fullName": "Paul Nkunda",
-  "email": "paul@kigaliexpress.rw",
+  "email": "paul@ecofleet.rw",
   "role": "dispatcher",
   "phone": "+250788345678",
   "password": "TempPass123!"

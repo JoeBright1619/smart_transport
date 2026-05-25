@@ -7,8 +7,8 @@ from app.schemas.base import APIModel
 
 class SuperadminTenantRead(APIModel):
     id: str = Field(json_schema_extra={"example": "ten-uuid"})
-    name: str = Field(json_schema_extra={"example": "Kigali Express Ltd"})
-    contact_email: str = Field(json_schema_extra={"example": "admin@kigaliexpress.rw"})
+    name: str = Field(json_schema_extra={"example": "EcoFleet Ltd"})
+    contact_email: str = Field(json_schema_extra={"example": "admin@ecofleet.rw"})
     is_active: bool = Field(json_schema_extra={"example": True})
     vehicle_count: int = Field(json_schema_extra={"example": 12})
     user_count: int = Field(json_schema_extra={"example": 8})
