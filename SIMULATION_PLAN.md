@@ -10,7 +10,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 1.1 — Geo Math Utilities
+**Next task:** Task 1.2 — Route Simulation Module
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -134,7 +134,7 @@ engine depends on. No third-party geo libraries — pure math using the haversin
 
 **Suggested commit:** `Add geo math utilities: haversine distance, bearing, position interpolation`
 
-- [ ] Task 1.1 complete
+- [x] Task 1.1 complete
 
 ---
 
