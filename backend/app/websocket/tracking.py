@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime, timezone
-from random import uniform
 from typing import Any
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
@@ -17,6 +16,7 @@ from app.models.tenant import Tenant
 from app.models.user import User
 from app.models.vehicle import Vehicle
 from app.websocket.manager import manager
+from app.websocket.route_simulation import advance_vehicle
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -203,12 +203,12 @@ async def _simulate_vehicle_positions(tenant_id: str) -> None:
             return
 
         for vehicle in vehicles:
-            vehicle.lat = (vehicle.lat or 0) + uniform(-0.0002, 0.0002)  # nosec B311
-            vehicle.lng = (vehicle.lng or 0) + uniform(-0.0002, 0.0002)  # nosec B311
-            vehicle.speed = max(
-                0,
-                min(80, (vehicle.speed or 35) + round(uniform(-3, 3))),  # nosec B311
-            )
-            vehicle.heading = int(((vehicle.heading or 0) + uniform(-8, 8)) % 360)  # nosec B311
+            now = datetime.now(timezone.utc)
+            updates = await advance_vehicle(db, vehicle, now)
+            if updates:
+                vehicle.lat = updates["lat"]
+                vehicle.lng = updates["lng"]
+                vehicle.speed = updates["speed"]
+                vehicle.heading = updates["heading"]
 
         await db.commit()

@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 2.2 — Wire Simulation into `tracking.py`
+**Next task:** Task 2.3 — Seed Vehicles at Route Start Positions
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -276,7 +276,7 @@ loop, telemetry recording) stays **unchanged**.
 
 **Suggested commit:** `Replace random-walk simulation with route-following movement`
 
-- [ ] Task 2.2 complete
+- [x] Task 2.2 complete
 
 ---
 
