@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 3.1 — Speed Variation Near Stops
+**Next task:** Task 3.2 — Fuel Consumption and Low-Fuel Alert
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -358,7 +358,7 @@ and accelerate as they leave. Implement smooth speed variation inside `advance_v
 
 **Suggested commit:** `Add speed variation: decelerate approaching stops, accelerate leaving`
 
-- [ ] Task 3.1 complete
+- [x] Task 3.1 complete
 
 ---
 

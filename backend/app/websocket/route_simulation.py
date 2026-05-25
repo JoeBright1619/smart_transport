@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from random import uniform
 from typing import Any
 
 from sqlalchemy import select
@@ -12,6 +13,8 @@ from app.models.route import RouteStop, Stop
 from app.models.vehicle import Vehicle
 
 TICK_SECONDS = 5
+OPEN_ROAD_SPEED = 35
+DECEL_START_DIST = 250
 
 _state: dict[str, dict[str, Any]] = {}
 
@@ -60,7 +63,19 @@ async def advance_vehicle(
     state = get_or_init_state(vehicle.id, len(stops))
     target = stops[int(state["next_stop_index"])]
     dist_m = haversine_distance(vehicle.lat, vehicle.lng, target.lat, target.lng)
-    advance_m = (vehicle.speed or 20) * 1000 / 3600 * TICK_SECONDS
+    current_speed = vehicle.speed or 0
+
+    if current_speed == 0:
+        new_speed = min(OPEN_ROAD_SPEED, current_speed + 8)
+    elif dist_m < DECEL_START_DIST:
+        ratio = dist_m / DECEL_START_DIST
+        new_speed = max(5, int(OPEN_ROAD_SPEED * ratio))
+    else:
+        variation = round(uniform(-3, 3))  # nosec B311
+        new_speed = max(15, min(50, current_speed + variation))
+
+    vehicle.speed = new_speed
+    advance_m = new_speed * 1000 / 3600 * TICK_SECONDS
 
     if dist_m <= advance_m or dist_m < 30:
         lat = target.lat
@@ -75,7 +90,7 @@ async def advance_vehicle(
     else:
         brg = bearing(vehicle.lat, vehicle.lng, target.lat, target.lng)
         lat, lng = move_along_bearing(vehicle.lat, vehicle.lng, brg, advance_m)
-        speed = vehicle.speed or 20
+        speed = new_speed
         heading = int(brg)
 
     return {
