@@ -351,7 +351,7 @@ export type WsVehiclePosition = {
   fuel: number;
   status: VehicleStatus;
   timestamp: string;
-  engineStatus?: string;
+  engineStatus?: EngineStatus;
   nextStopName?: string;
   progressPct?: number;
 };

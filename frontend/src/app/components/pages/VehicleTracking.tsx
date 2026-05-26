@@ -12,6 +12,11 @@ import { listRoutes } from '../../services/routes.service';
 import { listDrivers } from '../../services/drivers.service';
 import { VehicleTrackingSocket } from '../../lib/ws-client';
 
+type TrackedVehicle = VehicleRead & {
+  nextStopName?: string;
+  progressPct?: number;
+};
+
 // Create custom icon for vehicles
 const createVehicleIcon = (status: string, heading: number) => {
   const color =
@@ -37,10 +42,10 @@ const createVehicleIcon = (status: string, heading: number) => {
 };
 
 export function VehicleTracking() {
-  const [vehicles, setVehicles] = useState<VehicleRead[]>([]);
+  const [vehicles, setVehicles] = useState<TrackedVehicle[]>([]);
   const [routes, setRoutes] = useState<RouteRead[]>([]);
   const [drivers, setDrivers] = useState<DriverRead[]>([]);
-  const [selectedVehicle, setSelectedVehicle] = useState<VehicleRead | null>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<TrackedVehicle | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
@@ -88,7 +93,9 @@ export function VehicleTracking() {
                     heading: pos.heading,
                     fuel: pos.fuel,
                     status: pos.status,
-                    engineStatus: (pos as any).engineStatus || updated[idx].engineStatus,
+                    engineStatus: pos.engineStatus || updated[idx].engineStatus,
+                    nextStopName: pos.nextStopName,
+                    progressPct: pos.progressPct,
                     lastUpdate: pos.timestamp,
                   };
                 }
@@ -107,7 +114,9 @@ export function VehicleTracking() {
                   heading: pos.heading,
                   fuel: pos.fuel,
                   status: pos.status,
-                  engineStatus: (pos as any).engineStatus || prev.engineStatus,
+                  engineStatus: pos.engineStatus || prev.engineStatus,
+                  nextStopName: pos.nextStopName,
+                  progressPct: pos.progressPct,
                   lastUpdate: pos.timestamp,
                 };
               }
@@ -226,6 +235,17 @@ export function VehicleTracking() {
                         {route && (
                           <p className="text-xs text-blue-600 mt-1">Route {route.number}</p>
                         )}
+                        {vehicle.nextStopName && (
+                          <div className="mt-1">
+                            <p className="text-xs text-slate-500">Next: {vehicle.nextStopName}</p>
+                            <div className="mt-0.5 h-1 w-full rounded-full bg-slate-200">
+                              <div
+                                className="h-full rounded-full bg-blue-500"
+                                style={{ width: `${vehicle.progressPct ?? 0}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
                         {driver && (
                           <p className="text-xs text-slate-500">{driver.name}</p>
                         )}
@@ -337,7 +357,7 @@ export function VehicleTracking() {
             {selectedVehicle && (
               <Card className="mt-4">
                 <CardContent className="pt-4">
-                  <div className="grid gap-4 md:grid-cols-3">
+                  <div className="grid gap-4 md:grid-cols-4">
                     <div>
                       <p className="text-xs text-slate-500">Vehicle</p>
                       <p className="font-medium">{selectedVehicle.registrationNumber}</p>
@@ -370,6 +390,17 @@ export function VehicleTracking() {
                           {selectedVehicle.engineStatus}
                         </span>
                       </div>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500">Next Stop</p>
+                      <p className="font-medium text-sm mt-1">
+                        {selectedVehicle.nextStopName || '-'}
+                      </p>
+                      {selectedVehicle.progressPct !== undefined && (
+                        <p className="text-xs text-slate-400">
+                          {selectedVehicle.progressPct}% to stop
+                        </p>
+                      )}
                     </div>
                   </div>
                 </CardContent>

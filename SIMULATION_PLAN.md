@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 5.2 — Next Stop Display in Tracking Sidebar
+**Next task:** Task 5.3 — Passenger App Arrival Improvements
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -645,7 +645,7 @@ detail panel so operators can see progress at a glance.
 
 **Suggested commit:** `Show next stop and progress in tracking sidebar and detail panel`
 
-- [ ] Task 5.2 complete
+- [x] Task 5.2 complete
 
 ---
 
