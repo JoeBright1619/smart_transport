@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 3.3 — Automatic Trip Record Creation
+**Next task:** Task 4.1 — Broadcast Next-Stop Info
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -474,7 +474,7 @@ page trip history and feeds the analytics tables with live data going forward.
 
 **Suggested commit:** `Auto-create completed trip records on each route loop`
 
-- [ ] Task 3.3 complete
+- [x] Task 3.3 complete
 
 ---
 
