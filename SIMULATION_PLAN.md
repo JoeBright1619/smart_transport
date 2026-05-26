@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 5.1 — Directional Vehicle Markers
+**Next task:** Task 5.2 — Next Stop Display in Tracking Sidebar
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -591,7 +591,7 @@ the vehicle's current heading**. This makes the movement direction immediately o
 
 **Suggested commit:** `Rotate vehicle map markers to face heading direction`
 
-- [ ] Task 5.1 complete
+- [x] Task 5.1 complete
 
 ---
 

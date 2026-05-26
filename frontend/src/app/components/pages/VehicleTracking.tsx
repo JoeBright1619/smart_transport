@@ -13,19 +13,23 @@ import { listDrivers } from '../../services/drivers.service';
 import { VehicleTrackingSocket } from '../../lib/ws-client';
 
 // Create custom icon for vehicles
-const createVehicleIcon = (status: string) => {
+const createVehicleIcon = (status: string, heading: number) => {
   const color =
     status === 'active' ? '#10B981' :
     status === 'idle' ? '#F59E0B' :
     status === 'maintenance' ? '#EF4444' : '#6B7280';
 
-  return new Icon({
-    iconUrl: `data:image/svg+xml;base64,${btoa(`
-      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  const svg = `
+    <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+      <g transform="rotate(${heading}, 16, 16)">
         <circle cx="16" cy="16" r="12" fill="${color}" stroke="white" stroke-width="2"/>
-        <path d="M12 14h8v4h-8z M10 18h12v2h-12z M11 20h2v2h-2z M19 20h2v2h-2z" fill="white"/>
-      </svg>
-    `)}`,
+        <polygon points="16,6 20,20 16,17 12,20" fill="white" opacity="0.9"/>
+      </g>
+    </svg>
+  `;
+
+  return new Icon({
+    iconUrl: `data:image/svg+xml;base64,${btoa(svg)}`,
     iconSize: [32, 32],
     iconAnchor: [16, 16],
     popupAnchor: [0, -16],
@@ -278,7 +282,7 @@ export function VehicleTracking() {
                     <Marker
                       key={vehicle.id}
                       position={[vehicle.currentLocation.lat, vehicle.currentLocation.lng]}
-                      icon={createVehicleIcon(vehicle.status)}
+                      icon={createVehicleIcon(vehicle.status, vehicle.heading ?? 0)}
                       eventHandlers={{
                         click: () => setSelectedVehicle(vehicle)
                       }}
