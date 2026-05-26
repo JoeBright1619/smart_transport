@@ -20,6 +20,7 @@ FUEL_CONSUMPTION_PCT_PER_KM = 1.0
 LOW_FUEL_THRESHOLD = 15
 
 _state: dict[str, dict[str, Any]] = {}
+_route_stops_cache: dict[str, list["StopPoint"]] = {}
 
 
 @dataclass(frozen=True)
@@ -52,6 +53,13 @@ async def load_route_stops(db: AsyncSession, route_id: str) -> list[StopPoint]:
     ]
 
 
+async def get_stops_cached(db: AsyncSession, route_id: str) -> list[StopPoint]:
+    """Load route stops once per route and keep them in memory until restart."""
+    if route_id not in _route_stops_cache:
+        _route_stops_cache[route_id] = await load_route_stops(db, route_id)
+    return _route_stops_cache[route_id]
+
+
 async def advance_vehicle(
     db: AsyncSession, vehicle: Vehicle, now: datetime
 ) -> dict[str, float | int] | None:
@@ -59,7 +67,7 @@ async def advance_vehicle(
     if vehicle.route_id is None or vehicle.lat is None or vehicle.lng is None:
         return None
 
-    stops = await load_route_stops(db, vehicle.route_id)
+    stops = await get_stops_cached(db, vehicle.route_id)
     if len(stops) < 2:
         return None
 

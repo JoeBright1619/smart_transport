@@ -17,7 +17,14 @@ from app.models.tenant import Tenant
 from app.models.user import User
 from app.models.vehicle import Vehicle
 from app.websocket.manager import manager
-from app.websocket.route_simulation import LOW_FUEL_THRESHOLD, advance_vehicle
+from app.websocket.route_simulation import (
+    LOW_FUEL_THRESHOLD,
+    _state,
+    advance_vehicle,
+    compute_progress_pct,
+    get_next_stop_name,
+    get_stops_cached,
+)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -164,9 +171,13 @@ async def _build_vehicle_update_message(tenant_id: str) -> dict[str, Any]:
                     exc_info=True,
                 )
 
-        return {
-            "type": "vehicle_update",
-            "data": [
+        vehicle_data = []
+        for vehicle in vehicles:
+            stops = (
+                await get_stops_cached(db, vehicle.route_id) if vehicle.route_id else []
+            )
+            state = _state.get(vehicle.id, {})
+            vehicle_data.append(
                 {
                     "vehicleId": vehicle.id,
                     "lat": vehicle.lat,
@@ -176,10 +187,16 @@ async def _build_vehicle_update_message(tenant_id: str) -> dict[str, Any]:
                     "fuel": vehicle.fuel,
                     "engineStatus": vehicle.engine_status,
                     "timestamp": timestamp.isoformat(),
+                    "nextStopName": get_next_stop_name(vehicle.id, stops),
+                    "progressPct": (
+                        compute_progress_pct(vehicle, stops, state)
+                        if stops and state
+                        else 0
+                    ),
                 }
-                for vehicle in vehicles
-            ],
-        }
+            )
+
+        return {"type": "vehicle_update", "data": vehicle_data}
 
 
 async def _publish_vehicle_update(tenant_id: str, message: dict[str, Any]) -> None:

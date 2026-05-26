@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 4.1 — Broadcast Next-Stop Info
+**Next task:** Task 4.2 — Extend Frontend WebSocket Types
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -515,7 +515,7 @@ the frontend can show "heading to X (72%)" in real time without an extra API cal
 
 **Suggested commit:** `Include nextStopName and progressPct in WebSocket vehicle broadcast`
 
-- [ ] Task 4.1 complete
+- [x] Task 4.1 complete
 
 ---
 
