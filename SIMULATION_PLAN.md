@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 4.2 — Extend Frontend WebSocket Types
+**Next task:** Task 5.1 — Directional Vehicle Markers
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -550,7 +550,7 @@ to the components.
 
 **Suggested commit:** `Extend WsVehiclePosition type with nextStopName and progressPct`
 
-- [ ] Task 4.2 complete
+- [x] Task 4.2 complete
 
 ---
 

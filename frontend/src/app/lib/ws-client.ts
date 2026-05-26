@@ -43,6 +43,8 @@ export class VehicleTrackingSocket {
               status: 'active',
               timestamp: v.timestamp,
               engineStatus: v.engineStatus,
+              nextStopName: v.nextStopName ?? '',
+              progressPct: v.progressPct ?? 0,
             })),
           };
           this.onMessage(mappedMessage);
