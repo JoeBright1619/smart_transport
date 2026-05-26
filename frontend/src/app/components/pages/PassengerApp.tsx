@@ -196,37 +196,37 @@ export function PassengerApp() {
 
                     return (
                       <div key={arrival.vehicleId} className="rounded-lg bg-white p-4 shadow-sm">
-                        <div className="flex items-start justify-between mb-2">
+                        <div className="mb-3 flex items-center gap-2">
+                          <span className="size-2 rounded-full bg-green-500 animate-pulse" />
+                          <span className="text-xs font-medium text-green-700">Live</span>
+                        </div>
+                        <div className="flex items-center justify-between">
                           <div>
-                            <div className="flex items-center gap-2">
-                              {route && (
-                                <Badge style={{ backgroundColor: route.color }} className="text-white">
-                                  Route {route.number}
-                                </Badge>
-                              )}
-                              <p className="font-medium">{arrival.routeName}</p>
-                            </div>
-                            <p className="text-xs text-slate-500 mt-1">
-                              Vehicle: {arrival.registrationNumber}
-                            </p>
+                            <p className="font-semibold text-sm">{arrival.registrationNumber}</p>
+                            <p className="text-xs text-slate-500">{arrival.routeName}</p>
+                            {route && (
+                              <Badge style={{ backgroundColor: route.color }} className="mt-2 text-white">
+                                Route {route.number}
+                              </Badge>
+                            )}
                           </div>
                           <div className="text-right">
-                            {arrival.etaMinutes !== null ? (
-                              <>
-                                <p className="text-2xl font-bold text-blue-600">{arrival.etaMinutes}</p>
-                                <p className="text-xs text-slate-500">minutes</p>
-                              </>
+                            {arrival.etaMinutes !== null && arrival.etaMinutes < 2 ? (
+                              <span className="text-green-600 font-bold text-sm">Arriving now</span>
+                            ) : arrival.etaMinutes !== null ? (
+                              <span className="font-bold text-sm">{arrival.etaMinutes} min</span>
                             ) : (
-                              <Badge variant="secondary">Stopped</Badge>
+                              <span className="text-slate-400 text-sm">Stopped</span>
+                            )}
+                            {arrival.distanceToStopKm != null && (
+                              <p className="text-xs text-slate-500">{arrival.distanceToStopKm.toFixed(1)} km away</p>
                             )}
                           </div>
                         </div>
-
-                        <div className="flex items-center justify-between mt-3 pt-3 border-t">
-                          <div className="flex items-center gap-4 text-xs text-slate-600">
-                            <span>{arrival.distanceToStopKm != null ? `${arrival.distanceToStopKm.toFixed(1)} km away` : ''}</span>
-                            {route && <span>~{route.duration} min trip</span>}
-                          </div>
+                        <div className="mt-3 flex items-center justify-between border-t pt-3">
+                          <span className="text-xs text-slate-500">
+                            {route ? `~${route.duration} min trip` : 'Route timing unavailable'}
+                          </span>
                           <Badge variant={arrival.status === 'active' ? 'default' : 'secondary'}>
                             {arrival.status === 'active' ? 'approaching' : arrival.status}
                           </Badge>

@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 5.3 — Passenger App Arrival Improvements
+**Next task:** None — All tasks completed!
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -689,7 +689,7 @@ to board and where it is on the route.
 
 **Suggested commit:** `Improve Passenger App arrival cards with route info and live indicator`
 
-- [ ] Task 5.3 complete
+- [x] Task 5.3 complete
 
 ---
 
@@ -697,9 +697,9 @@ to board and where it is on the route.
 
 | Phase | Tasks | Status |
 |---|---|---|
-| Phase 1 — Geo Math & Route State | 2 tasks | 0 / 2 |
-| Phase 2 — Route-Following Engine (Layer 1) | 3 tasks | 0 / 3 |
-| Phase 3 — Realistic Physics (Layer 2) | 3 tasks | 0 / 3 |
-| Phase 4 — WebSocket Protocol Extension | 2 tasks | 0 / 2 |
-| Phase 5 — Frontend Enhancements | 3 tasks | 0 / 3 |
-| **Total** | **13 tasks** | **0 / 13** |
+| Phase 1 — Geo Math & Route State | 2 tasks | 2 / 2 |
+| Phase 2 — Route-Following Engine (Layer 1) | 3 tasks | 3 / 3 |
+| Phase 3 — Realistic Physics (Layer 2) | 3 tasks | 3 / 3 |
+| Phase 4 — WebSocket Protocol Extension | 2 tasks | 2 / 2 |
+| Phase 5 — Frontend Enhancements | 3 tasks | 3 / 3 |
+| **Total** | **13 tasks** | **13 / 13** |
