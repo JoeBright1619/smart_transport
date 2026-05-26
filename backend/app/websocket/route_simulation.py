@@ -107,19 +107,23 @@ async def advance_vehicle(
 
     km_this_tick = new_speed * TICK_SECONDS / 3600
     fuel_drop = km_this_tick * FUEL_CONSUMPTION_PCT_PER_KM
-    new_fuel = max(0, (vehicle.fuel or 100) - fuel_drop)
+    fuel_pct = float(
+        state.get("fuel_pct", vehicle.fuel if vehicle.fuel is not None else 100)
+    )
+    new_fuel = max(0, fuel_pct - fuel_drop)
 
     if state["next_stop_index"] == 0 and state["loop_count"] > 0:
         new_fuel = 100.0
 
-    vehicle.fuel = int(new_fuel)
+    state["fuel_pct"] = new_fuel
+    vehicle.fuel = round(new_fuel)
 
     return {
         "lat": lat,
         "lng": lng,
         "speed": speed,
         "heading": heading,
-        "fuel": int(new_fuel),
+        "fuel": round(new_fuel),
     }
 
 

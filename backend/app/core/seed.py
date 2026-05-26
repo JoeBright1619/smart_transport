@@ -515,7 +515,9 @@ async def _seed_vehicles(db: AsyncSession) -> dict[str, Vehicle]:
         if status == "active":
             vehicle.lat = lat
             vehicle.lng = lng
+            vehicle.speed = speed
             vehicle.heading = heading
+            vehicle.fuel = fuel
 
         result[veh_id] = vehicle
         _log(f"vehicle {veh_id} {'created' if created else 'already exists'}")
