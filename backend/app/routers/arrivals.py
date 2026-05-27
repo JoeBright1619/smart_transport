@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/v1/arrivals", tags=["arrivals"])
     summary="Get predicted arrivals for a stop",
     description=(
         "Returns ETA estimates for all active vehicles currently heading toward the given stop. "
-        "ETAs are calculated using the Haversine formula from each vehicle's last known GPS position."
+        "ETAs are calculated along the ordered route stops from each vehicle's current route segment."
     ),
 )
 async def get_arrivals(

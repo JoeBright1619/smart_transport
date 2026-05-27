@@ -4,10 +4,11 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.geo import haversine
+from app.core.geo_math import haversine_distance
 from app.models.route import Route, RouteStop, Stop
 from app.models.vehicle import Vehicle
 from app.schemas.arrival import ArrivalRead
+from app.websocket.route_simulation import StopPoint, _state, get_stops_cached
 
 
 def _error_detail(code: str, message: str) -> dict:
@@ -19,6 +20,60 @@ def _error_detail(code: str, message: str) -> dict:
             "message": message,
         },
     }
+
+
+def _fallback_next_stop_index(vehicle: Vehicle, stops: list[StopPoint]) -> int:
+    nearest_index = min(
+        range(len(stops)),
+        key=lambda index: haversine_distance(
+            vehicle.lat or 0,
+            vehicle.lng or 0,
+            stops[index].lat,
+            stops[index].lng,
+        ),
+    )
+    return (nearest_index + 1) % len(stops)
+
+
+def _next_stop_index(vehicle: Vehicle, stops: list[StopPoint]) -> int:
+    state = _state.get(vehicle.id, {})
+    next_stop_index = int(state.get("next_stop_index", -1))
+    if 0 <= next_stop_index < len(stops):
+        return next_stop_index
+    return _fallback_next_stop_index(vehicle, stops)
+
+
+def _route_distance_to_stop_km(
+    vehicle: Vehicle,
+    stops: list[StopPoint],
+    target_stop_id: str,
+) -> float | None:
+    target_indices = [
+        index for index, stop in enumerate(stops) if stop.id == target_stop_id
+    ]
+    if not target_indices or vehicle.lat is None or vehicle.lng is None:
+        return None
+
+    next_stop_index = _next_stop_index(vehicle, stops)
+    distance_m = haversine_distance(
+        vehicle.lat,
+        vehicle.lng,
+        stops[next_stop_index].lat,
+        stops[next_stop_index].lng,
+    )
+    current_index = next_stop_index
+
+    while current_index not in target_indices:
+        following_index = (current_index + 1) % len(stops)
+        distance_m += haversine_distance(
+            stops[current_index].lat,
+            stops[current_index].lng,
+            stops[following_index].lat,
+            stops[following_index].lng,
+        )
+        current_index = following_index
+
+    return distance_m / 1000
 
 
 async def get_arrivals_for_stop(
@@ -61,7 +116,14 @@ async def get_arrivals_for_stop(
     now = datetime.now(timezone.utc)
     arrivals: list[ArrivalRead] = []
     for vehicle, route in rows:
-        distance_km = haversine(vehicle.lat, vehicle.lng, stop.lat, stop.lng)
+        if vehicle.route_id is None:
+            continue
+
+        stops = await get_stops_cached(db, vehicle.route_id)
+        distance_km = _route_distance_to_stop_km(vehicle, stops, stop.id)
+        if distance_km is None:
+            continue
+
         speed = vehicle.speed or 0
 
         if speed == 0:
