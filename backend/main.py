@@ -10,6 +10,10 @@ from sqlalchemy import text
 
 from app.core.config import settings
 from app.core.database import engine
+from app.services.simulation_runner import (
+    start_vehicle_simulation,
+    stop_vehicle_simulation,
+)
 from app.routers import (
     alerts,
     analytics,
@@ -56,7 +60,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     async with engine.connect() as conn:
         await conn.execute(text("SELECT 1"))
 
-    yield
+    start_vehicle_simulation()
+
+    try:
+        yield
+    finally:
+        await stop_vehicle_simulation()
 
     await engine.dispose()
 

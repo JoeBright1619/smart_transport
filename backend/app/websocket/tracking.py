@@ -11,16 +11,12 @@ from sqlalchemy import select
 
 from app.core.database import AsyncSessionLocal
 from app.core.security import decode_access_token
-from app.models.alert import Alert
-from app.models.telemetry import Telemetry
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.models.vehicle import Vehicle
 from app.websocket.manager import manager
 from app.websocket.route_simulation import (
-    LOW_FUEL_THRESHOLD,
     _state,
-    advance_vehicle,
     compute_progress_pct,
     get_next_stop_name,
     get_stops_cached,
@@ -117,7 +113,6 @@ async def _broadcast_loop(tenant_id: str) -> None:
             try:
                 message = await _build_vehicle_update_message(tenant_id)
                 await _publish_vehicle_update(tenant_id, message)
-                await _simulate_vehicle_positions(tenant_id)
             except Exception:
                 logger.warning(
                     "Vehicle tracking broadcast cycle failed for tenant %s",
@@ -145,31 +140,6 @@ async def _build_vehicle_update_message(tenant_id: str) -> dict[str, Any]:
                 )
             )
         ).all()
-
-        telemetry_rows = [
-            Telemetry(
-                tenant_id=tenant_id,
-                vehicle_id=vehicle.id,
-                lat=vehicle.lat,
-                lng=vehicle.lng,
-                speed=vehicle.speed or 0,
-                heading=vehicle.heading or 0,
-                timestamp=timestamp,
-            )
-            for vehicle in vehicles
-        ]
-
-        if telemetry_rows:
-            db.add_all(telemetry_rows)
-            try:
-                await db.commit()
-            except Exception:
-                await db.rollback()
-                logger.warning(
-                    "Telemetry write failed for tenant %s",
-                    tenant_id,
-                    exc_info=True,
-                )
 
         vehicle_data = []
         for vehicle in vehicles:
@@ -201,50 +171,3 @@ async def _build_vehicle_update_message(tenant_id: str) -> dict[str, Any]:
 
 async def _publish_vehicle_update(tenant_id: str, message: dict[str, Any]) -> None:
     await manager.publish_to_tenant(tenant_id, message)
-
-
-async def _simulate_vehicle_positions(tenant_id: str) -> None:
-    async with AsyncSessionLocal() as db:
-        vehicles = (
-            await db.scalars(
-                select(Vehicle).where(
-                    Vehicle.tenant_id == tenant_id,
-                    Vehicle.is_deleted.is_(False),
-                    Vehicle.status == "active",
-                    Vehicle.lat.is_not(None),
-                    Vehicle.lng.is_not(None),
-                )
-            )
-        ).all()
-
-        if not vehicles:
-            return
-
-        for vehicle in vehicles:
-            now = datetime.now(timezone.utc)
-            prev_fuel_before = vehicle.fuel or 100
-            updates = await advance_vehicle(db, vehicle, now)
-            if updates:
-                vehicle.lat = updates["lat"]
-                vehicle.lng = updates["lng"]
-                vehicle.speed = updates["speed"]
-                vehicle.heading = updates["heading"]
-                vehicle.fuel = updates["fuel"]
-                if updates.get("fuel", 100) < LOW_FUEL_THRESHOLD:
-                    if prev_fuel_before >= LOW_FUEL_THRESHOLD:
-                        db.add(
-                            Alert(
-                                tenant_id=tenant_id,
-                                type="maintenance",
-                                severity="high",
-                                title=f"Low Fuel: {vehicle.registration_number}",
-                                message=(
-                                    f"{vehicle.registration_number} fuel is below "
-                                    f"{LOW_FUEL_THRESHOLD}%."
-                                ),
-                                vehicle_id=vehicle.id,
-                                is_acknowledged=False,
-                            )
-                        )
-
-        await db.commit()
