@@ -154,7 +154,7 @@ async def _build_vehicle_update_message(tenant_id: str) -> dict[str, Any]:
                     "lng": vehicle.lng,
                     "speed": vehicle.speed or 0,
                     "heading": vehicle.heading or 0,
-                    "fuel": vehicle.fuel,
+                    "fuel": round(state.get("fuel_pct", vehicle.fuel or 100)),
                     "engineStatus": vehicle.engine_status,
                     "timestamp": timestamp.isoformat(),
                     "nextStopName": get_next_stop_name(vehicle.id, stops),
