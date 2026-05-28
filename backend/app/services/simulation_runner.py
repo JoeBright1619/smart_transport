@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections import defaultdict
 from contextlib import suppress
 from datetime import datetime, timezone
 
 from sqlalchemy import select
 
 from app.core.database import AsyncSessionLocal
+from app.crud.analytics import upsert_daily_analytics
 from app.models.alert import Alert
 from app.models.telemetry import Telemetry
 from app.models.vehicle import Vehicle
@@ -53,6 +55,7 @@ async def simulate_active_vehicles() -> None:
     timestamp = datetime.now(timezone.utc)
 
     async with AsyncSessionLocal() as db:
+        fuel_drops_by_tenant: dict[str, float] = defaultdict(float)
         vehicles = (
             await db.scalars(
                 select(Vehicle).where(
@@ -69,6 +72,8 @@ async def simulate_active_vehicles() -> None:
             updates = await advance_vehicle(db, vehicle, timestamp)
             if updates is None:
                 continue
+
+            fuel_drops_by_tenant[vehicle.tenant_id] += updates.get("fuel_drop", 0.0)
 
             vehicle.lat = updates["lat"]
             vehicle.lng = updates["lng"]
@@ -105,6 +110,15 @@ async def simulate_active_vehicles() -> None:
                         vehicle_id=vehicle.id,
                         is_acknowledged=False,
                     )
+                )
+
+        for tenant_id, total_drop in fuel_drops_by_tenant.items():
+            if total_drop > 0:
+                await upsert_daily_analytics(
+                    db=db,
+                    tenant_id=tenant_id,
+                    record_date=timestamp.date(),
+                    fuel_consumed=total_drop,
                 )
 
         await db.commit()

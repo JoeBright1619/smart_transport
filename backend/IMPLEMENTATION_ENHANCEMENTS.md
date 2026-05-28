@@ -68,7 +68,7 @@ In `simulation_runner.py`, accumulate the `fuel_drop` across all active vehicles
 **Branch:** `feat/live-fuel-simulation`
 **Commit:** `Track live vehicle fuel consumption in daily analytics`
 
-- [ ] Task 1.3 complete
+- [x] Task 1.3 complete
 
 ---
 

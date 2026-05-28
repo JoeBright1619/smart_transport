@@ -131,6 +131,7 @@ async def advance_vehicle(
         "speed": speed,
         "heading": heading,
         "fuel": round(new_fuel),
+        "fuel_drop": fuel_drop,
     }
 
 
