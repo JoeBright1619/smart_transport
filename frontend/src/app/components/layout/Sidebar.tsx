@@ -50,14 +50,18 @@ export function Sidebar() {
   const filteredNavigation = navigation.filter(item =>
     user && item.roles.includes(user.role)
   );
+  const tenantLabel = user?.tenantName ?? 'Rwanda Transport';
+  const roleLabel = user
+    ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
+    : 'Fleet Management';
 
   return (
     <div className="flex h-screen w-64 flex-col bg-slate-900 text-white">
       <div className="flex h-16 items-center gap-2 border-b border-slate-800 px-6">
         <Bus className="size-8 text-blue-400" />
         <div>
-          <h1 className="font-bold">Rwanda Transport</h1>
-          <p className="text-xs text-slate-400">Fleet Management</p>
+          <h1 className="font-bold">{tenantLabel}</h1>
+          <p className="text-xs text-slate-400">{roleLabel}</p>
         </div>
       </div>
 

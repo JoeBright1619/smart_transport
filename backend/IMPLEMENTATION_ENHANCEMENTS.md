@@ -11,7 +11,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 7.2 — Tenant-Aware Dashboard & Sidebar Branding
+**Next task:** Task 7.3 — Tenant-Branded Analytics PDF Report
 
 ---
 
@@ -295,7 +295,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `feat: tenant name shown in sidebar and dashboard header after login`
 
-- [ ] Task 7.2 complete
+- [x] Task 7.2 complete
 
 ---
 
@@ -461,6 +461,6 @@ Fix: In `RouteCardsGrid`, apply `opacity-50` and a `"Inactive"` overlay `Badge` 
 | Phase 4 — Maintenance Screen Fix | 1 task | 1 / 1 |
 | Phase 5 — Analytics Formatting Fixes | 1 task | 1 / 1 |
 | Phase 6 — Security & Audit | 1 task | 1 / 1 |
-| Phase 7 — Tenant Identity & Data Isolation | 3 tasks | 1 / 3 |
+| Phase 7 — Tenant Identity & Data Isolation | 3 tasks | 2 / 3 |
 | Phase 8 — Additional Bugs & Improvements | 6 tasks | 0 / 6 |
-| **Total** | **17 tasks** | **9 / 17** |
+| **Total** | **17 tasks** | **10 / 17** |

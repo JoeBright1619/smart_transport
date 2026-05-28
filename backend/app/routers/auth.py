@@ -62,11 +62,23 @@ def _ensure_aware(value: datetime) -> datetime:
     return value
 
 
-def _access_token_for_user(user: User) -> str:
+def _auth_user_summary(user: User, tenant: Tenant | None = None) -> AuthUserSummary:
+    return AuthUserSummary(
+        id=user.id,
+        email=user.email,
+        full_name=user.full_name,
+        role=user.role,
+        tenant_id=user.tenant_id,
+        tenant_name=tenant.name if tenant else None,
+    )
+
+
+def _access_token_for_user(user: User, tenant: Tenant | None = None) -> str:
     return create_access_token(
         {
             "userId": user.id,
             "tenantId": user.tenant_id,
+            "tenantName": tenant.name if tenant else None,
             "role": user.role,
         }
     )
@@ -184,8 +196,8 @@ async def register(
     return APIResponse(
         data=RegisterResponse(
             tenant=AuthTenantSummary.model_validate(tenant),
-            user=AuthUserSummary.model_validate(user),
-            access_token=_access_token_for_user(user),
+            user=_auth_user_summary(user, tenant),
+            access_token=_access_token_for_user(user, tenant),
         )
     )
 
@@ -234,7 +246,7 @@ async def login(
             "Invalid email or password",
         )
 
-    await _get_active_tenant(db, user.tenant_id)
+    tenant = await _get_active_tenant(db, user.tenant_id)
     refresh_token = await _create_refresh_token(db, user.id)
     await audit_service.log(
         db=db,
@@ -250,8 +262,8 @@ async def login(
     _set_refresh_cookie(response, refresh_token)
     return APIResponse(
         data=TokenResponse(
-            access_token=_access_token_for_user(user),
-            user=AuthUserSummary.model_validate(user),
+            access_token=_access_token_for_user(user, tenant),
+            user=_auth_user_summary(user, tenant),
         )
     )
 
@@ -294,7 +306,7 @@ async def refresh(
             "Refresh token user was not found",
         )
 
-    await _get_active_tenant(db, user.tenant_id)
+    tenant = await _get_active_tenant(db, user.tenant_id)
     refresh_token.revoked_at = _utc_now()
     new_refresh_token = await _create_refresh_token(db, user.id)
     await db.commit()
@@ -302,7 +314,7 @@ async def refresh(
     _set_refresh_cookie(response, new_refresh_token)
     return APIResponse(
         data=RefreshTokenResponse(
-            access_token=_access_token_for_user(user),
+            access_token=_access_token_for_user(user, tenant),
         )
     )
 

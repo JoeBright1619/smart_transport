@@ -25,6 +25,7 @@ export interface AuthUserSummary {
   fullName: string | null;
   role: UserRole;
   tenantId: string | null;
+  tenantName: string | null;
 }
 
 export interface AuthTenantSummary {

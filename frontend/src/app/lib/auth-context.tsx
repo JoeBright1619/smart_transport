@@ -13,6 +13,7 @@ import * as authService from '../services/auth.service';
 type JwtPayload = {
   userId?: string;
   tenantId?: string | null;
+  tenantName?: string | null;
   role?: User['role'];
   email?: string | null;
   full_name?: string | null;
@@ -75,6 +76,8 @@ function userFromAuthSummary(summary: AuthUserSummary): User {
     email: summary.email ?? '',
     fullName: summary.fullName ?? summary.email ?? 'User',
     role: summary.role,
+    company: summary.tenantId ?? undefined,
+    tenantName: summary.tenantName ?? undefined,
   };
 }
 
@@ -89,6 +92,7 @@ function userFromTokenPayload(payload: JwtPayload): User | null {
     fullName: payload.full_name ?? payload.fullName ?? (email || 'User'),
     role: payload.role,
     company: payload.tenantId ?? undefined,
+    tenantName: payload.tenantName ?? undefined,
   };
 }
 

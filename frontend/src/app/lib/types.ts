@@ -9,4 +9,5 @@ export interface User {
   role: UserRole;
   phone?: string;
   company?: string;
+  tenantName?: string;
 }

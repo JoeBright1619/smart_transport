@@ -68,6 +68,9 @@ class AuthUserSummary(APIModel):
     tenant_id: str | None = Field(
         default=None, json_schema_extra={"example": "ten-uuid"}
     )
+    tenant_name: str | None = Field(
+        default=None, json_schema_extra={"example": "EcoFleet Ltd"}
+    )
 
 
 class RegisterResponse(APIModel):

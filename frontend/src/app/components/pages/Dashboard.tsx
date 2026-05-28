@@ -11,6 +11,7 @@ import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Skeleton } from '../ui/skeleton';
 import { ErrorMessage } from '../ui/error-message';
+import { formatRevenue } from './analytics/analytics-helpers';
 
 type DashboardState = {
   analytics: AnalyticsData | null;
@@ -138,6 +139,7 @@ export function Dashboard() {
   );
 
   const analyticsSummary = dashboard.analytics?.summary;
+  const tenantName = user?.tenantName;
   const totalVehicles = dashboard.vehicles.length;
   const activeVehicles = fleetCounts.active;
   const fleetUtilization = totalVehicles > 0 ? Math.round((activeVehicles / totalVehicles) * 100) : 0;
@@ -157,7 +159,7 @@ export function Dashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Fleet Dashboard</h1>
+        <h1 className="text-2xl font-bold">{tenantName ? `${tenantName} Fleet Dashboard` : 'Fleet Dashboard'}</h1>
         <p className="text-slate-600">Real-time overview of your transport operations</p>
       </div>
 
@@ -209,7 +211,7 @@ export function Dashboard() {
                   {(analyticsSummary?.totalPassengers ?? 0).toLocaleString()}
                 </div>
                 <p className="text-xs text-slate-500">
-                  {(analyticsSummary?.totalRevenue ?? 0).toLocaleString()} RWF revenue
+                  {formatRevenue(analyticsSummary?.totalRevenue ?? 0)} revenue
                 </p>
               </CardContent>
             </Card>

@@ -7,6 +7,7 @@ import type { RouteRead, StopRead, ArrivalEstimate } from '../../lib/api-types';
 import { listRoutes } from '../../services/routes.service';
 import { getArrivals } from '../../services/arrivals.service';
 import { MapPin, Clock, Navigation, Star, Heart, Search, Bus } from 'lucide-react';
+import { useAuth } from '../../lib/auth-context';
 
 const FAVORITE_STOPS_STORAGE_KEY = 'passenger-favourite-stops';
 
@@ -23,6 +24,7 @@ function loadFavoriteStops(): string[] {
 }
 
 export function PassengerApp() {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [routes, setRoutes] = useState<RouteRead[]>([]);
   const [allStops, setAllStops] = useState<StopRead[]>([]);
@@ -81,6 +83,7 @@ export function PassengerApp() {
 
   const favoriteStopsList = allStops.filter(s => favoriteStops.includes(s.id));
   const selectedStopName = allStops.find(s => s.id === selectedStop)?.name;
+  const tenantName = user?.tenantName ?? 'Transport System';
 
   const toggleFavorite = (stopId: string) => {
     setFavoriteStops(prev =>
@@ -94,7 +97,7 @@ export function PassengerApp() {
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 rounded-lg">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-xl font-bold">Rwanda Transport</h1>
+            <h1 className="text-xl font-bold">{tenantName}</h1>
             <p className="text-sm text-blue-100">Passenger Information</p>
           </div>
           <Bus className="size-10" />
