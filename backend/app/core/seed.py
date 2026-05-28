@@ -4,10 +4,11 @@ import asyncio
 import logging
 import os
 import random
+import sys
 from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
-from sqlalchemy import cast, Date, func, select
+from sqlalchemy import cast, Date, delete, func, select, or_, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import AsyncSessionLocal
@@ -63,6 +64,87 @@ async def _seed_superadmin(db: AsyncSession) -> None:
         is_deleted=False,
     )
     _log(f"superadmin {'created' if created else 'already exists'}")
+
+
+async def _cleanup_stale_data(db: AsyncSession, reset: bool = False) -> None:
+    conditions = [
+        Tenant.name.ilike("%kigali%"),
+        Tenant.contact_email.ilike("%kigali%"),
+        Tenant.id.in_(
+            select(User.tenant_id).where(
+                User.email.ilike("%kigali%"),
+                User.tenant_id.is_not(None),
+            )
+        ),
+    ]
+    if reset:
+        conditions.append(Tenant.id == _TENANT_ID)
+        await db.execute(delete(User).where(User.id == "user-superadmin-001"))
+
+    stale_tenants = await db.scalars(select(Tenant.id).where(or_(*conditions)))
+    stale_ids = stale_tenants.all()
+    if not stale_ids:
+        return
+    _log(f"Cleaning up {len(stale_ids)} stale tenants (reset={reset})...")
+
+    for tid in stale_ids:
+        await db.execute(
+            delete(RouteStop).where(
+                RouteStop.route_id.in_(select(Route.id).where(Route.tenant_id == tid))
+            )
+        )
+        await db.execute(delete(Trip).where(Trip.tenant_id == tid))
+        await db.execute(
+            delete(MaintenanceRecord).where(MaintenanceRecord.tenant_id == tid)
+        )
+        await db.execute(delete(Alert).where(Alert.tenant_id == tid))
+        await db.execute(
+            delete(AnalyticsRecord).where(AnalyticsRecord.tenant_id == tid)
+        )
+
+        try:
+            from app.models.audit_log import AuditLog
+
+            await db.execute(delete(AuditLog).where(AuditLog.tenant_id == tid))
+        except ImportError:
+            pass
+
+        try:
+            from app.models.telemetry import Telemetry
+
+            await db.execute(delete(Telemetry).where(Telemetry.tenant_id == tid))
+        except ImportError:
+            pass
+
+        try:
+            from app.models.refresh_token import RefreshToken
+
+            await db.execute(
+                delete(RefreshToken).where(
+                    RefreshToken.user_id.in_(
+                        select(User.id).where(User.tenant_id == tid)
+                    )
+                )
+            )
+        except ImportError:
+            pass
+
+        await db.execute(
+            update(Driver).where(Driver.tenant_id == tid).values(vehicle_id=None)
+        )
+        await db.execute(
+            update(Vehicle).where(Vehicle.tenant_id == tid).values(driver_id=None)
+        )
+
+        await db.execute(delete(Vehicle).where(Vehicle.tenant_id == tid))
+        await db.execute(delete(Driver).where(Driver.tenant_id == tid))
+        await db.execute(delete(Route).where(Route.tenant_id == tid))
+        await db.execute(delete(Stop).where(Stop.tenant_id == tid))
+        await db.execute(delete(User).where(User.tenant_id == tid))
+        await db.execute(delete(Tenant).where(Tenant.id == tid))
+
+    await db.flush()
+    _log("Stale data cleaned.")
 
 
 async def _seed_tenant(db: AsyncSession) -> None:
@@ -898,9 +980,10 @@ async def _seed_analytics_records(db: AsyncSession) -> None:
     )
 
 
-async def seed() -> None:
+async def seed(reset: bool = False) -> None:
     _log("Starting seed...")
     async with AsyncSessionLocal() as db:
+        await _cleanup_stale_data(db, reset=reset)
         await _seed_superadmin(db)
         await _seed_tenant(db)
         await _seed_users(db)
@@ -933,4 +1016,5 @@ async def seed() -> None:
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.WARNING)
-    asyncio.run(seed())
+    reset_flag = "--reset" in sys.argv
+    asyncio.run(seed(reset=reset_flag))
