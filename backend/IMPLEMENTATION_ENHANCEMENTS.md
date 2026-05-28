@@ -11,7 +11,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 1.3 — Deactivating a Route Hides It from Passenger & Arrival Views
+**Next task:** Task 2.1 — Persist Favourite Stops Across Page Reloads
 
 ---
 
@@ -93,7 +93,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `fix: inactive routes hidden from passenger and arrivals screens`
 
-- [ ] Task 1.3 complete
+- [x] Task 1.3 complete
 
 ---
 
@@ -455,7 +455,7 @@ Fix: In `RouteCardsGrid`, apply `opacity-50` and a `"Inactive"` overlay `Badge` 
 
 | Phase | Tasks | Status |
 |---|---|---|
-| Phase 1 — Route Management Fixes | 3 tasks | 2 / 3 |
+| Phase 1 — Route Management Fixes | 3 tasks | 3 / 3 |
 | Phase 2 — Passenger App Fixes | 1 task | 0 / 1 |
 | Phase 3 — Arrivals Screen Enhancement | 1 task | 0 / 1 |
 | Phase 4 — Maintenance Screen Fix | 1 task | 0 / 1 |
@@ -463,4 +463,4 @@ Fix: In `RouteCardsGrid`, apply `opacity-50` and a `"Inactive"` overlay `Badge` 
 | Phase 6 — Security & Audit | 1 task | 0 / 1 |
 | Phase 7 — Tenant Identity & Data Isolation | 3 tasks | 0 / 3 |
 | Phase 8 — Additional Bugs & Improvements | 6 tasks | 0 / 6 |
-| **Total** | **17 tasks** | **2 / 17** |
+| **Total** | **17 tasks** | **3 / 17** |

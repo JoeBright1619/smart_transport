@@ -45,13 +45,15 @@ export function RoutesTable({
                 {routes.map((route) => {
                   const disabled = updatingRouteId === route.id;
                   return (
-                    <TableRow key={route.id}>
+                    <TableRow key={route.id} className={route.isActive ? undefined : 'bg-slate-50/70 opacity-70'}>
                       <TableCell>
                         <Badge style={{ backgroundColor: route.color }} className="text-white">
                           {route.number}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-medium">{route.name}</TableCell>
+                      <TableCell className="font-medium">
+                        <span className={route.isActive ? undefined : 'text-slate-500'}>{route.name}</span>
+                      </TableCell>
                       <TableCell>{route.stops.length} stops</TableCell>
                       <TableCell>{route.distance} km</TableCell>
                       <TableCell>{route.duration} min</TableCell>

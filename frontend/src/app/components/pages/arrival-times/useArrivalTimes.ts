@@ -18,7 +18,7 @@ export function useArrivalTimes() {
     setError(null);
 
     try {
-      const routesResult = await routesService.listRoutes({ pageSize: 100 });
+      const routesResult = await routesService.listRoutes({ isActive: true, pageSize: 100 });
       const stopOptions = collectStops(routesResult.items);
       setStops(stopOptions);
       setSelectedStopId((current) => current || stopOptions[0]?.id || '');
