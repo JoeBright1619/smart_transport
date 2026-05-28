@@ -2,7 +2,7 @@ import { MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Label } from '../../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
-import type { StopOption } from './arrival-helpers';
+import { ALL_STOPS_ID, type StopOption } from './arrival-helpers';
 
 type ArrivalStopSelectorProps = {
   stops: StopOption[];
@@ -30,6 +30,7 @@ export function ArrivalStopSelector({
             <SelectValue placeholder="Select a stop" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value={ALL_STOPS_ID}>All Stops</SelectItem>
             {stops.map((stop) => (
               <SelectItem key={stop.id} value={stop.id}>
                 {stop.name}

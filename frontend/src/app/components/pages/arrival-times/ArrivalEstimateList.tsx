@@ -1,12 +1,11 @@
 import { Clock, Navigation } from 'lucide-react';
-import type { ArrivalEstimate } from '../../../lib/api-types';
 import { Badge } from '../../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
-import { etaLabel, formatLastUpdated, type StopOption } from './arrival-helpers';
+import { ALL_STOPS_ID, etaLabel, formatLastUpdated, type ArrivalEstimateWithStop, type StopOption } from './arrival-helpers';
 
 type ArrivalEstimateListProps = {
   selectedStop: StopOption | null;
-  estimates: ArrivalEstimate[];
+  estimates: ArrivalEstimateWithStop[];
   loading: boolean;
   lastUpdated: Date | null;
 };
@@ -17,6 +16,8 @@ export function ArrivalEstimateList({
   loading,
   lastUpdated,
 }: ArrivalEstimateListProps) {
+  const showStopName = selectedStop?.id === ALL_STOPS_ID;
+
   return (
     <Card>
       <CardHeader>
@@ -36,20 +37,31 @@ export function ArrivalEstimateList({
         ) : estimates.length === 0 ? (
           <p className="py-6 text-center text-sm text-slate-500">No active vehicles heading to this stop.</p>
         ) : (
-          estimates.map((estimate) => <ArrivalEstimateRow key={estimate.vehicleId} estimate={estimate} />)
+          estimates.map((estimate) => (
+            <ArrivalEstimateRow key={estimate.vehicleId} estimate={estimate} showStopName={showStopName} />
+          ))
         )}
       </CardContent>
     </Card>
   );
 }
 
-function ArrivalEstimateRow({ estimate }: { estimate: ArrivalEstimate }) {
+function ArrivalEstimateRow({
+  estimate,
+  showStopName,
+}: {
+  estimate: ArrivalEstimateWithStop;
+  showStopName: boolean;
+}) {
   return (
     <div className="flex items-center justify-between rounded-lg border p-3">
       <div className="flex items-center gap-3">
         <Badge>{estimate.routeName}</Badge>
         <div>
           <p className="font-medium text-sm">{estimate.registrationNumber}</p>
+          {showStopName && estimate.stopName && (
+            <p className="text-xs font-medium text-blue-700">To {estimate.stopName}</p>
+          )}
           <p className="text-xs text-slate-500">
             {estimate.distanceToStopKm.toFixed(2)} km away - {estimate.currentSpeedKmh} km/h
           </p>

@@ -1,8 +1,15 @@
 import type { ArrivalEstimate, RouteRead, StopRead } from '../../../lib/api-types';
 
+export const ALL_STOPS_ID = '__all__';
+
 export type StopOption = StopRead & {
   routeIds: string[];
   routeLabels: string[];
+};
+
+export type ArrivalEstimateWithStop = ArrivalEstimate & {
+  stopId?: string;
+  stopName?: string;
 };
 
 export function collectStops(routes: RouteRead[]): StopOption[] {
@@ -30,7 +37,7 @@ export function collectStops(routes: RouteRead[]): StopOption[] {
   return [...stopsById.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export function sortArrivals(estimates: ArrivalEstimate[]): ArrivalEstimate[] {
+export function sortArrivals<T extends ArrivalEstimate>(estimates: T[]): T[] {
   return [...estimates].sort((a, b) => {
     if (a.etaMinutes === null && b.etaMinutes === null) return 0;
     if (a.etaMinutes === null) return 1;

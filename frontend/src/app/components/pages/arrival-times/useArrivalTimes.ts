@@ -1,13 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { ArrivalEstimate } from '../../../lib/api-types';
 import * as arrivalsService from '../../../services/arrivals.service';
 import * as routesService from '../../../services/routes.service';
-import { collectStops, sortArrivals, type StopOption } from './arrival-helpers';
+import {
+  ALL_STOPS_ID,
+  collectStops,
+  sortArrivals,
+  type ArrivalEstimateWithStop,
+  type StopOption,
+} from './arrival-helpers';
 
 export function useArrivalTimes() {
   const [stops, setStops] = useState<StopOption[]>([]);
-  const [selectedStopId, setSelectedStopId] = useState('');
-  const [estimates, setEstimates] = useState<ArrivalEstimate[]>([]);
+  const [selectedStopId, setSelectedStopId] = useState(ALL_STOPS_ID);
+  const [estimates, setEstimates] = useState<ArrivalEstimateWithStop[]>([]);
   const [loadingStops, setLoadingStops] = useState(true);
   const [loadingArrivals, setLoadingArrivals] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +26,7 @@ export function useArrivalTimes() {
       const routesResult = await routesService.listRoutes({ isActive: true, pageSize: 100 });
       const stopOptions = collectStops(routesResult.items);
       setStops(stopOptions);
-      setSelectedStopId((current) => current || stopOptions[0]?.id || '');
+      setSelectedStopId((current) => current || ALL_STOPS_ID);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load stops');
     } finally {
@@ -38,15 +43,54 @@ export function useArrivalTimes() {
     setLoadingArrivals(true);
 
     try {
-      const result = await arrivalsService.getArrivals(stopId);
-      setEstimates(sortArrivals(result));
+      if (stopId === ALL_STOPS_ID) {
+        const results = await Promise.all(
+          stops.map(async (stop) => {
+            const arrivals = await arrivalsService.getArrivals(stop.id);
+            return arrivals.map((arrival) => ({
+              ...arrival,
+              stopId: stop.id,
+              stopName: stop.name,
+            }));
+          }),
+        );
+        const byVehicleId = new Map<string, ArrivalEstimateWithStop>();
+
+        results.flat().forEach((arrival) => {
+          const current = byVehicleId.get(arrival.vehicleId);
+          if (!current) {
+            byVehicleId.set(arrival.vehicleId, arrival);
+            return;
+          }
+
+          const currentEta = current.etaMinutes ?? Number.POSITIVE_INFINITY;
+          const nextEta = arrival.etaMinutes ?? Number.POSITIVE_INFINITY;
+          if (nextEta < currentEta) {
+            byVehicleId.set(arrival.vehicleId, arrival);
+          }
+        });
+
+        setEstimates(sortArrivals([...byVehicleId.values()]));
+      } else {
+        const stop = stops.find((item) => item.id === stopId);
+        const result = await arrivalsService.getArrivals(stopId);
+        setEstimates(
+          sortArrivals(
+            result.map((arrival) => ({
+              ...arrival,
+              stopId,
+              stopName: stop?.name,
+            })),
+          ),
+        );
+      }
       setLastUpdated(new Date());
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load arrivals');
     } finally {
       setLoadingArrivals(false);
     }
-  }, []);
+  }, [stops]);
 
   useEffect(() => {
     void loadStops();
@@ -65,7 +109,18 @@ export function useArrivalTimes() {
   }, [loadArrivals, selectedStopId]);
 
   const selectedStop = useMemo(
-    () => stops.find((stop) => stop.id === selectedStopId) ?? null,
+    () =>
+      selectedStopId === ALL_STOPS_ID
+        ? {
+            id: ALL_STOPS_ID,
+            name: 'All Stops',
+            lat: 0,
+            lng: 0,
+            order: 0,
+            routeIds: [],
+            routeLabels: ['All active routes'],
+          }
+        : stops.find((stop) => stop.id === selectedStopId) ?? null,
     [selectedStopId, stops],
   );
 
