@@ -56,7 +56,7 @@ export function AnalyticsStatsCards({ summary, trends, dayCount }: AnalyticsStat
           <Fuel className="size-4 text-orange-600" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{summary.totalFuelConsumption}L</div>
+          <div className="text-2xl font-bold">{Math.round(summary.totalFuelConsumption)}L</div>
           <p className="mt-1 text-xs text-slate-500">
             Avg {averageDailyFuel(summary.totalFuelConsumption, dayCount)}L per selected day
           </p>

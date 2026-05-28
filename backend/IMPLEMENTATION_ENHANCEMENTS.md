@@ -11,7 +11,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 5.1 — Fix Fractional Fuel & Revenue Display
+**Next task:** Task 6.1 — Real Audit Log on Security Page
 
 ---
 
@@ -217,7 +217,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `fix: analytics formatting — fuel integer, tiered revenue/passenger display`
 
-- [ ] Task 5.1 complete
+- [x] Task 5.1 complete
 
 ---
 
@@ -459,8 +459,8 @@ Fix: In `RouteCardsGrid`, apply `opacity-50` and a `"Inactive"` overlay `Badge` 
 | Phase 2 — Passenger App Fixes | 1 task | 1 / 1 |
 | Phase 3 — Arrivals Screen Enhancement | 1 task | 1 / 1 |
 | Phase 4 — Maintenance Screen Fix | 1 task | 1 / 1 |
-| Phase 5 — Analytics Formatting Fixes | 1 task | 0 / 1 |
+| Phase 5 — Analytics Formatting Fixes | 1 task | 1 / 1 |
 | Phase 6 — Security & Audit | 1 task | 0 / 1 |
 | Phase 7 — Tenant Identity & Data Isolation | 3 tasks | 0 / 3 |
 | Phase 8 — Additional Bugs & Improvements | 6 tasks | 0 / 6 |
-| **Total** | **17 tasks** | **6 / 17** |
+| **Total** | **17 tasks** | **7 / 17** |

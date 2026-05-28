@@ -78,11 +78,27 @@ export function buildFleetStatus(vehicles: VehicleRead[]): FleetStatusDatum[] {
 }
 
 export function formatRevenue(value: number): string {
-  return `${(value / 1000000).toFixed(1)}M RWF`;
+  const rounded = Math.round(value);
+
+  if (rounded >= 1000000) {
+    return `${(rounded / 1000000).toFixed(1)}M RWF`;
+  }
+
+  if (rounded >= 1000) {
+    return `${Math.round(rounded / 1000).toLocaleString()}K RWF`;
+  }
+
+  return `${rounded.toLocaleString()} RWF`;
 }
 
 export function formatPassengers(value: number): string {
-  return `${(value / 1000).toFixed(1)}K`;
+  const rounded = Math.round(value);
+
+  if (rounded >= 1000) {
+    return `${Math.round(rounded / 1000).toLocaleString()}K`;
+  }
+
+  return rounded.toLocaleString();
 }
 
 export function averageDailyFuel(summaryFuel: number, dayCount: number): number {

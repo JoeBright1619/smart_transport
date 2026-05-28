@@ -45,9 +45,9 @@ export function TrendCharts({ daily }: { daily: AnalyticsDaily[] }) {
               <BarChart data={daily}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" tickFormatter={formatChartDate} />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" />
-                <Tooltip />
+                <YAxis yAxisId="left" tickFormatter={(value) => Math.round(Number(value)).toLocaleString()} />
+                <YAxis yAxisId="right" orientation="right" tickFormatter={(value) => Math.round(Number(value)).toLocaleString()} />
+                <Tooltip formatter={(value) => Math.round(Number(value)).toLocaleString()} />
                 <Legend />
                 <Bar yAxisId="left" dataKey="revenue" fill="#10B981" name="Revenue (RWF)" />
                 <Bar yAxisId="right" dataKey="totalPassengers" fill="#3B82F6" name="Passengers" />
@@ -67,7 +67,7 @@ export function TrendCharts({ daily }: { daily: AnalyticsDaily[] }) {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" tickFormatter={formatChartDate} />
               <YAxis />
-              <Tooltip />
+              <Tooltip formatter={(value) => Math.round(Number(value)).toLocaleString()} />
               <Legend />
               <Line
                 type="monotone"

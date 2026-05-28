@@ -60,7 +60,7 @@ function summaryBox(doc: jsPDF, summary: AnalyticsData['summary'], y: number): n
     ['Average Delay', `${summary.avgDelay} min`],
     ['Total Passengers', summary.totalPassengers.toLocaleString()],
     ['Total Revenue', formatRevenue(summary.totalRevenue)],
-    ['Fuel Consumption', `${summary.totalFuelConsumption.toLocaleString()} L`],
+    ['Fuel Consumption', `${Math.round(summary.totalFuelConsumption).toLocaleString()} L`],
   ];
 
   items.forEach(([label, value], i) => {
@@ -115,8 +115,8 @@ export function exportAnalyticsPDF({
       `${d.onTimePercentage}%`,
       d.avgDelay,
       d.totalPassengers.toLocaleString(),
-      d.fuelConsumption.toLocaleString(),
-      d.revenue.toLocaleString(),
+      Math.round(d.fuelConsumption).toLocaleString(),
+      Math.round(d.revenue).toLocaleString(),
     ]),
     headStyles: { fillColor: BRAND, textColor: '#FFFFFF', fontStyle: 'bold', fontSize: 8 },
     bodyStyles: { fontSize: 8 },
