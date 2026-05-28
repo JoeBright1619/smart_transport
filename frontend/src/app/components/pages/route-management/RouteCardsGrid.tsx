@@ -1,8 +1,16 @@
 import type { RouteRead } from '../../../lib/api-types';
 import { Badge } from '../../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { EditRouteModal } from './EditRouteModal';
+import type { RouteUpdate } from '../../../lib/api-types';
 
-export function RouteCardsGrid({ routes }: { routes: RouteRead[] }) {
+type RouteCardsGridProps = {
+  routes: RouteRead[];
+  updatingRouteId: string | null;
+  onUpdateRoute: (routeId: string, patch: RouteUpdate) => Promise<void>;
+};
+
+export function RouteCardsGrid({ routes, updatingRouteId, onUpdateRoute }: RouteCardsGridProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {routes.map((route) => (
@@ -15,9 +23,16 @@ export function RouteCardsGrid({ routes }: { routes: RouteRead[] }) {
                 </Badge>
                 <CardTitle className="text-base">{route.name}</CardTitle>
               </div>
-              <Badge variant={route.isActive ? 'default' : 'secondary'}>
-                {route.isActive ? 'Active' : 'Inactive'}
-              </Badge>
+              <div className="flex gap-2">
+                <Badge variant={route.isActive ? 'default' : 'secondary'}>
+                  {route.isActive ? 'Active' : 'Inactive'}
+                </Badge>
+                <EditRouteModal
+                  route={route}
+                  onUpdateRoute={onUpdateRoute}
+                  disabled={updatingRouteId === route.id}
+                />
+              </div>
             </div>
           </CardHeader>
           <CardContent>

@@ -92,7 +92,7 @@ Overhaul the route creation and editing UI:
 **Branch:** `feat/interactive-route-management`
 **Commit:** `Add map-based route editor with automatic distance and duration calculation`
 
-- [ ] Task 2.1 complete
+- [x] Task 2.1 complete
 
 ---
 

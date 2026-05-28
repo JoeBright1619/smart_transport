@@ -43,7 +43,11 @@ export function RouteManagement() {
 
       <RouteManagementTools routes={routeManagement.routes} />
 
-      <RouteCardsGrid routes={routeManagement.routes} />
+      <RouteCardsGrid
+        routes={routeManagement.routes}
+        updatingRouteId={routeManagement.updatingRouteId}
+        onUpdateRoute={routeManagement.updateRoute}
+      />
     </div>
   );
 }

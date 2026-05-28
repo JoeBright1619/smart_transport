@@ -31,6 +31,10 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
+
+    volumes:
+      - ./backend:/app
+
     environment:
       DEBUG: "true"
       SECRET_KEY: dev-secret-key-change-in-production-32chars
@@ -42,6 +46,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       SUPERADMIN_PASSWORD: Admin@123456
       SEED_PASSWORD: Password123!
+
     depends_on:
       db:
         condition: service_healthy

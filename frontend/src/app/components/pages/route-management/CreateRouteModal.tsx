@@ -19,7 +19,7 @@ import {
   toRouteCreatePayload,
   type RouteFormState,
 } from './route-helpers';
-import { RouteStopsEditor } from './RouteStopsEditor';
+import { RouteForm } from './RouteForm';
 
 type CreateRouteModalProps = {
   onCreateRoute: (payload: RouteCreate) => Promise<void>;
@@ -64,71 +64,14 @@ export function CreateRouteModal({ onCreateRoute }: CreateRouteModalProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid gap-4 md:grid-cols-5">
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="routeName">Route name</Label>
-              <Input
-                id="routeName"
-                value={form.name}
-                onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="routeNumber">Number</Label>
-              <Input
-                id="routeNumber"
-                value={form.number}
-                onChange={(event) => setForm((current) => ({ ...current, number: event.target.value }))}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="distance">Distance km</Label>
-              <Input
-                id="distance"
-                type="number"
-                min="0"
-                step="0.1"
-                value={form.distance}
-                onChange={(event) => setForm((current) => ({ ...current, distance: event.target.value }))}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="duration">Duration min</Label>
-              <Input
-                id="duration"
-                type="number"
-                min="0"
-                value={form.duration}
-                onChange={(event) => setForm((current) => ({ ...current, duration: event.target.value }))}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="color">Color</Label>
-              <Input
-                id="color"
-                type="color"
-                value={form.color}
-                onChange={(event) => setForm((current) => ({ ...current, color: event.target.value }))}
-              />
-            </div>
-          </div>
-
-          <RouteStopsEditor stops={form.stops} setForm={setForm} />
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Close
-            </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? 'Creating...' : 'Create Route'}
-            </Button>
-          </DialogFooter>
-        </form>
+        <RouteForm
+          form={form}
+          setForm={setForm}
+          onSubmit={handleSubmit}
+          submitting={submitting}
+          submitLabel="Create Route"
+          onCancel={() => setOpen(false)}
+        />
       </DialogContent>
     </Dialog>
   );

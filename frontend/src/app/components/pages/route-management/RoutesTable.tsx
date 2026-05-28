@@ -4,6 +4,7 @@ import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
+import { EditRouteModal } from './EditRouteModal';
 
 type RoutesTableProps = {
   routes: RouteRead[];
@@ -69,6 +70,11 @@ export function RoutesTable({
                           >
                             {route.isActive ? 'Deactivate' : 'Activate'}
                           </Button>
+                          <EditRouteModal
+                            route={route}
+                            onUpdateRoute={onUpdateRoute}
+                            disabled={disabled}
+                          />
                           <Button
                             variant="ghost"
                             size="icon"
