@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from random import uniform
+from random import uniform, randint
 from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.geo_math import bearing, haversine_distance, move_along_bearing
+from app.crud.analytics import upsert_daily_analytics
 from app.models.route import RouteStop, Stop
 from app.models.vehicle import Vehicle
 from app.websocket.route_trip_records import create_completed_trip
@@ -93,7 +94,13 @@ async def advance_vehicle(
         lng = target.lng
         speed = 0
         heading = vehicle.heading or 0
-        state["next_stop_index"] = (int(state["next_stop_index"]) + 1) % len(stops)
+
+        current_stop_index = int(state["next_stop_index"])
+        state["next_stop_index"] = (current_stop_index + 1) % len(stops)
+
+        await _simulate_passengers_at_stop(
+            db, vehicle, stops, current_stop_index, state, now
+        )
 
         if state["next_stop_index"] == 0:
             state["loop_count"] = int(state.get("loop_count", 0)) + 1
@@ -132,6 +139,62 @@ async def _create_completed_trip(
 ) -> None:
     """Create a completed trip for a vehicle that has finished its route loop."""
     await create_completed_trip(db, vehicle, state, now)
+
+
+async def _simulate_passengers_at_stop(
+    db: AsyncSession,
+    vehicle: Vehicle,
+    stops: list[StopPoint],
+    current_stop_index: int,
+    state: dict[str, Any],
+    now: datetime,
+) -> None:
+    """Simulate passengers boarding and alighting at a stop and calculate revenue."""
+    passengers = state.setdefault("passengers", [])
+
+    # 1. Alight passengers
+    remaining_passengers = []
+    revenue = 0.0
+    for p in passengers:
+        if p["dest_index"] == current_stop_index:
+            revenue += p["distance_km"] * 60.0
+        else:
+            remaining_passengers.append(p)
+
+    # 2. Board new passengers
+    if current_stop_index < len(stops) - 1:
+        capacity = vehicle.capacity if vehicle.capacity else 30
+        available_seats = capacity - len(remaining_passengers)
+        boarding_count = randint(0, available_seats) if available_seats > 0 else 0  # nosec B311
+
+        for _ in range(boarding_count):
+            dest_index = randint(current_stop_index + 1, len(stops) - 1)  # nosec B311
+
+            # calculate distance from current_stop_index to dest_index
+            dist_m = 0.0
+            for i in range(current_stop_index, dest_index):
+                s1 = stops[i]
+                s2 = stops[i + 1]
+                dist_m += haversine_distance(s1.lat, s1.lng, s2.lat, s2.lng)
+
+            remaining_passengers.append(
+                {
+                    "origin_index": current_stop_index,
+                    "dest_index": dest_index,
+                    "distance_km": dist_m / 1000.0,
+                }
+            )
+
+    state["passengers"] = remaining_passengers
+
+    # 3. Add to live daily revenue
+    if revenue > 0:
+        await upsert_daily_analytics(
+            db=db,
+            tenant_id=vehicle.tenant_id,
+            record_date=now.date(),
+            revenue=revenue,
+        )
 
 
 def get_or_init_state(vehicle_id: str, stop_count: int) -> dict[str, Any]:

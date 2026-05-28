@@ -56,7 +56,7 @@ Update the vehicle simulation to track passengers boarding and alighting at ever
 **Branch:** `feat/live-revenue-simulation`
 **Commit:** `Implement stop-by-stop passenger simulation and live revenue tracking`
 
-- [ ] Task 1.2 complete
+- [x] Task 1.2 complete
 
 ---
 
