@@ -125,11 +125,22 @@ export interface StopRead {
   order: number;
 }
 
-export interface StopCreate {
+export interface GlobalStopRead {
+  id: string;
   name: string;
   lat: number;
   lng: number;
+}
+
+export interface StopCreate {
+  stopId: string;
   order: number;
+}
+
+export interface GlobalStopCreate {
+  name: string;
+  lat: number;
+  lng: number;
 }
 
 export interface RouteRead {

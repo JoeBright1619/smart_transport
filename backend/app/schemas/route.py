@@ -12,14 +12,21 @@ class StopCreate(APIModel):
     )
     lat: float = Field(ge=-90, le=90, json_schema_extra={"example": -1.9396})
     lng: float = Field(ge=-180, le=180, json_schema_extra={"example": 30.0585})
-    order: int = Field(ge=1, json_schema_extra={"example": 1})
 
 
-class StopRead(APIModel):
+class GlobalStopRead(APIModel):
     id: str = Field(json_schema_extra={"example": "stop-uuid"})
     name: str = Field(json_schema_extra={"example": "Nyabugogo"})
     lat: float = Field(json_schema_extra={"example": -1.9396})
     lng: float = Field(json_schema_extra={"example": 30.0585})
+
+
+class RouteStopCreate(APIModel):
+    stop_id: str = Field(json_schema_extra={"example": "stop-uuid"})
+    order: int = Field(ge=1, json_schema_extra={"example": 1})
+
+
+class StopRead(GlobalStopRead):
     order: int = Field(json_schema_extra={"example": 1})
 
 
@@ -37,7 +44,7 @@ class RouteCreate(APIModel):
     color: str = Field(
         min_length=4, max_length=9, json_schema_extra={"example": "#3B82F6"}
     )
-    stops: list[StopCreate] = Field(min_length=1)
+    stops: list[RouteStopCreate] = Field(min_length=1)
 
 
 class RouteUpdate(APIModel):
@@ -54,7 +61,7 @@ class RouteUpdate(APIModel):
         max_length=9,
         json_schema_extra={"example": "#EF4444"},
     )
-    stops: list[StopCreate] | None = Field(default=None)
+    stops: list[RouteStopCreate] | None = Field(default=None)
 
 
 class RouteRead(APIModel):

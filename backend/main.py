@@ -22,6 +22,7 @@ from app.routers import (
     drivers,
     maintenance,
     routes,
+    stops,
     superadmin,
     trips,
     users,
@@ -143,6 +144,7 @@ def create_app() -> FastAPI:
     app.include_router(users.router)
     app.include_router(vehicles.router)
     app.include_router(routes.router)
+    app.include_router(stops.router)
     app.include_router(trips.router)
     app.include_router(drivers.router)
     app.include_router(maintenance.router)

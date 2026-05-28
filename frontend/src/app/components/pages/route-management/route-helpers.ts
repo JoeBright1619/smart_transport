@@ -1,7 +1,12 @@
-import type { RouteCreate, RouteRead, StopCreate } from '../../../lib/api-types';
+import type { RouteCreate, RouteRead } from '../../../lib/api-types';
 
-export type RouteFormStop = StopCreate & {
+export type RouteFormStop = {
   key: string;
+  stopId: string;
+  name: string;
+  lat: number;
+  lng: number;
+  order: number;
 };
 
 export type RouteFormState = {
@@ -27,12 +32,13 @@ export const initialRouteFormState: RouteFormState = {
   distance: '',
   duration: '',
   color: '#3B82F6',
-  stops: [createEmptyStop(1)],
+  stops: [],
 };
 
 export function createEmptyStop(order: number): RouteFormStop {
   return {
     key: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${order}`,
+    stopId: '',
     name: '',
     lat: 0,
     lng: 0,
@@ -61,9 +67,7 @@ export function toRouteCreatePayload(form: RouteFormState): RouteCreate {
     duration: Number(form.duration),
     color: form.color,
     stops: form.stops.map((stop, index) => ({
-      name: stop.name.trim(),
-      lat: Number(stop.lat),
-      lng: Number(stop.lng),
+      stopId: stop.stopId,
       order: index + 1,
     })),
   };

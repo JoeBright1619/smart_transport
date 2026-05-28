@@ -1,19 +1,42 @@
-import { Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { MapPin, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import type { Dispatch, SetStateAction } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import type { GlobalStopRead } from '../../../lib/api-types';
+import * as routesService from '../../../services/routes.service';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
-import { createEmptyStop, type RouteFormState, type RouteFormStop } from './route-helpers';
+import { type RouteFormState, type RouteFormStop } from './route-helpers';
 
-// Fix leaflet marker icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
+
+const globalStopIcon = L.divIcon({
+  className: '',
+  html: '<div style="width:14px;height:14px;border-radius:9999px;background:#94a3b8;border:2px solid white;box-shadow:0 1px 4px rgb(15 23 42 / 0.35);"></div>',
+  iconSize: [14, 14],
+  iconAnchor: [7, 7],
+});
+
+const routeStopIcon = L.divIcon({
+  className: '',
+  html: '<div style="width:22px;height:22px;border-radius:9999px;background:#2563eb;border:3px solid white;box-shadow:0 2px 8px rgb(37 99 235 / 0.45);"></div>',
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
+});
+
+const draftStopIcon = L.divIcon({
+  className: '',
+  html: '<div style="width:30px;height:30px;border-radius:9999px;background:#f97316;border:4px solid white;box-shadow:0 3px 10px rgb(249 115 22 / 0.5);position:relative;"><div style="position:absolute;inset:6px;border-radius:9999px;background:white;"></div></div>',
+  iconSize: [30, 30],
+  iconAnchor: [15, 15],
 });
 
 function MapEvents({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) {
@@ -30,20 +53,72 @@ type RouteStopsEditorProps = {
   setForm: Dispatch<SetStateAction<RouteFormState>>;
 };
 
+type NewStopForm = {
+  name: string;
+  lat: string;
+  lng: string;
+};
+
+const createFormKey = () => globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+
+function toRouteFormStop(stop: GlobalStopRead, order: number): RouteFormStop {
+  return {
+    key: createFormKey(),
+    stopId: stop.id,
+    name: stop.name,
+    lat: stop.lat,
+    lng: stop.lng,
+    order,
+  };
+}
+
 export function RouteStopsEditor({ stops, setForm }: RouteStopsEditorProps) {
-  const updateStop = (
-    key: string,
-    field: 'name' | 'lat' | 'lng',
-    value: string,
-  ) => {
-    setForm((current) => ({
-      ...current,
-      stops: current.stops.map((stop) =>
-        stop.key === key
-          ? { ...stop, [field]: field === 'name' ? value : Number(value) }
-          : stop,
-      ),
-    }));
+  const [globalStops, setGlobalStops] = useState<GlobalStopRead[]>([]);
+  const [loadingStops, setLoadingStops] = useState(true);
+  const [stopError, setStopError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [newStop, setNewStop] = useState<NewStopForm>({ name: '', lat: '', lng: '' });
+
+  const selectedStopIds = useMemo(() => new Set(stops.map((stop) => stop.stopId)), [stops]);
+
+  const filteredStops = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return globalStops.filter((stop) => {
+      const isSelected = selectedStopIds.has(stop.id);
+      const matchesSearch = !term || stop.name.toLowerCase().includes(term);
+      return !isSelected && matchesSearch;
+    });
+  }, [globalStops, search, selectedStopIds]);
+
+  const loadStops = async () => {
+    setLoadingStops(true);
+    setStopError(null);
+
+    try {
+      setGlobalStops(await routesService.listStops());
+    } catch (error) {
+      setStopError(error instanceof Error ? error.message : 'Unable to load stops');
+    } finally {
+      setLoadingStops(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadStops();
+  }, []);
+
+  const addStopToRoute = (stop: GlobalStopRead) => {
+    setForm((current) => {
+      if (current.stops.some((item) => item.stopId === stop.id)) {
+        return current;
+      }
+
+      return {
+        ...current,
+        stops: [...current.stops, toRouteFormStop(stop, current.stops.length + 1)],
+      };
+    });
   };
 
   const removeStop = (key: string) => {
@@ -55,132 +130,189 @@ export function RouteStopsEditor({ stops, setForm }: RouteStopsEditorProps) {
     }));
   };
 
-  const addStop = () => {
-    setForm((current) => ({
-      ...current,
-      stops: [...current.stops, createEmptyStop(current.stops.length + 1)],
-    }));
-  };
+  const handleCreateStop = async () => {
+    setCreating(true);
+    setStopError(null);
 
-  const handleMapClick = (lat: number, lng: number) => {
-    setForm((current) => {
-      const newStop = createEmptyStop(current.stops.length + 1);
-      newStop.lat = Number(lat.toFixed(6));
-      newStop.lng = Number(lng.toFixed(6));
-      newStop.name = `Stop ${current.stops.length + 1}`;
-      return {
-        ...current,
-        stops: [...current.stops, newStop],
-      };
-    });
-  };
+    try {
+      const created = await routesService.createStop({
+        name: newStop.name.trim(),
+        lat: Number(newStop.lat),
+        lng: Number(newStop.lng),
+      });
 
-  const handleMarkerDragEnd = (key: string, e: L.DragEndEvent) => {
-    const marker = e.target;
-    const position = marker.getLatLng();
-    if (window.confirm("Are you sure you want to update this stop's location?")) {
-      updateStop(key, 'lat', position.lat.toFixed(6));
-      updateStop(key, 'lng', position.lng.toFixed(6));
-    } else {
-      // Re-render to snap marker back if cancelled
-      setForm((current) => ({ ...current }));
+      setGlobalStops((current) => [...current, created].sort((a, b) => a.name.localeCompare(b.name)));
+      addStopToRoute(created);
+      setNewStop({ name: '', lat: '', lng: '' });
+      setSearch('');
+    } catch (error) {
+      setStopError(error instanceof Error ? error.message : 'Unable to create stop');
+    } finally {
+      setCreating(false);
     }
   };
 
-  // Calculate map center based on existing stops or default to Kigali
+  const handleMapClick = (lat: number, lng: number) => {
+    setNewStop((current) => ({
+      ...current,
+      lat: lat.toFixed(6),
+      lng: lng.toFixed(6),
+    }));
+  };
+
   const defaultCenter: [number, number] = [-1.9403, 30.0605];
-  const validStops = stops.filter(s => s.lat !== 0 && s.lng !== 0);
-  const center = validStops.length > 0 ? [validStops[0].lat, validStops[0].lng] : defaultCenter;
+  const mapAnchor = stops[0] ?? globalStops[0];
+  const center: [number, number] = mapAnchor ? [mapAnchor.lat, mapAnchor.lng] : defaultCenter;
+
+  const draftPosition =
+    newStop.lat && newStop.lng
+      ? ([Number(newStop.lat), Number(newStop.lng)] as [number, number])
+      : null;
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label>Stops</Label>
-          <Button type="button" variant="outline" size="sm" onClick={addStop}>
-            Add stop
-          </Button>
-        </div>
-        <div className="max-h-[400px] space-y-3 overflow-y-auto pr-2">
-          {stops.map((stop, index) => (
-            <div key={stop.key} className="grid gap-2 rounded-lg border p-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="flex size-6 items-center justify-center rounded-full bg-slate-100 text-xs font-medium">
-                    {index + 1}
+    <div className="grid gap-4 md:grid-cols-[minmax(280px,0.9fr)_minmax(360px,1.1fr)]">
+      <div className="space-y-3 md:max-h-[calc(100vh-17rem)] md:overflow-y-auto md:pr-2">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <Label>Route stops</Label>
+            <Button type="button" variant="outline" size="sm" onClick={loadStops} disabled={loadingStops}>
+              <RefreshCw className="mr-2 size-3" />
+              Refresh
+            </Button>
+          </div>
+
+          <div className="max-h-44 space-y-2 overflow-y-auto rounded-md border p-2 md:max-h-[22vh]">
+            {stops.length === 0 ? (
+              <p className="px-2 py-6 text-center text-sm text-slate-500">Select or create a stop to build this route.</p>
+            ) : (
+              stops.map((stop, index) => (
+                <div key={stop.key} className="flex items-center justify-between gap-3 rounded-md border bg-white p-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-medium text-blue-700">
+                        {index + 1}
+                      </div>
+                      <p className="truncate text-sm font-medium">{stop.name}</p>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {stop.lat.toFixed(6)}, {stop.lng.toFixed(6)}
+                    </p>
                   </div>
-                  <Label className="text-xs text-slate-500">Name</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 shrink-0"
+                    onClick={() => removeStop(stop.key)}
+                  >
+                    <Trash2 className="size-4 text-red-500" />
+                  </Button>
                 </div>
-                <Button
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="stopSearch">Add existing stop</Label>
+          <Input
+            id="stopSearch"
+            placeholder="Search stops"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+          <div className="max-h-32 overflow-y-auto rounded-md border md:max-h-[18vh]">
+            {loadingStops ? (
+              <p className="p-3 text-sm text-slate-500">Loading stops...</p>
+            ) : filteredStops.length === 0 ? (
+              <p className="p-3 text-sm text-slate-500">No available stops match this search.</p>
+            ) : (
+              filteredStops.map((stop) => (
+                <button
+                  key={stop.id}
                   type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-6"
-                  disabled={stops.length === 1}
-                  onClick={() => removeStop(stop.key)}
+                  className="flex w-full items-center justify-between gap-3 border-b px-3 py-2 text-left text-sm last:border-b-0 hover:bg-slate-50"
+                  onClick={() => addStopToRoute(stop)}
                 >
-                  <Trash2 className="size-3 text-red-500" />
-                </Button>
-              </div>
-              <Input
-                placeholder="Stop name"
-                value={stop.name}
-                onChange={(event) => updateStop(stop.key, 'name', event.target.value)}
-                required
-              />
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-[10px] text-slate-500">Lat</Label>
-                  <Input
-                    type="number"
-                    step="0.000001"
-                    placeholder="Latitude"
-                    value={stop.lat}
-                    onChange={(event) => updateStop(stop.key, 'lat', event.target.value)}
-                    required
-                    className="h-8 text-xs"
-                  />
-                </div>
-                <div>
-                  <Label className="text-[10px] text-slate-500">Lng</Label>
-                  <Input
-                    type="number"
-                    step="0.000001"
-                    placeholder="Longitude"
-                    value={stop.lng}
-                    onChange={(event) => updateStop(stop.key, 'lng', event.target.value)}
-                    required
-                    className="h-8 text-xs"
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
+                  <span className="truncate">{stop.name}</span>
+                  <Plus className="size-4 shrink-0 text-slate-500" />
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-3 rounded-md border p-3">
+          <div className="flex items-center gap-2">
+            <MapPin className="size-4 text-slate-500" />
+            <Label>Create new stop</Label>
+          </div>
+          <Input
+            placeholder="Stop name"
+            value={newStop.name}
+            onChange={(event) => setNewStop((current) => ({ ...current, name: event.target.value }))}
+          />
+          <div className="grid grid-cols-2 gap-2">
+            <Input
+              type="number"
+              step="0.000001"
+              placeholder="Latitude"
+              value={newStop.lat}
+              onChange={(event) => setNewStop((current) => ({ ...current, lat: event.target.value }))}
+            />
+            <Input
+              type="number"
+              step="0.000001"
+              placeholder="Longitude"
+              value={newStop.lng}
+              onChange={(event) => setNewStop((current) => ({ ...current, lng: event.target.value }))}
+            />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            disabled={creating || !newStop.name.trim() || !newStop.lat || !newStop.lng}
+            onClick={handleCreateStop}
+          >
+            {creating ? 'Creating...' : 'Create and add stop'}
+          </Button>
+          {draftPosition && (
+            <p className="text-xs text-slate-500">
+              New stop marker placed at {draftPosition[0].toFixed(6)}, {draftPosition[1].toFixed(6)}.
+            </p>
+          )}
+          {stopError && <p className="text-sm text-red-600">{stopError}</p>}
         </div>
       </div>
 
       <div className="flex flex-col space-y-3">
-        <Label>Route Map (Click to add stop)</Label>
-        <div className="flex-1 overflow-hidden rounded-lg border min-h-[400px]">
-          <MapContainer center={center as [number, number]} zoom={13} style={{ height: '100%', width: '100%' }}>
+        <Label>Stops Map</Label>
+        <div className="h-[320px] overflow-hidden rounded-lg border md:h-[calc(100vh-17rem)] md:min-h-[360px] md:max-h-[620px]">
+          <MapContainer center={center} zoom={13} style={{ height: '100%', width: '100%' }}>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <MapEvents onMapClick={handleMapClick} />
-            {stops.map((stop, index) => {
-              if (stop.lat === 0 && stop.lng === 0) return null;
+            {draftPosition && (
+              <Marker position={draftPosition} icon={draftStopIcon}>
+                <Popup>New stop location</Popup>
+              </Marker>
+            )}
+            {globalStops.map((stop) => {
+              const selectedIndex = stops.findIndex((routeStop) => routeStop.stopId === stop.id);
+              const selected = selectedIndex >= 0;
+
               return (
                 <Marker
-                  key={stop.key}
+                  key={stop.id}
                   position={[stop.lat, stop.lng]}
-                  draggable={true}
-                  eventHandlers={{
-                    dragend: (e) => handleMarkerDragEnd(stop.key, e),
-                  }}
+                  icon={selected ? routeStopIcon : globalStopIcon}
                 >
                   <Popup>
-                    {index + 1}. {stop.name || 'Unnamed Stop'}
+                    {selected ? `${selectedIndex + 1}. ` : ''}
+                    {stop.name}
                   </Popup>
                 </Marker>
               );

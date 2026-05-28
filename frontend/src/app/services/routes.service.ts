@@ -1,6 +1,8 @@
 import { apiClient } from '../lib/api-client';
 import type {
   ApiResponse,
+  GlobalStopCreate,
+  GlobalStopRead,
   PaginatedResponse,
   RouteCreate,
   RouteRead,
@@ -53,4 +55,16 @@ export async function updateRoute(id: string, data: RouteUpdate): Promise<RouteR
 
 export async function deleteRoute(id: string): Promise<void> {
   await apiClient.delete(`/api/v1/routes/${id}`);
+}
+
+export async function listStops(): Promise<GlobalStopRead[]> {
+  const response = await apiClient.get<ApiResponse<GlobalStopRead[]>>('/api/v1/stops');
+
+  return response.data.data;
+}
+
+export async function createStop(data: GlobalStopCreate): Promise<GlobalStopRead> {
+  const response = await apiClient.post<ApiResponse<GlobalStopRead>>('/api/v1/stops', data);
+
+  return response.data.data;
 }

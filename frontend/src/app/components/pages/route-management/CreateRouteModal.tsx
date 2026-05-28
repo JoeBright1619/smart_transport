@@ -53,7 +53,7 @@ export function CreateRouteModal({ onCreateRoute }: CreateRouteModalProps) {
           Create New Route
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-5xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <RouteIcon className="size-5" />

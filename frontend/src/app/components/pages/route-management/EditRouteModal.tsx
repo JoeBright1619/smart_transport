@@ -31,6 +31,7 @@ function toRouteFormState(route: RouteRead): RouteFormState {
     color: route.color,
     stops: route.stops.map((stop) => ({
       key: createFormKey(),
+      stopId: stop.id,
       name: stop.name,
       lat: stop.lat,
       lng: stop.lng,
@@ -62,9 +63,7 @@ export function EditRouteModal({ route, onUpdateRoute, disabled }: EditRouteModa
         duration: Number(form.duration),
         color: form.color,
         stops: form.stops.map((stop, index) => ({
-          name: stop.name.trim(),
-          lat: Number(stop.lat),
-          lng: Number(stop.lng),
+          stopId: stop.stopId,
           order: index + 1,
         })),
       };
@@ -86,7 +85,7 @@ export function EditRouteModal({ route, onUpdateRoute, disabled }: EditRouteModa
           Edit
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-5xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <RouteIcon className="size-5" />
