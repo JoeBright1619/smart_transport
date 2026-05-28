@@ -16,6 +16,9 @@ type RouteFormProps = {
 
 export function RouteForm({ form, setForm, onSubmit, submitting, submitLabel, onCancel }: RouteFormProps) {
   useEffect(() => {
+    let distanceRounded = '0';
+    let durationRounded = '0';
+
     if (form.stops.length >= 2) {
       let dist = 0;
       for (let i = 0; i < form.stops.length - 1; i++) {
@@ -25,26 +28,22 @@ export function RouteForm({ form, setForm, onSubmit, submitting, submitLabel, on
           dist += haversineDistance(Number(s1.lat), Number(s1.lng), Number(s2.lat), Number(s2.lng));
         }
       }
-      const distanceRounded = dist.toFixed(1);
-      const durationRounded = Math.round(dist).toString();
-
-      if (form.distance !== distanceRounded || form.duration !== durationRounded) {
-        setForm((current) => ({
-          ...current,
-          distance: distanceRounded,
-          duration: durationRounded,
-        }));
-      }
-    } else {
-      if (form.distance !== '0' || form.duration !== '0') {
-        setForm((current) => ({
-          ...current,
-          distance: '0',
-          duration: '0',
-        }));
-      }
+      distanceRounded = dist.toFixed(1);
+      durationRounded = Math.round(dist).toString();
     }
-  }, [form.stops, form.distance, form.duration, setForm]);
+
+    setForm((current) => {
+      if (current.distance === distanceRounded && current.duration === durationRounded) {
+        return current;
+      }
+
+      return {
+        ...current,
+        distance: distanceRounded,
+        duration: durationRounded,
+      };
+    });
+  }, [form.stops, setForm]);
 
   return (
     <form onSubmit={onSubmit} className="space-y-5">

@@ -140,8 +140,8 @@ async def update_route(
 
     if "stops" in update_data:
         for rs in list(route.route_stops):
-            db.delete(rs.stop)
-            db.delete(rs)
+            await db.delete(rs.stop)
+            await db.delete(rs)
 
         await db.flush()
 

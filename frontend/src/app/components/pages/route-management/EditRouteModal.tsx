@@ -20,40 +20,33 @@ type EditRouteModalProps = {
   disabled?: boolean;
 };
 
-export function EditRouteModal({ route, onUpdateRoute, disabled }: EditRouteModalProps) {
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<RouteFormState>({
+const createFormKey = () => globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+
+function toRouteFormState(route: RouteRead): RouteFormState {
+  return {
     name: route.name,
     number: route.number,
     distance: String(route.distance),
     duration: String(route.duration),
     color: route.color,
     stops: route.stops.map((stop) => ({
-      key: stop.id,
+      key: createFormKey(),
       name: stop.name,
       lat: stop.lat,
       lng: stop.lng,
       order: stop.order,
     })),
-  });
+  };
+}
+
+export function EditRouteModal({ route, onUpdateRoute, disabled }: EditRouteModalProps) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState<RouteFormState>(() => toRouteFormState(route));
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (open) {
-      setForm({
-        name: route.name,
-        number: route.number,
-        distance: String(route.distance),
-        duration: String(route.duration),
-        color: route.color,
-        stops: route.stops.map((stop) => ({
-          key: stop.id,
-          name: stop.name,
-          lat: stop.lat,
-          lng: stop.lng,
-          order: stop.order,
-        })),
-      });
+      setForm(toRouteFormState(route));
     }
   }, [open, route]);
 

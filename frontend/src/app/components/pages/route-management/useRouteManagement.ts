@@ -39,8 +39,8 @@ export function useRouteManagement() {
   const updateRoute = async (routeId: string, patch: RouteUpdate) => {
     setUpdatingRouteId(routeId);
     try {
-      const updated = await routesService.updateRoute(routeId, patch);
-      setRoutes((current) => current.map((route) => (route.id === updated.id ? updated : route)));
+      await routesService.updateRoute(routeId, patch);
+      await fetchRoutes();
       toast.success('Route updated');
     } catch (updateError) {
       toast.error(updateError instanceof Error ? updateError.message : 'Unable to update route');
