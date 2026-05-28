@@ -18,6 +18,7 @@ from app.routers import (
     alerts,
     analytics,
     arrivals,
+    audit,
     auth,
     drivers,
     maintenance,
@@ -151,6 +152,7 @@ def create_app() -> FastAPI:
     app.include_router(alerts.router)
     app.include_router(analytics.router)
     app.include_router(arrivals.router)
+    app.include_router(audit.router)
     app.include_router(superadmin.router, prefix="/superadmin")
     app.include_router(tracking.router)
 

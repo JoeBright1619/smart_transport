@@ -254,6 +254,18 @@ export interface AlertRead {
   createdAt: string;
 }
 
+// Audit
+export interface AuditLogRead {
+  id: string;
+  userId: string;
+  tenantId: string | null;
+  resourceType: string;
+  resourceId: string;
+  action: string;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+}
+
 // Maintenance
 export type MaintenanceType = 'routine' | 'repair' | 'inspection';
 export type MaintenanceStatus = 'scheduled' | 'in-progress' | 'completed';

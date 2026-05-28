@@ -38,6 +38,7 @@ class AuditLog(Base):
             "update",
             "soft_delete",
             "login",
+            "login_failed",
             "impersonate",
             name="audit_action_type_enum",
         ),

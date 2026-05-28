@@ -11,7 +11,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 6.1 — Real Audit Log on Security Page
+**Next task:** Task 7.1 — Fix Seed Data: Remove Kigali Express, Ensure EcoFleet Only
 
 ---
 
@@ -248,7 +248,7 @@ Frontend changes:
 **Branch:** `master`
 **Commit:** `feat: real audit log endpoint and Security page wired to live data`
 
-- [ ] Task 6.1 complete
+- [x] Task 6.1 complete
 
 ---
 
@@ -460,7 +460,7 @@ Fix: In `RouteCardsGrid`, apply `opacity-50` and a `"Inactive"` overlay `Badge` 
 | Phase 3 — Arrivals Screen Enhancement | 1 task | 1 / 1 |
 | Phase 4 — Maintenance Screen Fix | 1 task | 1 / 1 |
 | Phase 5 — Analytics Formatting Fixes | 1 task | 1 / 1 |
-| Phase 6 — Security & Audit | 1 task | 0 / 1 |
+| Phase 6 — Security & Audit | 1 task | 1 / 1 |
 | Phase 7 — Tenant Identity & Data Isolation | 3 tasks | 0 / 3 |
 | Phase 8 — Additional Bugs & Improvements | 6 tasks | 0 / 6 |
-| **Total** | **17 tasks** | **7 / 17** |
+| **Total** | **17 tasks** | **8 / 17** |

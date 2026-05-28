@@ -210,7 +210,24 @@ async def login(
             User.is_deleted.is_(False),
         )
     )
-    if user is None or not verify_password(data.password, user.password_hash):
+    if user is None:
+        _raise_error(
+            status.HTTP_401_UNAUTHORIZED,
+            "UNAUTHORIZED",
+            "Invalid email or password",
+        )
+
+    if not verify_password(data.password, user.password_hash):
+        await audit_service.log(
+            db=db,
+            user_id=user.id,
+            tenant_id=user.tenant_id,
+            entity_type="User",
+            entity_id=user.id,
+            action_type="login_failed",
+            metadata={"source": "login"},
+        )
+        await db.commit()
         _raise_error(
             status.HTTP_401_UNAUTHORIZED,
             "UNAUTHORIZED",
