@@ -93,7 +93,7 @@ function MaintenanceTableRow({
               Start
             </Button>
           )}
-          {record.status !== 'completed' && (
+          {record.status === 'in-progress' && (
             <Button size="sm" disabled={disabled} onClick={() => onUpdateStatus(record, 'completed')}>
               Complete
             </Button>

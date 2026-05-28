@@ -11,7 +11,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 3.1 — "All Stops" Option in Arrivals Stop Selector
+**Next task:** Task 5.1 — Fix Fractional Fuel & Revenue Display
 
 ---
 
@@ -141,7 +141,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `feat: all-stops option in arrivals screen`
 
-- [ ] Task 3.1 complete
+- [x] Task 3.1 complete
 
 ---
 
@@ -184,7 +184,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `fix: show single context-aware action button in maintenance table`
 
-- [ ] Task 4.1 complete
+- [x] Task 4.1 complete
 
 ---
 
@@ -457,10 +457,10 @@ Fix: In `RouteCardsGrid`, apply `opacity-50` and a `"Inactive"` overlay `Badge` 
 |---|---|---|
 | Phase 1 — Route Management Fixes | 3 tasks | 3 / 3 |
 | Phase 2 — Passenger App Fixes | 1 task | 1 / 1 |
-| Phase 3 — Arrivals Screen Enhancement | 1 task | 0 / 1 |
-| Phase 4 — Maintenance Screen Fix | 1 task | 0 / 1 |
+| Phase 3 — Arrivals Screen Enhancement | 1 task | 1 / 1 |
+| Phase 4 — Maintenance Screen Fix | 1 task | 1 / 1 |
 | Phase 5 — Analytics Formatting Fixes | 1 task | 0 / 1 |
 | Phase 6 — Security & Audit | 1 task | 0 / 1 |
 | Phase 7 — Tenant Identity & Data Isolation | 3 tasks | 0 / 3 |
 | Phase 8 — Additional Bugs & Improvements | 6 tasks | 0 / 6 |
-| **Total** | **17 tasks** | **4 / 17** |
+| **Total** | **17 tasks** | **6 / 17** |
