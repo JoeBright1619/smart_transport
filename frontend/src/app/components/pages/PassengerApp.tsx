@@ -8,13 +8,27 @@ import { listRoutes } from '../../services/routes.service';
 import { getArrivals } from '../../services/arrivals.service';
 import { MapPin, Clock, Navigation, Star, Heart, Search, Bus } from 'lucide-react';
 
+const FAVORITE_STOPS_STORAGE_KEY = 'passenger-favourite-stops';
+
+function loadFavoriteStops(): string[] {
+  try {
+    const stored = localStorage.getItem(FAVORITE_STOPS_STORAGE_KEY);
+    if (!stored) return [];
+
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
 export function PassengerApp() {
   const [searchTerm, setSearchTerm] = useState('');
   const [routes, setRoutes] = useState<RouteRead[]>([]);
   const [allStops, setAllStops] = useState<StopRead[]>([]);
   const [selectedStop, setSelectedStop] = useState<string | null>(null);
   const [arrivals, setArrivals] = useState<ArrivalEstimate[]>([]);
-  const [favoriteStops, setFavoriteStops] = useState<string[]>([]);
+  const [favoriteStops, setFavoriteStops] = useState<string[]>(loadFavoriteStops);
 
   useEffect(() => {
     listRoutes({ isActive: true, pageSize: 100 })
@@ -52,6 +66,14 @@ export function PassengerApp() {
     const interval = setInterval(fetchArrivals, 10000);
     return () => clearInterval(interval);
   }, [selectedStop]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(FAVORITE_STOPS_STORAGE_KEY, JSON.stringify(favoriteStops));
+    } catch {
+      // Ignore storage failures; favourites still work for the current session.
+    }
+  }, [favoriteStops]);
 
   const filteredStops = allStops.filter(stop =>
     stop.name.toLowerCase().includes(searchTerm.toLowerCase())
