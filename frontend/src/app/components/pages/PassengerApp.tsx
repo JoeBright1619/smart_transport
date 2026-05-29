@@ -6,7 +6,7 @@ import { Input } from '../ui/input';
 import type { RouteRead, StopRead, ArrivalEstimate } from '../../lib/api-types';
 import { listRoutes } from '../../services/routes.service';
 import { getArrivals } from '../../services/arrivals.service';
-import { MapPin, Clock, Navigation, Star, Heart, Search, Bus } from 'lucide-react';
+import { MapPin, Clock, Navigation, Heart, Search, Bus } from 'lucide-react';
 import { useAuth } from '../../lib/auth-context';
 
 const FAVORITE_STOPS_STORAGE_KEY = 'passenger-favourite-stops';
@@ -84,6 +84,7 @@ export function PassengerApp() {
   const favoriteStopsList = allStops.filter(s => favoriteStops.includes(s.id));
   const selectedStopName = allStops.find(s => s.id === selectedStop)?.name;
   const tenantName = user?.tenantName ?? 'Transport System';
+  const tenantContact = user?.tenantPhone ?? user?.tenantEmail;
 
   const toggleFavorite = (stopId: string) => {
     setFavoriteStops(prev =>
@@ -98,7 +99,7 @@ export function PassengerApp() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-xl font-bold">{tenantName}</h1>
-            <p className="text-sm text-blue-100">Passenger Information</p>
+            <p className="text-sm text-blue-100">Passenger service updates</p>
           </div>
           <Bus className="size-10" />
         </div>
@@ -287,18 +288,12 @@ export function PassengerApp() {
               </div>
 
               <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
-                <Star className="size-5 text-yellow-600 mt-0.5" />
-                <div>
-                  <p className="font-medium">Fare Information</p>
-                  <p className="text-xs text-slate-600">Base fare: 200 RWF | Distance-based pricing</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-lg">
                 <MapPin className="size-5 text-green-600 mt-0.5" />
                 <div>
-                  <p className="font-medium">Coverage Area</p>
-                  <p className="text-xs text-slate-600">Kigali City - All major districts</p>
+                  <p className="font-medium">Service Contact</p>
+                  <p className="text-xs text-slate-600">
+                    {tenantContact ?? 'Contact your transport operator for service information.'}
+                  </p>
                 </div>
               </div>
             </CardContent>
