@@ -11,7 +11,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 8.3 — Map Marker Drag Calls `updateStop` Twice (Double State Update)
+**Next task:** Task 8.4 — Dashboard Revenue Display Is Raw Unformatted Number
 
 ---
 
@@ -390,7 +390,7 @@ setForm(current => ({
 **Branch:** `master`
 **Commit:** `fix: merge lat/lng updates into single setForm call on marker drag`
 
-- [ ] Task 8.3 complete
+- [x] Task 8.3 complete
 
 ---
 
@@ -462,5 +462,5 @@ Fix: In `RouteCardsGrid`, apply `opacity-50` and a `"Inactive"` overlay `Badge` 
 | Phase 5 — Analytics Formatting Fixes | 1 task | 1 / 1 |
 | Phase 6 — Security & Audit | 1 task | 1 / 1 |
 | Phase 7 — Tenant Identity & Data Isolation | 3 tasks | 3 / 3 |
-| Phase 8 — Additional Bugs & Improvements | 6 tasks | 2 / 6 |
-| **Total** | **17 tasks** | **13 / 17** |
+| Phase 8 — Additional Bugs & Improvements | 6 tasks | 3 / 6 |
+| **Total** | **17 tasks** | **14 / 17** |
