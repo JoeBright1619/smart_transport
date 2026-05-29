@@ -166,6 +166,10 @@ async def impersonate_tenant_admin(
         {
             "userId": admin.id,
             "tenantId": tenant_id,
+            "tenantName": tenant.name,
+            "tenantEmail": tenant.contact_email,
+            "tenantAddress": tenant.address,
+            "tenantPhone": tenant.phone,
             "role": "admin",
             "impersonatedBy": superadmin_user_id,
         },

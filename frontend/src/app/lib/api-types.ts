@@ -26,11 +26,17 @@ export interface AuthUserSummary {
   role: UserRole;
   tenantId: string | null;
   tenantName: string | null;
+  tenantEmail: string | null;
+  tenantAddress: string | null;
+  tenantPhone: string | null;
 }
 
 export interface AuthTenantSummary {
   id: string;
   name: string;
+  contactEmail: string;
+  address: string | null;
+  phone: string | null;
   isActive: boolean;
 }
 

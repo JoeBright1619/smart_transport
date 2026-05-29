@@ -2,7 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { AnalyticsData } from '../../../lib/api-types';
 import { formatRevenue } from './analytics-helpers';
-import type { RoutePerformanceDatum, FleetStatusDatum } from './analytics-helpers';
+import type { FleetStatusDatum, RoutePerformanceDatum } from './analytics-helpers';
 
 type ReportInput = {
   data: AnalyticsData;
@@ -10,30 +10,48 @@ type ReportInput = {
   fleetStatus: FleetStatusDatum[];
   from: string;
   to: string;
+  tenantName?: string;
+  tenantEmail?: string;
+  tenantAddress?: string;
+  tenantPhone?: string;
+};
+
+type TenantReportBranding = {
+  name: string;
+  email?: string;
+  address?: string;
+  phone?: string;
 };
 
 const BRAND = '#1E3A5F';
 const LIGHT = '#F1F5F9';
 
-function pageHeader(doc: jsPDF, title: string, dateRange: string) {
+function pageHeader(doc: jsPDF, title: string, dateRange: string, tenant: TenantReportBranding) {
   const pageWidth = doc.internal.pageSize.getWidth();
 
-  // Banner
   doc.setFillColor(BRAND);
-  doc.rect(0, 0, pageWidth, 26, 'F');
+  doc.rect(0, 0, pageWidth, 32, 'F');
 
   doc.setTextColor('#FFFFFF');
-  doc.setFontSize(16);
+  doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.text('Smart Transport', 14, 11);
-
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.text(title, 14, 19);
+  doc.text(tenant.name, 14, 10);
 
   doc.setFontSize(8);
-  doc.text(`Period: ${dateRange}`, pageWidth - 14, 11, { align: 'right' });
-  doc.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth - 14, 19, { align: 'right' });
+  doc.setFont('helvetica', 'normal');
+  let leftY = 17;
+  [tenant.address, tenant.email, tenant.phone].filter(Boolean).forEach((line) => {
+    doc.text(String(line), 14, leftY);
+    leftY += 6;
+  });
+
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text(title, pageWidth - 14, 10, { align: 'right' });
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Generated: ${new Date().toLocaleDateString('en-GB')}`, pageWidth - 14, 18, { align: 'right' });
+  doc.text(`Period: ${dateRange}`, pageWidth - 14, 25, { align: 'right' });
 
   doc.setTextColor('#000000');
 }
@@ -93,14 +111,23 @@ export function exportAnalyticsPDF({
   fleetStatus,
   from,
   to,
+  tenantName,
+  tenantEmail,
+  tenantAddress,
+  tenantPhone,
 }: ReportInput): void {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const dateRange = `${from} — ${to}`;
+  const tenant = {
+    name: tenantName?.trim() || 'Smart Transport',
+    email: tenantEmail?.trim() || undefined,
+    address: tenantAddress?.trim() || undefined,
+    phone: tenantPhone?.trim() || undefined,
+  };
+  const dateRange = `${from} - ${to}`;
 
-  // ── Page 1 ──────────────────────────────────────────────────────────────────
-  pageHeader(doc, 'Analytics & Performance Report', dateRange);
+  pageHeader(doc, 'Analytics & Performance Report', dateRange, tenant);
 
-  let y = 34;
+  let y = 40;
   y = sectionTitle(doc, 'Summary Metrics', y);
   y = summaryBox(doc, data.summary, y);
 
@@ -126,15 +153,14 @@ export function exportAnalyticsPDF({
     tableLineWidth: 0.1,
   });
 
-  // ── Route Performance ────────────────────────────────────────────────────────
   // @ts-expect-error jspdf-autotable extends jsPDF at runtime
   const afterDailyTable: number = (doc as any).lastAutoTable.finalY + 10;
   const spaceLeft = doc.internal.pageSize.getHeight() - afterDailyTable;
 
   if (spaceLeft < 60) {
     doc.addPage();
-    pageHeader(doc, 'Analytics & Performance Report', dateRange);
-    y = 34;
+    pageHeader(doc, 'Analytics & Performance Report', dateRange, tenant);
+    y = 40;
   } else {
     y = afterDailyTable;
   }
@@ -159,15 +185,14 @@ export function exportAnalyticsPDF({
     tableLineWidth: 0.1,
   });
 
-  // ── Fleet Status ─────────────────────────────────────────────────────────────
   // @ts-expect-error jspdf-autotable extends jsPDF at runtime
   const afterRouteTable: number = (doc as any).lastAutoTable.finalY + 10;
   const spaceLeft2 = doc.internal.pageSize.getHeight() - afterRouteTable;
 
   if (spaceLeft2 < 50) {
     doc.addPage();
-    pageHeader(doc, 'Analytics & Performance Report', dateRange);
-    y = 34;
+    pageHeader(doc, 'Analytics & Performance Report', dateRange, tenant);
+    y = 40;
   } else {
     y = afterRouteTable;
   }
@@ -194,19 +219,28 @@ export function exportAnalyticsPDF({
     tableLineWidth: 0.1,
   });
 
-  // ── Footer on every page ─────────────────────────────────────────────────────
   const totalPages = doc.getNumberOfPages();
   for (let p = 1; p <= totalPages; p++) {
     doc.setPage(p);
     doc.setFontSize(7);
     doc.setTextColor('#94A3B8');
     doc.text(
-      `Page ${p} of ${totalPages}  •  Smart Transport Analytics Report`,
+      `Page ${p} of ${totalPages} - ${tenant.name} Analytics Report`,
       doc.internal.pageSize.getWidth() / 2,
       doc.internal.pageSize.getHeight() - 6,
       { align: 'center' },
     );
   }
 
-  doc.save(`smart-transport-report-${from}-to-${to}.pdf`);
+  doc.save(`${slugify(tenant.name)}-report-${from}-to-${to}.pdf`);
+}
+
+function slugify(value: string): string {
+  return (
+    value
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'smart-transport'
+  );
 }

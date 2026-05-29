@@ -6,9 +6,11 @@ import { AnalyticsErrorState, AnalyticsLoadingState } from './analytics/Analytic
 import { AnalyticsStatsCards } from './analytics/AnalyticsStatsCards';
 import { exportAnalyticsPDF } from './analytics/analytics-pdf';
 import { useAnalyticsPage } from './analytics/useAnalyticsPage';
+import { useAuth } from '../../lib/auth-context';
 
 export function Analytics() {
   const analytics = useAnalyticsPage();
+  const { user } = useAuth();
 
   if (analytics.loading) {
     return <AnalyticsLoadingState />;
@@ -45,6 +47,10 @@ export function Analytics() {
                 fleetStatus: analytics.fleetStatus,
                 from: analytics.from,
                 to: analytics.to,
+                tenantName: user?.tenantName,
+                tenantEmail: user?.tenantEmail,
+                tenantAddress: user?.tenantAddress,
+                tenantPhone: user?.tenantPhone,
               })
             }
           >

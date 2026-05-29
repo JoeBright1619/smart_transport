@@ -53,6 +53,13 @@ class LoginRequest(APIModel):
 class AuthTenantSummary(APIModel):
     id: str = Field(json_schema_extra={"example": "ten-uuid"})
     name: str = Field(json_schema_extra={"example": "EcoFleet Ltd"})
+    contact_email: str = Field(json_schema_extra={"example": "admin@ecofleet.rw"})
+    address: str | None = Field(
+        default=None, json_schema_extra={"example": "Kigali, Rwanda"}
+    )
+    phone: str | None = Field(
+        default=None, json_schema_extra={"example": "+250788123456"}
+    )
     is_active: bool = Field(default=True, json_schema_extra={"example": True})
 
 
@@ -70,6 +77,15 @@ class AuthUserSummary(APIModel):
     )
     tenant_name: str | None = Field(
         default=None, json_schema_extra={"example": "EcoFleet Ltd"}
+    )
+    tenant_email: str | None = Field(
+        default=None, json_schema_extra={"example": "admin@ecofleet.rw"}
+    )
+    tenant_address: str | None = Field(
+        default=None, json_schema_extra={"example": "Kigali, Rwanda"}
+    )
+    tenant_phone: str | None = Field(
+        default=None, json_schema_extra={"example": "+250788123456"}
     )
 
 

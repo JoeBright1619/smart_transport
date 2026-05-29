@@ -10,4 +10,7 @@ export interface User {
   phone?: string;
   company?: string;
   tenantName?: string;
+  tenantEmail?: string;
+  tenantAddress?: string;
+  tenantPhone?: string;
 }

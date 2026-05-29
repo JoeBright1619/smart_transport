@@ -14,6 +14,9 @@ type JwtPayload = {
   userId?: string;
   tenantId?: string | null;
   tenantName?: string | null;
+  tenantEmail?: string | null;
+  tenantAddress?: string | null;
+  tenantPhone?: string | null;
   role?: User['role'];
   email?: string | null;
   full_name?: string | null;
@@ -78,6 +81,9 @@ function userFromAuthSummary(summary: AuthUserSummary): User {
     role: summary.role,
     company: summary.tenantId ?? undefined,
     tenantName: summary.tenantName ?? undefined,
+    tenantEmail: summary.tenantEmail ?? undefined,
+    tenantAddress: summary.tenantAddress ?? undefined,
+    tenantPhone: summary.tenantPhone ?? undefined,
   };
 }
 
@@ -93,6 +99,9 @@ function userFromTokenPayload(payload: JwtPayload): User | null {
     role: payload.role,
     company: payload.tenantId ?? undefined,
     tenantName: payload.tenantName ?? undefined,
+    tenantEmail: payload.tenantEmail ?? undefined,
+    tenantAddress: payload.tenantAddress ?? undefined,
+    tenantPhone: payload.tenantPhone ?? undefined,
   };
 }
 
