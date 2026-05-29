@@ -11,7 +11,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 8.4 — Dashboard Revenue Display Is Raw Unformatted Number
+**Next task:** Task 8.5 — Passenger App Shows Wrong Branding & Hard-coded Service Info
 
 ---
 
@@ -410,7 +410,7 @@ Fix: Import `formatRevenue` from `analytics-helpers.ts` and apply it to `analyti
 **Branch:** `master`
 **Commit:** `fix: format dashboard revenue using tiered formatRevenue helper`
 
-- [ ] Task 8.4 complete
+- [x] Task 8.4 complete
 
 ---
 
@@ -462,5 +462,5 @@ Fix: In `RouteCardsGrid`, apply `opacity-50` and a `"Inactive"` overlay `Badge` 
 | Phase 5 — Analytics Formatting Fixes | 1 task | 1 / 1 |
 | Phase 6 — Security & Audit | 1 task | 1 / 1 |
 | Phase 7 — Tenant Identity & Data Isolation | 3 tasks | 3 / 3 |
-| Phase 8 — Additional Bugs & Improvements | 6 tasks | 3 / 6 |
-| **Total** | **17 tasks** | **14 / 17** |
+| Phase 8 — Additional Bugs & Improvements | 6 tasks | 4 / 6 |
+| **Total** | **17 tasks** | **15 / 17** |
