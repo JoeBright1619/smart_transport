@@ -11,7 +11,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 8.6 — Route Cards Grid Also Shows Inactive Routes
+**Next task:** All tasks complete
 
 ---
 
@@ -447,7 +447,7 @@ Fix: In `RouteCardsGrid`, apply `opacity-50` and a `"Inactive"` overlay `Badge` 
 **Branch:** `master`
 **Commit:** `fix: route cards grid dims inactive routes with inactive badge`
 
-- [ ] Task 8.6 complete
+- [x] Task 8.6 complete
 
 ---
 
@@ -462,5 +462,5 @@ Fix: In `RouteCardsGrid`, apply `opacity-50` and a `"Inactive"` overlay `Badge` 
 | Phase 5 — Analytics Formatting Fixes | 1 task | 1 / 1 |
 | Phase 6 — Security & Audit | 1 task | 1 / 1 |
 | Phase 7 — Tenant Identity & Data Isolation | 3 tasks | 3 / 3 |
-| Phase 8 — Additional Bugs & Improvements | 6 tasks | 5 / 6 |
-| **Total** | **17 tasks** | **16 / 17** |
+| Phase 8 — Additional Bugs & Improvements | 6 tasks | 6 / 6 |
+| **Total** | **17 tasks** | **17 / 17** |

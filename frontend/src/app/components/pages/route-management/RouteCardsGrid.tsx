@@ -1,6 +1,7 @@
 import type { RouteRead } from '../../../lib/api-types';
 import { Badge } from '../../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { cn } from '../../ui/utils';
 import { EditRouteModal } from './EditRouteModal';
 import type { RouteUpdate } from '../../../lib/api-types';
 
@@ -14,9 +15,14 @@ export function RouteCardsGrid({ routes, updatingRouteId, onUpdateRoute }: Route
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {routes.map((route) => (
-        <Card key={route.id}>
+        <Card key={route.id} className={cn('relative', !route.isActive && 'opacity-60')}>
+          {!route.isActive && (
+            <Badge variant="secondary" className="absolute right-3 top-3 z-10">
+              Inactive
+            </Badge>
+          )}
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3 pr-24">
               <div className="flex items-center gap-2">
                 <Badge style={{ backgroundColor: route.color }} className="text-white">
                   {route.number}
@@ -24,9 +30,7 @@ export function RouteCardsGrid({ routes, updatingRouteId, onUpdateRoute }: Route
                 <CardTitle className="text-base">{route.name}</CardTitle>
               </div>
               <div className="flex gap-2">
-                <Badge variant={route.isActive ? 'default' : 'secondary'}>
-                  {route.isActive ? 'Active' : 'Inactive'}
-                </Badge>
+                {route.isActive && <Badge>Active</Badge>}
                 <EditRouteModal
                   route={route}
                   onUpdateRoute={onUpdateRoute}
