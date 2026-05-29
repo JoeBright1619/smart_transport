@@ -11,7 +11,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 8.2 — Arrivals Screen Shows Stops from All Routes Including Inactive
+**Next task:** Task 8.3 — Map Marker Drag Calls `updateStop` Twice (Double State Update)
 
 ---
 
@@ -364,7 +364,7 @@ Fix: Add `isActive: true` to the `listRoutes` call in `loadStops` in `useArrival
 **Branch:** `master`
 **Commit:** `fix: arrivals screen excludes stops from inactive routes`
 
-- [ ] Task 8.2 complete
+- [x] Task 8.2 complete
 
 ---
 
@@ -462,5 +462,5 @@ Fix: In `RouteCardsGrid`, apply `opacity-50` and a `"Inactive"` overlay `Badge` 
 | Phase 5 — Analytics Formatting Fixes | 1 task | 1 / 1 |
 | Phase 6 — Security & Audit | 1 task | 1 / 1 |
 | Phase 7 — Tenant Identity & Data Isolation | 3 tasks | 3 / 3 |
-| Phase 8 — Additional Bugs & Improvements | 6 tasks | 1 / 6 |
-| **Total** | **17 tasks** | **12 / 17** |
+| Phase 8 — Additional Bugs & Improvements | 6 tasks | 2 / 6 |
+| **Total** | **17 tasks** | **13 / 17** |
