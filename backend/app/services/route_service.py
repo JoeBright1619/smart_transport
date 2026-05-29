@@ -232,6 +232,27 @@ async def update_route(
 
     if "name" in update_data:
         route.name = update_data["name"]
+    if "number" in update_data and update_data["number"] != route.number:
+        existing = await db.execute(
+            select(Route).where(
+                Route.number == update_data["number"],
+                Route.tenant_id == tenant_id,
+                Route.id != route.id,
+                Route.is_deleted.is_(False),
+            )
+        )
+        if existing.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=_error_detail(
+                    "CONFLICT", "Route with this number already exists"
+                ),
+            )
+        route.number = update_data["number"]
+    if "distance" in update_data:
+        route.distance = update_data["distance"]
+    if "duration" in update_data:
+        route.duration = update_data["duration"]
     if "is_active" in update_data:
         route.is_active = update_data["is_active"]
     if "color" in update_data:

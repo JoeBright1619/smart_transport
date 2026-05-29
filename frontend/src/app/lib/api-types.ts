@@ -173,6 +173,9 @@ export interface RouteCreate {
 
 export interface RouteUpdate {
   name?: string;
+  number?: string;
+  distance?: number;
+  duration?: number;
   isActive?: boolean;
   color?: string;
   stops?: StopCreate[];

@@ -54,6 +54,16 @@ class RouteUpdate(APIModel):
         max_length=100,
         json_schema_extra={"example": "Nyabugogo - Kimironko Express"},
     )
+    number: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=20,
+        json_schema_extra={"example": "101X"},
+    )
+    distance: float | None = Field(
+        default=None, ge=0, json_schema_extra={"example": 12.5}
+    )
+    duration: int | None = Field(default=None, ge=0, json_schema_extra={"example": 35})
     is_active: bool | None = Field(default=None, json_schema_extra={"example": False})
     color: str | None = Field(
         default=None,

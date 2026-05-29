@@ -11,7 +11,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 8.1 — Route Number & Distance Not Persisted on Edit
+**Next task:** Task 8.2 — Arrivals Screen Shows Stops from All Routes Including Inactive
 
 ---
 
@@ -348,7 +348,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `fix: persist route number, distance and duration on route update`
 
-- [ ] Task 8.1 complete
+- [x] Task 8.1 complete
 
 ---
 
@@ -462,5 +462,5 @@ Fix: In `RouteCardsGrid`, apply `opacity-50` and a `"Inactive"` overlay `Badge` 
 | Phase 5 — Analytics Formatting Fixes | 1 task | 1 / 1 |
 | Phase 6 — Security & Audit | 1 task | 1 / 1 |
 | Phase 7 — Tenant Identity & Data Isolation | 3 tasks | 3 / 3 |
-| Phase 8 — Additional Bugs & Improvements | 6 tasks | 0 / 6 |
-| **Total** | **17 tasks** | **11 / 17** |
+| Phase 8 — Additional Bugs & Improvements | 6 tasks | 1 / 6 |
+| **Total** | **17 tasks** | **12 / 17** |
