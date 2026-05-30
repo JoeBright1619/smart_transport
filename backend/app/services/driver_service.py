@@ -6,6 +6,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.driver import Driver
+from app.models.trip import Trip
 from app.schemas.driver import DriverCreate, DriverUpdate
 from app.services import audit_service
 
@@ -116,14 +117,31 @@ async def update_driver(
     update_data = data.model_dump(exclude_unset=True)
 
     if "status" in update_data:
-        if update_data["status"] == "on-trip" and driver.status != "on-trip":
+        new_status = update_data["status"]
+        if new_status == "on-trip" and driver.status != "on-trip":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=_error_detail(
                     "BAD_REQUEST", "Cannot manually set status to on-trip"
                 ),
             )
-        driver.status = update_data["status"]
+        if new_status == "off-duty":
+            conflict_result = await db.execute(
+                select(Trip).where(
+                    Trip.driver_id == driver_id,
+                    Trip.status.in_(["scheduled", "active"]),
+                    Trip.is_deleted.is_(False),
+                )
+            )
+            if conflict_result.scalar_one_or_none():
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=_error_detail(
+                        "CONFLICT",
+                        "Cannot set driver to off-duty — they have an active or scheduled trip",
+                    ),
+                )
+        driver.status = new_status
 
     if "name" in update_data:
         driver.name = update_data["name"]

@@ -26,7 +26,7 @@ export function Dispatch() {
         <ScheduleTripDialog
           vehicles={dispatch.availableVehicles}
           drivers={dispatch.availableDrivers}
-          routes={dispatch.routes}
+          routes={dispatch.schedulableRoutes}
           onCreateTrip={dispatch.createTrip}
         />
       </div>

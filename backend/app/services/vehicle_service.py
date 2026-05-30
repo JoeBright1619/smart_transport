@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.trip import Trip
 from app.models.vehicle import Vehicle
 from app.schemas.vehicle import VehicleCreate, VehicleUpdate
 from app.services import audit_service
@@ -113,7 +114,34 @@ async def update_vehicle(
 
     update_data = data.model_dump(exclude_unset=True)
     if "status" in update_data:
-        vehicle.status = update_data["status"]
+        new_status = update_data["status"]
+        if new_status in ("idle", "maintenance", "offline"):
+            conflict_result = await db.execute(
+                select(Trip).where(
+                    Trip.vehicle_id == vehicle_id,
+                    Trip.status.in_(["scheduled", "active"]),
+                    Trip.is_deleted.is_(False),
+                )
+            )
+            conflict_trip = conflict_result.scalar_one_or_none()
+            if conflict_trip:
+                if conflict_trip.status == "active":
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail=_error_detail(
+                            "CONFLICT",
+                            "Vehicle has an active trip — complete or cancel the trip first",
+                        ),
+                    )
+                if new_status in ("maintenance", "offline"):
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail=_error_detail(
+                            "CONFLICT",
+                            "Cannot set vehicle to maintenance or offline — it has a scheduled trip",
+                        ),
+                    )
+        vehicle.status = new_status
     if "fuel" in update_data:
         vehicle.fuel = update_data["fuel"]
     if "route_id" in update_data:

@@ -123,7 +123,7 @@ function DriverTableRow({
               <SelectItem value="available">Available</SelectItem>
               <SelectItem value="off-duty">Off Duty</SelectItem>
               <SelectItem value="on-trip" disabled>
-                On Trip
+                On Trip — set by active trip
               </SelectItem>
             </SelectContent>
           </Select>

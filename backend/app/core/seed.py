@@ -351,14 +351,18 @@ async def _seed_routes(db: AsyncSession) -> None:
         await _seed_route_stop(db, "route-005", stop_id, order)
 
 
-async def _seed_drivers(db: AsyncSession) -> dict[str, Driver]:
+async def _seed_drivers(db: AsyncSession) -> None:
+    # total_trips approximated from 90-day history (2 trips/day for active drivers)
     drivers_data = [
+        # id, name, license, phone, status, total_trips, rating, cert_expiry
         (
             "drv-001",
             "Patrick Hakizimana",
             "DL-RW-0001",
             "+250700000001",
             "available",
+            178,
+            4.6,
             date(2027, 6, 30),
         ),
         (
@@ -367,6 +371,8 @@ async def _seed_drivers(db: AsyncSession) -> dict[str, Driver]:
             "DL-RW-0002",
             "+250700000002",
             "available",
+            182,
+            4.8,
             date(2027, 9, 15),
         ),
         (
@@ -375,6 +381,8 @@ async def _seed_drivers(db: AsyncSession) -> dict[str, Driver]:
             "DL-RW-0003",
             "+250700000003",
             "off-duty",
+            0,
+            3.9,
             date(2026, 12, 1),
         ),
         (
@@ -383,6 +391,8 @@ async def _seed_drivers(db: AsyncSession) -> dict[str, Driver]:
             "DL-RW-0004",
             "+250700000004",
             "available",
+            175,
+            4.5,
             date(2027, 3, 20),
         ),
         (
@@ -391,6 +401,8 @@ async def _seed_drivers(db: AsyncSession) -> dict[str, Driver]:
             "DL-RW-0005",
             "+250700000005",
             "available",
+            180,
+            4.7,
             date(2027, 7, 10),
         ),
         (
@@ -399,6 +411,8 @@ async def _seed_drivers(db: AsyncSession) -> dict[str, Driver]:
             "DL-RW-0006",
             "+250700000006",
             "available",
+            176,
+            4.4,
             date(2027, 11, 5),
         ),
         (
@@ -407,6 +421,8 @@ async def _seed_drivers(db: AsyncSession) -> dict[str, Driver]:
             "DL-RW-0007",
             "+250700000007",
             "available",
+            0,
+            4.0,
             date(2028, 1, 15),
         ),
         (
@@ -415,12 +431,22 @@ async def _seed_drivers(db: AsyncSession) -> dict[str, Driver]:
             "DL-RW-0008",
             "+250700000008",
             "off-duty",
+            0,
+            4.1,
             date(2027, 4, 22),
         ),
     ]
-    result: dict[str, Driver] = {}
-    for drv_id, name, license_num, phone, status, cert_expiry in drivers_data:
-        driver, created = await _get_or_create(
+    for (
+        drv_id,
+        name,
+        license_num,
+        phone,
+        status,
+        total_trips,
+        rating,
+        cert_expiry,
+    ) in drivers_data:
+        _, created = await _get_or_create(
             db,
             Driver,
             drv_id,
@@ -428,8 +454,8 @@ async def _seed_drivers(db: AsyncSession) -> dict[str, Driver]:
             name=name,
             license_number=license_num,
             phone=phone,
-            rating=0.0,
-            total_trips=0,
+            rating=rating,
+            total_trips=total_trips,
             status=status,
             vehicle_id=None,
             certification_expiry=datetime(
@@ -440,143 +466,25 @@ async def _seed_drivers(db: AsyncSession) -> dict[str, Driver]:
             ),
             is_deleted=False,
         )
-        result[drv_id] = driver
         _log(f"driver {drv_id} {'created' if created else 'already exists'}")
-    return result
 
 
-async def _seed_vehicles(db: AsyncSession) -> dict[str, Vehicle]:
+async def _seed_vehicles(db: AsyncSession) -> None:
+    # All vehicles start idle with no GPS — live trips will activate the relevant ones.
+    # veh-004 is in maintenance (broken down, not available for dispatch).
     vehicles_data = [
-        # id,       reg,          model,             cap, status,        route,       driver,    lat,      lng,     speed, hdg, fuel
-        (
-            "veh-001",
-            "RAD 001 A",
-            "Yutong ZK6120",
-            60,
-            "active",
-            "route-001",
-            "drv-001",
-            -1.9396,
-            30.0585,
-            35,
-            90,
-            80,
-        ),
-        (
-            "veh-002",
-            "RAD 002 B",
-            "King Long XMQ",
-            45,
-            "idle",
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            100,
-        ),
-        (
-            "veh-003",
-            "RAD 003 C",
-            "Yutong ZK6120",
-            60,
-            "active",
-            "route-002",
-            "drv-002",
-            -1.9500,
-            30.0588,
-            28,
-            0,
-            62,
-        ),
-        (
-            "veh-004",
-            "RAD 004 D",
-            "Higer KLQ",
-            30,
-            "maintenance",
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            100,
-        ),
-        (
-            "veh-005",
-            "RAD 005 E",
-            "Yutong ZK6120",
-            60,
-            "idle",
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            95,
-        ),
-        (
-            "veh-006",
-            "RAD 006 F",
-            "King Long XMQ",
-            45,
-            "active",
-            "route-003",
-            "drv-004",
-            -1.9553,
-            30.1127,
-            30,
-            180,
-            74,
-        ),
-        (
-            "veh-007",
-            "RAD 007 G",
-            "Higer KLQ",
-            40,
-            "active",
-            "route-004",
-            "drv-005",
-            -1.9742,
-            30.0904,
-            25,
-            45,
-            58,
-        ),
-        (
-            "veh-008",
-            "RAD 008 H",
-            "Yutong ZK6120",
-            60,
-            "active",
-            "route-005",
-            "drv-006",
-            -1.9726,
-            30.0642,
-            32,
-            270,
-            67,
-        ),
+        # id, reg, model, cap, fuel, engine_status, status
+        ("veh-001", "RAD 001 A", "Yutong ZK6120", 60, 78, "good", "idle"),
+        ("veh-002", "RAD 002 B", "King Long XMQ", 45, 100, "good", "idle"),
+        ("veh-003", "RAD 003 C", "Yutong ZK6120", 60, 63, "good", "idle"),
+        ("veh-004", "RAD 004 D", "Higer KLQ", 30, 100, "critical", "maintenance"),
+        ("veh-005", "RAD 005 E", "Yutong ZK6120", 60, 95, "good", "idle"),
+        ("veh-006", "RAD 006 F", "King Long XMQ", 45, 88, "good", "idle"),
+        ("veh-007", "RAD 007 G", "Higer KLQ", 40, 55, "warning", "idle"),
+        ("veh-008", "RAD 008 H", "Yutong ZK6120", 60, 91, "good", "idle"),
     ]
-    result: dict[str, Vehicle] = {}
-    for (
-        veh_id,
-        reg,
-        model,
-        cap,
-        status,
-        route_id,
-        drv_id,
-        lat,
-        lng,
-        speed,
-        heading,
-        fuel,
-    ) in vehicles_data:
-        vehicle, created = await _get_or_create(
+    for veh_id, reg, model, cap, fuel, engine_status, status in vehicles_data:
+        _, created = await _get_or_create(
             db,
             Vehicle,
             veh_id,
@@ -585,43 +493,176 @@ async def _seed_vehicles(db: AsyncSession) -> dict[str, Vehicle]:
             model=model,
             capacity=cap,
             status=status,
-            route_id=route_id,
-            driver_id=drv_id,
-            lat=lat,
-            lng=lng,
-            speed=speed,
-            heading=heading,
+            route_id=None,
+            driver_id=None,
+            lat=None,
+            lng=None,
+            speed=0,
+            heading=0,
             fuel=fuel,
-            engine_status="good",
+            engine_status=engine_status,
             is_deleted=False,
         )
-        if status == "active":
+        _log(f"vehicle {veh_id} {'created' if created else 'already exists'}")
+
+
+async def _seed_live_trips(db: AsyncSession) -> None:
+    """Create the current live trip state — active trips running on the map and
+    scheduled trips waiting in the dispatch queue.
+
+    Active trips:   veh-001/drv-001/route-101, veh-003/drv-002/route-202, veh-007/drv-005/route-404
+    Scheduled trips: veh-006/drv-004/route-303 (starts in ~30 min)
+
+    Idle + available for new dispatch: veh-002, veh-005, veh-008
+    Free drivers: drv-006, drv-007
+    """
+    now = datetime.now(timezone.utc)
+
+    # ── Active trips ────────────────────────────────────────────────────────────
+    # (trip_id, veh_id, route_id, drv_id, started_min_ago, duration_min, lat, lng, speed, heading, fuel)
+    active = [
+        (
+            "trip-live-001",
+            "veh-001",
+            "route-001",
+            "drv-001",
+            28,
+            35,
+            -1.9396,
+            30.0585,
+            38,
+            90,
+            78,
+        ),
+        (
+            "trip-live-002",
+            "veh-003",
+            "route-002",
+            "drv-002",
+            12,
+            25,
+            -1.9500,
+            30.0588,
+            29,
+            0,
+            63,
+        ),
+        (
+            "trip-live-003",
+            "veh-007",
+            "route-004",
+            "drv-005",
+            18,
+            28,
+            -1.9742,
+            30.0904,
+            26,
+            45,
+            55,
+        ),
+    ]
+    for (
+        trip_id,
+        veh_id,
+        route_id,
+        drv_id,
+        started_ago,
+        duration,
+        lat,
+        lng,
+        speed,
+        heading,
+        fuel,
+    ) in active:
+        existing = await db.get(Trip, trip_id)
+        if existing is None:
+            actual_start = now - timedelta(minutes=started_ago)
+            scheduled_start = actual_start - timedelta(minutes=2)
+            scheduled_end = scheduled_start + timedelta(minutes=duration)
+            db.add(
+                Trip(
+                    id=trip_id,
+                    tenant_id=_TENANT_ID,
+                    vehicle_id=veh_id,
+                    route_id=route_id,
+                    driver_id=drv_id,
+                    scheduled_start=scheduled_start,
+                    actual_start=actual_start,
+                    scheduled_end=scheduled_end,
+                    status="active",
+                    passengers=0,
+                    delay=0,
+                    is_deleted=False,
+                )
+            )
+            _log(f"live active trip {trip_id} created")
+        else:
+            _log(f"live active trip {trip_id} already exists")
+
+        # Set vehicle to active with GPS at first route stop
+        vehicle = (
+            await db.execute(select(Vehicle).where(Vehicle.id == veh_id))
+        ).scalar_one_or_none()
+        if vehicle:
+            vehicle.status = "active"
+            vehicle.route_id = route_id
+            vehicle.driver_id = drv_id
             vehicle.lat = lat
             vehicle.lng = lng
             vehicle.speed = speed
             vehicle.heading = heading
             vehicle.fuel = fuel
 
-        result[veh_id] = vehicle
-        _log(f"vehicle {veh_id} {'created' if created else 'already exists'}")
-    return result
-
-
-def _link_drivers_to_vehicles(drivers: dict[str, Driver]) -> None:
-    links = [
-        ("drv-001", "veh-001"),
-        ("drv-002", "veh-003"),
-        ("drv-004", "veh-006"),
-        ("drv-005", "veh-007"),
-        ("drv-006", "veh-008"),
-    ]
-    for drv_id, veh_id in links:
-        driver = drivers[drv_id]
-        if driver.vehicle_id != veh_id:
+        # Set driver to on-trip and link to vehicle
+        driver = (
+            await db.execute(select(Driver).where(Driver.id == drv_id))
+        ).scalar_one_or_none()
+        if driver:
+            driver.status = "on-trip"
             driver.vehicle_id = veh_id
-            _log(f"linked driver {drv_id} -> vehicle {veh_id}")
+
+    # ── Scheduled trips ─────────────────────────────────────────────────────────
+    # (trip_id, veh_id, route_id, drv_id, starts_in_min, duration_min)
+    scheduled = [
+        ("trip-live-004", "veh-006", "route-003", "drv-004", 35, 30),
+    ]
+    for trip_id, veh_id, route_id, drv_id, starts_in, duration in scheduled:
+        existing = await db.get(Trip, trip_id)
+        if existing is None:
+            scheduled_start = now + timedelta(minutes=starts_in)
+            scheduled_end = scheduled_start + timedelta(minutes=duration)
+            db.add(
+                Trip(
+                    id=trip_id,
+                    tenant_id=_TENANT_ID,
+                    vehicle_id=veh_id,
+                    route_id=route_id,
+                    driver_id=drv_id,
+                    scheduled_start=scheduled_start,
+                    scheduled_end=scheduled_end,
+                    status="scheduled",
+                    passengers=0,
+                    delay=0,
+                    is_deleted=False,
+                )
+            )
+            _log(f"live scheduled trip {trip_id} created")
         else:
-            _log(f"driver {drv_id} already linked to vehicle {veh_id}")
+            _log(f"live scheduled trip {trip_id} already exists")
+
+        # Reserve resources — vehicle and driver keep idle/available status until trip starts
+        vehicle = (
+            await db.execute(select(Vehicle).where(Vehicle.id == veh_id))
+        ).scalar_one_or_none()
+        if vehicle:
+            vehicle.route_id = route_id
+            vehicle.driver_id = drv_id
+
+        driver = (
+            await db.execute(select(Driver).where(Driver.id == drv_id))
+        ).scalar_one_or_none()
+        if driver:
+            driver.vehicle_id = veh_id
 
 
 async def _seed_maintenance(db: AsyncSession) -> None:
@@ -780,10 +821,10 @@ async def _seed_alerts(db: AsyncSession) -> None:
         (
             "speeding",
             "high",
-            "veh-008",
-            "drv-006",
-            "Speeding Detected: RAD 008 H",
-            "Vehicle RAD 008 H exceeded speed limit on Gikondo - Kimironko.",
+            "veh-007",
+            "drv-005",
+            "Speeding Detected: RAD 007 G",
+            "Vehicle RAD 007 G exceeded speed limit on Kicukiro - Nyabugogo.",
             False,
         ),
         (
@@ -834,7 +875,7 @@ async def _seed_alerts(db: AsyncSession) -> None:
 # Historical trips & analytics (90-day history)
 # ---------------------------------------------------------------------------
 
-# Five active service assignments: (vehicle_id, route_id, driver_id, route_duration_min)
+# Five service assignments used to generate historical completed trips
 _ASSIGNMENTS = [
     ("veh-001", "route-001", "drv-001", 35),
     ("veh-003", "route-002", "drv-002", 25),
@@ -846,7 +887,7 @@ _ASSIGNMENTS = [
 # Two departures per vehicle per day (morning + afternoon)
 _DEPARTURE_HOURS: list[tuple[int, int]] = [(7, 0), (13, 30)]
 
-# Revenue per passenger (RWF) — realistic Kigali fare range
+# Revenue per passenger (RWF)
 _FARE_RWF = 300
 
 
@@ -864,7 +905,6 @@ def _make_trip(
     )
     scheduled_end = scheduled_start + timedelta(minutes=duration)
 
-    # 82 % of trips are on time
     on_time = _RNG.random() < 0.82
     delay_min = _RNG.randint(-4, 0) if on_time else _RNG.randint(5, 18)
     passengers = _RNG.randint(28, 55)
@@ -872,7 +912,6 @@ def _make_trip(
     actual_start = scheduled_start + timedelta(minutes=max(0, delay_min // 2))
     actual_end = scheduled_end + timedelta(minutes=delay_min)
 
-    # Use noon on the historical day as created_at so the date cast is unambiguous
     created_at = datetime(day.year, day.month, day.day, 12, 0, tzinfo=timezone.utc)
 
     return Trip(
@@ -894,7 +933,6 @@ def _make_trip(
 
 
 async def _seed_historical_trips(db: AsyncSession) -> None:
-    # Skip if substantial historical data already exists
     existing_count = await db.scalar(
         select(func.count(Trip.id)).where(
             Trip.tenant_id == _TENANT_ID,
@@ -927,7 +965,6 @@ async def _seed_historical_trips(db: AsyncSession) -> None:
 
 
 async def _seed_analytics_records(db: AsyncSession) -> None:
-    # Skip if records already exist for the past window
     existing_count = await db.scalar(
         select(func.count(AnalyticsRecord.id)).where(
             AnalyticsRecord.tenant_id == _TENANT_ID,
@@ -940,15 +977,10 @@ async def _seed_analytics_records(db: AsyncSession) -> None:
     today = date.today()
     start_day = today - timedelta(days=90)
 
-    # Average passengers per day: 5 vehicles × 2 trips × avg 41 passengers ≈ 410
-    # Revenue = passengers × _FARE_RWF + some variability
-    # Fuel = 5 active vehicles × ~25–35 L each
-
     total = 0
     current = start_day
     while current < today:
-        # Passengers from trips that day (approximated deterministically)
-        _RNG.seed(current.toordinal())  # day-specific seed for consistency
+        _RNG.seed(current.toordinal())
         daily_passengers = sum(
             _RNG.randint(28, 55)
             for _ in range(len(_ASSIGNMENTS) * len(_DEPARTURE_HOURS))
@@ -993,13 +1025,14 @@ async def seed(reset: bool = False) -> None:
         await _seed_routes(db)
         await db.flush()
 
-        drivers = await _seed_drivers(db)
+        await _seed_drivers(db)
         await db.flush()
 
         await _seed_vehicles(db)
         await db.flush()
 
-        _link_drivers_to_vehicles(drivers)
+        # Seed live trips — activates vehicles and links drivers properly
+        await _seed_live_trips(db)
         await db.flush()
 
         await _seed_maintenance(db)

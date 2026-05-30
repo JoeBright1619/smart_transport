@@ -21,10 +21,19 @@ type Props = {
 };
 
 export function VehicleMapView({ vehicles, routes, drivers, selectedVehicle, selectedRoute, markerRefs, onSelectVehicle }: Props) {
+  const noGpsCount = vehicles.filter(v => !v.currentLocation).length;
+
   return (
     <Card className="lg:col-span-2">
       <CardHeader>
-        <CardTitle>Live Map View</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Live Map View</CardTitle>
+          {noGpsCount > 0 && (
+            <span className="text-xs text-slate-400">
+              {noGpsCount} vehicle{noGpsCount > 1 ? 's' : ''} without GPS — start trip to place on map
+            </span>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <div className="relative h-[600px] rounded-lg overflow-hidden border">
@@ -41,9 +50,9 @@ export function VehicleMapView({ vehicles, routes, drivers, selectedVehicle, sel
                 <Polyline
                   key={route.id}
                   positions={route.stops.map(s => [s.lat, s.lng] as [number, number])}
-                  color={highlighted ? route.color : '#94A3B8'}
+                  color={highlighted ? route.color : route.color}
                   weight={highlighted ? 5 : 2}
-                  opacity={highlighted ? 0.9 : 0.25}
+                  opacity={highlighted ? 0.9 : 0.45}
                 />
               );
             })}

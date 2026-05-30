@@ -5,6 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.route import RouteStop, Stop
 from app.models.trip import Trip
 from app.models.driver import Driver
 from app.models.vehicle import Vehicle
@@ -76,6 +77,50 @@ async def get_trip_by_id(db: AsyncSession, trip_id: str, tenant_id: str) -> Trip
 async def create_trip(
     db: AsyncSession, data: TripCreate, tenant_id: str, current_user_id: str
 ) -> Trip:
+    # Validate vehicle belongs to tenant, is not deleted, and is dispatchable
+    vehicle_result = await db.execute(
+        select(Vehicle).where(
+            Vehicle.id == data.vehicle_id,
+            Vehicle.tenant_id == tenant_id,
+            Vehicle.is_deleted.is_(False),
+        )
+    )
+    vehicle = vehicle_result.scalar_one_or_none()
+    if not vehicle:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=_error_detail("NOT_FOUND", "Vehicle not found"),
+        )
+    if vehicle.status in ("active", "maintenance", "offline"):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=_error_detail(
+                "CONFLICT",
+                f"Vehicle is not available for dispatch (status: {vehicle.status})",
+            ),
+        )
+
+    # Validate driver belongs to tenant, is not deleted, and is dispatchable
+    driver_result = await db.execute(
+        select(Driver).where(
+            Driver.id == data.driver_id,
+            Driver.tenant_id == tenant_id,
+            Driver.is_deleted.is_(False),
+        )
+    )
+    driver = driver_result.scalar_one_or_none()
+    if not driver:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=_error_detail("NOT_FOUND", "Driver not found"),
+        )
+    if driver.status == "on-trip":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=_error_detail("CONFLICT", "Driver is currently on a trip"),
+        )
+
+    # Reject if vehicle or driver already has a scheduled/active trip
     conflicting_trip = await db.execute(
         select(Trip).where(
             Trip.tenant_id == tenant_id,
@@ -103,6 +148,12 @@ async def create_trip(
     )
     db.add(trip)
     await db.flush()
+
+    # Reserve the resources — link vehicle and driver to this trip
+    vehicle.driver_id = trip.driver_id
+    vehicle.route_id = trip.route_id
+    driver.vehicle_id = trip.vehicle_id
+
     await audit_service.log(db, current_user_id, tenant_id, "Trip", trip.id, "create")
     return trip
 
@@ -153,6 +204,22 @@ async def update_trip(
         vehicle = vehicle_result.scalar_one_or_none()
         if vehicle:
             vehicle.status = "active"
+            if vehicle.lat is None or vehicle.lng is None:
+                first_stop = (
+                    await db.execute(
+                        select(Stop.lat, Stop.lng)
+                        .join(RouteStop, RouteStop.stop_id == Stop.id)
+                        .where(
+                            RouteStop.route_id == trip.route_id,
+                            Stop.is_deleted.is_(False),
+                        )
+                        .order_by(RouteStop.stop_order.asc())
+                        .limit(1)
+                    )
+                ).first()
+                if first_stop:
+                    vehicle.lat = first_stop.lat
+                    vehicle.lng = first_stop.lng
 
     elif new_status == "completed" or new_status == "cancelled":
         if new_status == "completed":
@@ -162,17 +229,22 @@ async def update_trip(
             select(Driver).where(Driver.id == trip.driver_id)
         )
         driver = driver_result.scalar_one_or_none()
-        if driver and driver.status == "on-trip":
-            driver.status = "available"
-            if new_status == "completed":
-                driver.total_trips += 1
+        if driver:
+            if driver.status == "on-trip":
+                driver.status = "available"
+                if new_status == "completed":
+                    driver.total_trips += 1
+            driver.vehicle_id = None
 
         vehicle_result = await db.execute(
             select(Vehicle).where(Vehicle.id == trip.vehicle_id)
         )
         vehicle = vehicle_result.scalar_one_or_none()
-        if vehicle and vehicle.status == "active":
-            vehicle.status = "idle"
+        if vehicle:
+            if vehicle.status == "active":
+                vehicle.status = "idle"
+            vehicle.driver_id = None
+            vehicle.route_id = None
 
     await db.flush()
     await audit_service.log(

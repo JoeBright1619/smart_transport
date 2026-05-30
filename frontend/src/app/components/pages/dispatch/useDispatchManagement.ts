@@ -45,8 +45,25 @@ export function useDispatchManagement() {
 
   const activeTrips = useMemo(() => trips.filter((trip) => trip.status === 'active'), [trips]);
   const scheduledTrips = useMemo(() => trips.filter((trip) => trip.status === 'scheduled'), [trips]);
-  const availableVehicles = useMemo(() => vehicles.filter((vehicle) => vehicle.status === 'idle'), [vehicles]);
-  const availableDrivers = useMemo(() => drivers.filter((driver) => driver.status === 'available'), [drivers]);
+
+  const bookedVehicleIds = useMemo(
+    () => new Set([...activeTrips, ...scheduledTrips].map((t) => t.vehicleId)),
+    [activeTrips, scheduledTrips],
+  );
+  const bookedDriverIds = useMemo(
+    () => new Set([...activeTrips, ...scheduledTrips].map((t) => t.driverId)),
+    [activeTrips, scheduledTrips],
+  );
+
+  const availableVehicles = useMemo(
+    () => vehicles.filter((v) => v.status === 'idle' && !bookedVehicleIds.has(v.id)),
+    [vehicles, bookedVehicleIds],
+  );
+  const availableDrivers = useMemo(
+    () => drivers.filter((d) => d.status === 'available' && !bookedDriverIds.has(d.id)),
+    [drivers, bookedDriverIds],
+  );
+  const schedulableRoutes = useMemo(() => routes.filter((r) => r.isActive), [routes]);
   const vehiclesById = useMemo(() => new Map(vehicles.map((vehicle) => [vehicle.id, vehicle])), [vehicles]);
   const driversById = useMemo(() => new Map(drivers.map((driver) => [driver.id, driver])), [drivers]);
   const routesById = useMemo(() => new Map(routes.map((route) => [route.id, route])), [routes]);
@@ -59,6 +76,7 @@ export function useDispatchManagement() {
     try {
       const createdTrip = await tripsService.createTrip(payload);
       setTrips((current) => [createdTrip, ...current]);
+      await loadDispatch();
       toast.success('Trip scheduled');
     } catch (createError) {
       if (createError instanceof ApiError && [409, 422].includes(createError.status ?? 0)) {
@@ -89,6 +107,7 @@ export function useDispatchManagement() {
     scheduledTrips,
     availableVehicles,
     availableDrivers,
+    schedulableRoutes,
     routes,
     vehiclesById,
     driversById,

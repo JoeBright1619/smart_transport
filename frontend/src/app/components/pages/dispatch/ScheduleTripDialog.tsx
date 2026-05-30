@@ -31,6 +31,10 @@ export function ScheduleTripDialog({ vehicles, drivers, routes, onCreateTrip }: 
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (new Date(form.scheduledEnd) <= new Date(form.scheduledStart)) {
+      toast.error('Scheduled end must be after scheduled start');
+      return;
+    }
     setSubmitting(true);
 
     try {
