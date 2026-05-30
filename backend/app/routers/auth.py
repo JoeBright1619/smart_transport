@@ -73,6 +73,7 @@ def _auth_user_summary(user: User, tenant: Tenant | None = None) -> AuthUserSumm
         tenant_email=tenant.contact_email if tenant else None,
         tenant_address=tenant.address if tenant else None,
         tenant_phone=tenant.phone if tenant else None,
+        tenant_logo_path=tenant.logo_path if tenant else None,
     )
 
 
@@ -85,6 +86,7 @@ def _access_token_for_user(user: User, tenant: Tenant | None = None) -> str:
             "tenantEmail": tenant.contact_email if tenant else None,
             "tenantAddress": tenant.address if tenant else None,
             "tenantPhone": tenant.phone if tenant else None,
+            "tenantLogoPath": tenant.logo_path if tenant else None,
             "role": user.role,
         }
     )

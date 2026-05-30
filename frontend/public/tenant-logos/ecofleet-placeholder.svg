@@ -1,0 +1,13 @@
+<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="160" height="160" rx="32" fill="#0F172A"/>
+  <circle cx="80" cy="80" r="52" fill="#10B981" opacity="0.16"/>
+  <path d="M42 88C42 68.118 58.118 52 78 52H98C109.046 52 118 60.954 118 72V88H42Z" fill="#10B981"/>
+  <path d="M54 88H128V104H54C47.373 104 42 98.627 42 92V88H54Z" fill="#34D399"/>
+  <circle cx="62" cy="106" r="10" fill="#E2E8F0"/>
+  <circle cx="62" cy="106" r="5" fill="#0F172A"/>
+  <circle cx="108" cy="106" r="10" fill="#E2E8F0"/>
+  <circle cx="108" cy="106" r="5" fill="#0F172A"/>
+  <path d="M55 70H78V84H50C51.197 78.667 52.817 74.167 55 70Z" fill="#ECFDF5"/>
+  <path d="M84 70H99C104.523 70 109 74.477 109 80V84H84V70Z" fill="#ECFDF5"/>
+  <text x="80" y="138" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#F8FAFC">EcoFleet</text>
+</svg>

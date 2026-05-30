@@ -29,6 +29,7 @@ export interface AuthUserSummary {
   tenantEmail: string | null;
   tenantAddress: string | null;
   tenantPhone: string | null;
+  tenantLogoPath: string | null;
 }
 
 export interface AuthTenantSummary {
@@ -37,6 +38,7 @@ export interface AuthTenantSummary {
   contactEmail: string;
   address: string | null;
   phone: string | null;
+  logoPath: string | null;
   isActive: boolean;
 }
 

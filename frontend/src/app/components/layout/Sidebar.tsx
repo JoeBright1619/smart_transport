@@ -58,7 +58,15 @@ export function Sidebar() {
   return (
     <div className="flex h-screen w-64 flex-col bg-slate-900 text-white">
       <div className="flex h-16 items-center gap-2 border-b border-slate-800 px-6">
-        <Bus className="size-8 text-blue-400" />
+        {user?.tenantLogoPath ? (
+          <img
+            src={user.tenantLogoPath}
+            alt=""
+            className="size-8 rounded-md object-cover"
+          />
+        ) : (
+          <Bus className="size-8 text-blue-400" />
+        )}
         <div>
           <h1 className="font-bold">{tenantLabel}</h1>
           <p className="text-xs text-slate-400">{roleLabel}</p>

@@ -154,6 +154,7 @@ async def _seed_tenant(db: AsyncSession) -> None:
         _TENANT_ID,
         name="EcoFleet Ltd",
         contact_email="admin@ecofleet.rw",
+        logo_path="/tenant-logos/Ecofleet_logo.png",
         is_active=True,
     )
     _log(f"tenant {_TENANT_ID} {'created' if created else 'already exists'}")

@@ -13,4 +13,5 @@ export interface User {
   tenantEmail?: string;
   tenantAddress?: string;
   tenantPhone?: string;
+  tenantLogoPath?: string;
 }

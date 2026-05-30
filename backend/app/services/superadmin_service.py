@@ -170,6 +170,7 @@ async def impersonate_tenant_admin(
             "tenantEmail": tenant.contact_email,
             "tenantAddress": tenant.address,
             "tenantPhone": tenant.phone,
+            "tenantLogoPath": tenant.logo_path,
             "role": "admin",
             "impersonatedBy": superadmin_user_id,
         },

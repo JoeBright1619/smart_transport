@@ -17,6 +17,7 @@ type JwtPayload = {
   tenantEmail?: string | null;
   tenantAddress?: string | null;
   tenantPhone?: string | null;
+  tenantLogoPath?: string | null;
   role?: User['role'];
   email?: string | null;
   full_name?: string | null;
@@ -84,6 +85,7 @@ function userFromAuthSummary(summary: AuthUserSummary): User {
     tenantEmail: summary.tenantEmail ?? undefined,
     tenantAddress: summary.tenantAddress ?? undefined,
     tenantPhone: summary.tenantPhone ?? undefined,
+    tenantLogoPath: summary.tenantLogoPath ?? undefined,
   };
 }
 
@@ -102,6 +104,7 @@ function userFromTokenPayload(payload: JwtPayload): User | null {
     tenantEmail: payload.tenantEmail ?? undefined,
     tenantAddress: payload.tenantAddress ?? undefined,
     tenantPhone: payload.tenantPhone ?? undefined,
+    tenantLogoPath: payload.tenantLogoPath ?? undefined,
   };
 }
 

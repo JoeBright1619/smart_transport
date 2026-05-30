@@ -60,6 +60,9 @@ class AuthTenantSummary(APIModel):
     phone: str | None = Field(
         default=None, json_schema_extra={"example": "+250788123456"}
     )
+    logo_path: str | None = Field(
+        default=None, json_schema_extra={"example": "/tenant-logos/Ecofleet_logo.png"}
+    )
     is_active: bool = Field(default=True, json_schema_extra={"example": True})
 
 
@@ -86,6 +89,9 @@ class AuthUserSummary(APIModel):
     )
     tenant_phone: str | None = Field(
         default=None, json_schema_extra={"example": "+250788123456"}
+    )
+    tenant_logo_path: str | None = Field(
+        default=None, json_schema_extra={"example": "/tenant-logos/Ecofleet_logo.png"}
     )
 
 

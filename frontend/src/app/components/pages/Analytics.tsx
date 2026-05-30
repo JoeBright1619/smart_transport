@@ -40,7 +40,7 @@ export function Analytics() {
           />
           <Button
             variant="outline"
-            onClick={() =>
+            onClick={async () =>
               exportAnalyticsPDF({
                 data: analytics.data!,
                 routePerformance: analytics.routePerformance,
@@ -51,6 +51,7 @@ export function Analytics() {
                 tenantEmail: user?.tenantEmail,
                 tenantAddress: user?.tenantAddress,
                 tenantPhone: user?.tenantPhone,
+                tenantLogoPath: user?.tenantLogoPath,
               })
             }
           >

@@ -8,6 +8,9 @@ export function RoleHomeRedirect() {
   if (user?.role === 'superadmin') {
     return <Navigate to="/superadmin" replace />;
   }
+  if (user?.role === 'passenger') {
+    return <Navigate to="/passenger" replace />;
+  }
 
   return <Dashboard />;
 }

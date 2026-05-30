@@ -14,6 +14,7 @@ type ReportInput = {
   tenantEmail?: string;
   tenantAddress?: string;
   tenantPhone?: string;
+  tenantLogoPath?: string;
 };
 
 type TenantReportBranding = {
@@ -21,28 +22,56 @@ type TenantReportBranding = {
   email?: string;
   address?: string;
   phone?: string;
+  logoPath?: string;
 };
 
 const BRAND = '#1E3A5F';
 const LIGHT = '#F1F5F9';
 
-function pageHeader(doc: jsPDF, title: string, dateRange: string, tenant: TenantReportBranding) {
+async function loadLogoDataUrl(src: string): Promise<string> {
+  const resp = await fetch(src);
+  if (!resp.ok) throw new Error(`logo fetch failed: ${resp.status}`);
+  const blob = await resp.blob();
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function pageHeader(
+  doc: jsPDF,
+  title: string,
+  dateRange: string,
+  tenant: TenantReportBranding,
+  logoDataUrl?: string,
+) {
   const pageWidth = doc.internal.pageSize.getWidth();
+  const LOGO_W = 24;
+  const LOGO_H = 16;
+  const LOGO_X = 14;
+  const LOGO_Y = 8;
+  const textX = logoDataUrl ? LOGO_X + LOGO_W + 4 : 14;
 
   doc.setFillColor(BRAND);
   doc.rect(0, 0, pageWidth, 32, 'F');
 
+  if (logoDataUrl) {
+    doc.addImage(logoDataUrl, 'PNG', LOGO_X, LOGO_Y, LOGO_W, LOGO_H);
+  }
+
   doc.setTextColor('#FFFFFF');
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.text(tenant.name, 14, 10);
+  doc.text(tenant.name, textX, 12);
 
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
-  let leftY = 17;
+  let leftY = 19;
   [tenant.address, tenant.email, tenant.phone].filter(Boolean).forEach((line) => {
-    doc.text(String(line), 14, leftY);
-    leftY += 6;
+    doc.text(String(line), textX, leftY);
+    leftY += 5;
   });
 
   doc.setFontSize(12);
@@ -105,7 +134,7 @@ function summaryBox(doc: jsPDF, summary: AnalyticsData['summary'], y: number): n
   return y + Math.ceil(items.length / 3) * 18 + 4;
 }
 
-export function exportAnalyticsPDF({
+export async function exportAnalyticsPDF({
   data,
   routePerformance,
   fleetStatus,
@@ -115,17 +144,29 @@ export function exportAnalyticsPDF({
   tenantEmail,
   tenantAddress,
   tenantPhone,
-}: ReportInput): void {
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  tenantLogoPath,
+}: ReportInput): Promise<void> {
   const tenant = {
     name: tenantName?.trim() || 'Smart Transport',
     email: tenantEmail?.trim() || undefined,
     address: tenantAddress?.trim() || undefined,
     phone: tenantPhone?.trim() || undefined,
+    logoPath: tenantLogoPath?.trim() || undefined,
   };
+
+  let logoDataUrl: string | undefined;
+  if (tenant.logoPath) {
+    try {
+      logoDataUrl = await loadLogoDataUrl(tenant.logoPath);
+    } catch {
+      // logo unavailable — proceed with text-only header
+    }
+  }
+
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const dateRange = `${from} - ${to}`;
 
-  pageHeader(doc, 'Analytics & Performance Report', dateRange, tenant);
+  pageHeader(doc, 'Analytics & Performance Report', dateRange, tenant, logoDataUrl);
 
   let y = 40;
   y = sectionTitle(doc, 'Summary Metrics', y);
@@ -153,13 +194,12 @@ export function exportAnalyticsPDF({
     tableLineWidth: 0.1,
   });
 
-  // @ts-expect-error jspdf-autotable extends jsPDF at runtime
   const afterDailyTable: number = (doc as any).lastAutoTable.finalY + 10;
   const spaceLeft = doc.internal.pageSize.getHeight() - afterDailyTable;
 
   if (spaceLeft < 60) {
     doc.addPage();
-    pageHeader(doc, 'Analytics & Performance Report', dateRange, tenant);
+    pageHeader(doc, 'Analytics & Performance Report', dateRange, tenant, logoDataUrl);
     y = 40;
   } else {
     y = afterDailyTable;
@@ -185,13 +225,12 @@ export function exportAnalyticsPDF({
     tableLineWidth: 0.1,
   });
 
-  // @ts-expect-error jspdf-autotable extends jsPDF at runtime
   const afterRouteTable: number = (doc as any).lastAutoTable.finalY + 10;
   const spaceLeft2 = doc.internal.pageSize.getHeight() - afterRouteTable;
 
   if (spaceLeft2 < 50) {
     doc.addPage();
-    pageHeader(doc, 'Analytics & Performance Report', dateRange, tenant);
+    pageHeader(doc, 'Analytics & Performance Report', dateRange, tenant, logoDataUrl);
     y = 40;
   } else {
     y = afterRouteTable;
