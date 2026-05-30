@@ -11,7 +11,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 9.3 — Interactive Global Header: Notifications, Date/Weather, and Search Strategy
+**Next task:** Task 9.4 — Dispatch Workflow Documentation and UX Review
 
 ---
 
@@ -525,7 +525,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `feat: make global header notifications and search interactive`
 
-- [ ] Task 9.3 complete
+- [x] Task 9.3 complete
 
 ---
 
