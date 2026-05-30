@@ -11,7 +11,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 9.2 — Vehicle Tracking Map Highlights Selected Vehicle, Route Stops, and All Statuses
+**Next task:** Task 9.3 — Interactive Global Header: Notifications, Date/Weather, and Search Strategy
 
 ---
 
@@ -497,7 +497,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `feat: highlight selected tracking vehicle and route stops on map`
 
-- [ ] Task 9.2 complete
+- [x] Task 9.2 complete
 
 ---
 
