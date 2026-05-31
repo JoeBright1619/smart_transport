@@ -29,8 +29,15 @@ export function ScheduleTripDialog({ vehicles, drivers, routes, onCreateTrip }: 
   const [form, setForm] = useState<ScheduleTripFormState>(initialScheduleTripFormState);
   const [submitting, setSubmitting] = useState(false);
 
+  const nowMin = toDatetimeLocalString(new Date());
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    const now = new Date();
+    if (new Date(form.scheduledStart) < now) {
+      toast.error('Scheduled start must be in the future');
+      return;
+    }
     if (new Date(form.scheduledEnd) <= new Date(form.scheduledStart)) {
       toast.error('Scheduled end must be after scheduled start');
       return;
@@ -92,6 +99,7 @@ export function ScheduleTripDialog({ vehicles, drivers, routes, onCreateTrip }: 
                 id="scheduledStart"
                 type="datetime-local"
                 value={form.scheduledStart}
+                min={nowMin}
                 onChange={(event) => setForm((current) => ({ ...current, scheduledStart: event.target.value }))}
                 required
               />
@@ -102,6 +110,7 @@ export function ScheduleTripDialog({ vehicles, drivers, routes, onCreateTrip }: 
                 id="scheduledEnd"
                 type="datetime-local"
                 value={form.scheduledEnd}
+                min={form.scheduledStart || nowMin}
                 onChange={(event) => setForm((current) => ({ ...current, scheduledEnd: event.target.value }))}
                 required
               />
@@ -146,4 +155,9 @@ function setField(
   field: keyof ScheduleTripFormState,
 ) {
   return (value: string) => setForm((current) => ({ ...current, [field]: value }));
+}
+
+function toDatetimeLocalString(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
