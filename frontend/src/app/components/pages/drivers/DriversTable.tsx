@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Star, Trash2 } from 'lucide-react';
 import type { DriverRead, DriverStatus, VehicleRead } from '../../../lib/api-types';
 import { Avatar, AvatarFallback } from '../../ui/avatar';
@@ -12,7 +13,10 @@ import {
   SelectValue,
 } from '../../ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
+import { TablePagination } from '../../ui/table-pagination';
 import { driverInitials, statusBadgeVariant, statusLabels } from './driver-helpers';
+
+const PAGE_SIZE = 10;
 
 type DriversTableProps = {
   drivers: DriverRead[];
@@ -29,6 +33,9 @@ export function DriversTable({
   onUpdateStatus,
   onDeleteDriver,
 }: DriversTableProps) {
+  const [page, setPage] = useState(1);
+  const paginatedDrivers = drivers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
     <Card>
       <CardHeader>
@@ -40,33 +47,41 @@ export function DriversTable({
             No drivers found.
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Driver</TableHead>
-                <TableHead>License</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead>Total Trips</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Vehicle</TableHead>
-                <TableHead>Cert. Expiry</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {drivers.map((driver) => (
-                <DriverTableRow
-                  key={driver.id}
-                  driver={driver}
-                  vehicle={driver.vehicleId ? vehiclesById.get(driver.vehicleId) : undefined}
-                  disabled={updatingDriverId === driver.id}
-                  onUpdateStatus={onUpdateStatus}
-                  onDeleteDriver={onDeleteDriver}
-                />
-              ))}
-            </TableBody>
-          </Table>
+          <>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Driver</TableHead>
+                  <TableHead>License</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Rating</TableHead>
+                  <TableHead>Total Trips</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Vehicle</TableHead>
+                  <TableHead>Cert. Expiry</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedDrivers.map((driver) => (
+                  <DriverTableRow
+                    key={driver.id}
+                    driver={driver}
+                    vehicle={driver.vehicleId ? vehiclesById.get(driver.vehicleId) : undefined}
+                    disabled={updatingDriverId === driver.id}
+                    onUpdateStatus={onUpdateStatus}
+                    onDeleteDriver={onDeleteDriver}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+            <TablePagination
+              page={page}
+              pageSize={PAGE_SIZE}
+              total={drivers.length}
+              onPageChange={setPage}
+            />
+          </>
         )}
       </CardContent>
     </Card>

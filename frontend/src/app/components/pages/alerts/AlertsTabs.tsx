@@ -8,8 +8,12 @@ type AlertsTabsProps = {
   alerts: AlertRead[];
   stats: AlertStats;
   acknowledgingAlertId: string | null;
+  page: number;
+  pageSize: number;
+  total: number;
   onTabChange: (tab: AlertTab) => void;
   onAcknowledge: (alert: AlertRead) => void;
+  onPageChange: (page: number) => void;
 };
 
 export function AlertsTabs({
@@ -17,9 +21,15 @@ export function AlertsTabs({
   alerts,
   stats,
   acknowledgingAlertId,
+  page,
+  pageSize,
+  total,
   onTabChange,
   onAcknowledge,
+  onPageChange,
 }: AlertsTabsProps) {
+  const pagination = { page, pageSize, total, onPageChange };
+
   return (
     <Tabs value={activeTab} onValueChange={(value) => onTabChange(value as AlertTab)} className="space-y-4">
       <TabsList>
@@ -34,6 +44,7 @@ export function AlertsTabs({
           alerts={alerts}
           acknowledgingAlertId={acknowledgingAlertId}
           onAcknowledge={onAcknowledge}
+          pagination={pagination}
         />
       </TabsContent>
       <TabsContent value="acknowledged">
@@ -42,6 +53,7 @@ export function AlertsTabs({
           alerts={alerts}
           acknowledgingAlertId={acknowledgingAlertId}
           onAcknowledge={onAcknowledge}
+          pagination={pagination}
         />
       </TabsContent>
       <TabsContent value="all">
@@ -50,6 +62,7 @@ export function AlertsTabs({
           alerts={alerts}
           acknowledgingAlertId={acknowledgingAlertId}
           onAcknowledge={onAcknowledge}
+          pagination={pagination}
         />
       </TabsContent>
     </Tabs>

@@ -1,9 +1,13 @@
+import { useState } from 'react';
 import type { MaintenanceRead, MaintenanceStatus, VehicleRead } from '../../../lib/api-types';
 import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
+import { TablePagination } from '../../ui/table-pagination';
 import { formatDate, statusBadgeVariant, statusLabels } from './maintenance-helpers';
+
+const PAGE_SIZE = 10;
 
 type MaintenanceTableProps = {
   records: MaintenanceRead[];
@@ -18,6 +22,9 @@ export function MaintenanceTable({
   updatingRecordId,
   onUpdateStatus,
 }: MaintenanceTableProps) {
+  const [page, setPage] = useState(1);
+  const paginatedRecords = records.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
     <Card>
       <CardHeader>
@@ -29,32 +36,40 @@ export function MaintenanceTable({
             No maintenance records found.
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Vehicle</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Scheduled Date</TableHead>
-                <TableHead>Completed Date</TableHead>
-                <TableHead>Cost (RWF)</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Next Due</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {records.map((record) => (
-                <MaintenanceTableRow
-                  key={record.id}
-                  record={record}
-                  vehicle={vehiclesById.get(record.vehicleId)}
-                  disabled={updatingRecordId === record.id}
-                  onUpdateStatus={onUpdateStatus}
-                />
-              ))}
-            </TableBody>
-          </Table>
+          <>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Vehicle</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Scheduled Date</TableHead>
+                  <TableHead>Completed Date</TableHead>
+                  <TableHead>Cost (RWF)</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Next Due</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedRecords.map((record) => (
+                  <MaintenanceTableRow
+                    key={record.id}
+                    record={record}
+                    vehicle={vehiclesById.get(record.vehicleId)}
+                    disabled={updatingRecordId === record.id}
+                    onUpdateStatus={onUpdateStatus}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+            <TablePagination
+              page={page}
+              pageSize={PAGE_SIZE}
+              total={records.length}
+              onPageChange={setPage}
+            />
+          </>
         )}
       </CardContent>
     </Card>

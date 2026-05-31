@@ -2,13 +2,22 @@ import type { AlertRead } from '../../../lib/api-types';
 import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
+import { TablePagination } from '../../ui/table-pagination';
 import { alertIcon, CheckCircle, severityBadgeVariant, severityColor } from './alert-helpers';
+
+type AlertPagination = {
+  page: number;
+  pageSize: number;
+  total: number;
+  onPageChange: (page: number) => void;
+};
 
 type AlertsListProps = {
   title: string;
   alerts: AlertRead[];
   acknowledgingAlertId: string | null;
   onAcknowledge: (alert: AlertRead) => void;
+  pagination?: AlertPagination;
 };
 
 export function AlertsList({
@@ -16,6 +25,7 @@ export function AlertsList({
   alerts,
   acknowledgingAlertId,
   onAcknowledge,
+  pagination,
 }: AlertsListProps) {
   return (
     <Card>
@@ -37,6 +47,14 @@ export function AlertsList({
               onAcknowledge={onAcknowledge}
             />
           ))
+        )}
+        {pagination && (
+          <TablePagination
+            page={pagination.page}
+            pageSize={pagination.pageSize}
+            total={pagination.total}
+            onPageChange={pagination.onPageChange}
+          />
         )}
       </CardContent>
     </Card>

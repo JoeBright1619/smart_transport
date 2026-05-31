@@ -36,8 +36,12 @@ export function Alerts() {
         alerts={alertsManagement.alerts}
         stats={alertsManagement.stats}
         acknowledgingAlertId={alertsManagement.acknowledgingAlertId}
+        page={alertsManagement.page}
+        pageSize={alertsManagement.pageSize}
+        total={alertsManagement.total}
         onTabChange={alertsManagement.setActiveTab}
         onAcknowledge={alertsManagement.acknowledgeAlert}
+        onPageChange={alertsManagement.setPage}
       />
     </div>
   );

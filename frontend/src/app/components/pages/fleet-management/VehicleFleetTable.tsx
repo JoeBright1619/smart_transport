@@ -1,12 +1,16 @@
 import type { Dispatch, FormEvent, SetStateAction } from 'react';
+import { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
 import type { DriverRead, RouteRead, VehicleRead, VehicleUpdate } from '../../../lib/api-types';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Input } from '../../ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
+import { TablePagination } from '../../ui/table-pagination';
 import { AddVehicleDialog } from './AddVehicleDialog';
 import type { FleetFormState } from './useFleetManagement';
 import { VehicleTableRow } from './VehicleTableRow';
+
+const PAGE_SIZE = 10;
 
 type VehicleFleetTableProps = {
   searchTerm: string;
@@ -41,6 +45,13 @@ export function VehicleFleetTable({
   submitting,
   createVehicle,
 }: VehicleFleetTableProps) {
+  const [page, setPage] = useState(1);
+
+  // Reset to first page whenever the filtered list changes
+  useEffect(() => { setPage(1); }, [searchTerm]);
+
+  const paginatedVehicles = vehicles.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
     <Card>
       <CardHeader>
@@ -89,7 +100,7 @@ export function VehicleFleetTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {vehicles.map((vehicle) => (
+                {paginatedVehicles.map((vehicle) => (
                   <VehicleTableRow
                     key={vehicle.id}
                     vehicle={vehicle}
@@ -102,6 +113,12 @@ export function VehicleFleetTable({
                 ))}
               </TableBody>
             </Table>
+            <TablePagination
+              page={page}
+              pageSize={PAGE_SIZE}
+              total={vehicles.length}
+              onPageChange={setPage}
+            />
           </div>
         )}
       </CardContent>
