@@ -7,9 +7,21 @@ import redis.asyncio as redis
 from sqlalchemy import select, func, case, cast, Date
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from sqlalchemy.orm import selectinload
+
 from app.core.config import settings
 from app.models.analytics import AnalyticsRecord
+from app.models.driver import Driver
+from app.models.maintenance import MaintenanceRecord
+from app.models.route import Route
 from app.models.trip import Trip
+from app.models.vehicle import Vehicle
+from app.schemas.analytics import (
+    DailyReportData,
+    DriverReportData,
+    FleetReportData,
+    RouteReportData,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -166,3 +178,280 @@ async def get_analytics(
         logger.warning(f"Failed to write to Redis cache: {e}")
 
     return result
+
+
+async def get_filtered_report(
+    db: AsyncSession,
+    tenant_id: str,
+    report_type: str,
+    date_from: date,
+    date_to: date,
+    route_id: str | None = None,
+    vehicle_id: str | None = None,
+    driver_id: str | None = None,
+):
+    if report_type == "route":
+        route_q = select(Route).where(Route.tenant_id == tenant_id)
+        if route_id:
+            route_q = route_q.where(Route.id == route_id)
+        routes = (await db.execute(route_q)).scalars().all()
+
+        trip_q = (
+            select(Trip)
+            .options(selectinload(Trip.vehicle))
+            .where(
+                Trip.tenant_id == tenant_id,
+                cast(Trip.created_at, Date) >= date_from,
+                cast(Trip.created_at, Date) <= date_to,
+            )
+        )
+        if route_id:
+            trip_q = trip_q.where(Trip.route_id == route_id)
+        if vehicle_id:
+            trip_q = trip_q.where(Trip.vehicle_id == vehicle_id)
+        if driver_id:
+            trip_q = trip_q.where(Trip.driver_id == driver_id)
+        trips = (await db.execute(trip_q)).scalars().all()
+
+        route_stats = {
+            r.id: {
+                "route": r,
+                "trips": [],
+                "on_time": 0,
+                "duration_sum": 0,
+                "duration_count": 0,
+                "passengers": 0,
+                "capacity": 0,
+            }
+            for r in routes
+        }
+        for t in trips:
+            if t.route_id in route_stats:
+                rs = route_stats[t.route_id]
+                rs["trips"].append(t)
+                if t.delay <= 0:
+                    rs["on_time"] += 1
+                if t.actual_end and t.actual_start:
+                    rs["duration_sum"] += (
+                        t.actual_end - t.actual_start
+                    ).total_seconds() / 60.0
+                    rs["duration_count"] += 1
+                rs["passengers"] += t.passengers
+                if t.vehicle:
+                    rs["capacity"] += t.vehicle.capacity
+
+        result = []
+        for r_id, rs in route_stats.items():
+            total = len(rs["trips"])
+            result.append(
+                RouteReportData(
+                    route_id=r_id,
+                    route_name=rs["route"].name,
+                    on_time_rate=round(
+                        (rs["on_time"] / total * 100) if total else 0.0, 1
+                    ),
+                    avg_trip_duration_minutes=round(
+                        (rs["duration_sum"] / rs["duration_count"])
+                        if rs["duration_count"]
+                        else 0.0,
+                        1,
+                    ),
+                    total_passengers=rs["passengers"],
+                    utilisation_percentage=round(
+                        (rs["passengers"] / rs["capacity"] * 100)
+                        if rs["capacity"]
+                        else 0.0,
+                        1,
+                    ),
+                )
+            )
+        return result
+
+    elif report_type == "daily":
+        trip_q = select(Trip).where(
+            Trip.tenant_id == tenant_id,
+            cast(Trip.created_at, Date) >= date_from,
+            cast(Trip.created_at, Date) <= date_to,
+        )
+        if route_id:
+            trip_q = trip_q.where(Trip.route_id == route_id)
+        if vehicle_id:
+            trip_q = trip_q.where(Trip.vehicle_id == vehicle_id)
+        if driver_id:
+            trip_q = trip_q.where(Trip.driver_id == driver_id)
+
+        trips = (await db.execute(trip_q)).scalars().all()
+
+        daily_stats = {}
+        curr = date_from
+        while curr <= date_to:
+            daily_stats[curr] = {
+                "total": 0,
+                "completed": 0,
+                "cancelled": 0,
+                "passengers": 0,
+            }
+            curr += timedelta(days=1)
+
+        for t in trips:
+            d = (
+                t.created_at.date()
+                if isinstance(t.created_at, datetime)
+                else t.created_at
+            )
+            if d in daily_stats:
+                daily_stats[d]["total"] += 1
+                if t.status == "completed":
+                    daily_stats[d]["completed"] += 1
+                elif t.status == "cancelled":
+                    daily_stats[d]["cancelled"] += 1
+                daily_stats[d]["passengers"] += t.passengers
+
+        result = []
+        for d, st in daily_stats.items():
+            result.append(
+                DailyReportData(
+                    date=d,
+                    total_trips=st["total"],
+                    completed_trips=st["completed"],
+                    cancelled_trips=st["cancelled"],
+                    total_passengers=st["passengers"],
+                )
+            )
+        return sorted(result, key=lambda x: x.date)
+
+    elif report_type == "fleet":
+        veh_q = select(Vehicle).where(Vehicle.tenant_id == tenant_id)
+        if vehicle_id:
+            veh_q = veh_q.where(Vehicle.id == vehicle_id)
+        vehicles = (await db.execute(veh_q)).scalars().all()
+
+        trip_q = (
+            select(Trip)
+            .options(selectinload(Trip.route))
+            .where(
+                Trip.tenant_id == tenant_id,
+                cast(Trip.created_at, Date) >= date_from,
+                cast(Trip.created_at, Date) <= date_to,
+            )
+        )
+        if route_id:
+            trip_q = trip_q.where(Trip.route_id == route_id)
+        if vehicle_id:
+            trip_q = trip_q.where(Trip.vehicle_id == vehicle_id)
+        if driver_id:
+            trip_q = trip_q.where(Trip.driver_id == driver_id)
+        trips = (await db.execute(trip_q)).scalars().all()
+
+        maint_q = select(MaintenanceRecord).where(
+            MaintenanceRecord.tenant_id == tenant_id,
+            MaintenanceRecord.scheduled_date >= date_from,
+            MaintenanceRecord.scheduled_date <= date_to,
+        )
+        if vehicle_id:
+            maint_q = maint_q.where(MaintenanceRecord.vehicle_id == vehicle_id)
+        maintenances = (await db.execute(maint_q)).scalars().all()
+
+        veh_stats = {
+            v.id: {"veh": v, "passengers": 0, "capacity": 0, "maint": 0, "km": 0.0}
+            for v in vehicles
+        }
+        for t in trips:
+            if t.vehicle_id in veh_stats:
+                vs = veh_stats[t.vehicle_id]
+                vs["passengers"] += t.passengers
+                vs["capacity"] += vs["veh"].capacity
+                if t.route and t.status == "completed":
+                    vs["km"] += t.route.distance
+
+        for m in maintenances:
+            if m.vehicle_id in veh_stats:
+                veh_stats[m.vehicle_id]["maint"] += 1
+
+        result = []
+        for v_id, vs in veh_stats.items():
+            result.append(
+                FleetReportData(
+                    vehicle_id=v_id,
+                    registration_number=vs["veh"].registration_number,
+                    utilisation_percentage=round(
+                        (vs["passengers"] / vs["capacity"] * 100)
+                        if vs["capacity"]
+                        else 0.0,
+                        1,
+                    ),
+                    maintenance_events=vs["maint"],
+                    total_km=round(vs["km"], 2),
+                    status=vs["veh"].status,
+                )
+            )
+        return result
+
+    elif report_type == "driver":
+        drv_q = select(Driver).where(Driver.tenant_id == tenant_id)
+        if driver_id:
+            drv_q = drv_q.where(Driver.id == driver_id)
+        drivers = (await db.execute(drv_q)).scalars().all()
+
+        trip_q = select(Trip).where(
+            Trip.tenant_id == tenant_id,
+            cast(Trip.created_at, Date) >= date_from,
+            cast(Trip.created_at, Date) <= date_to,
+        )
+        if route_id:
+            trip_q = trip_q.where(Trip.route_id == route_id)
+        if vehicle_id:
+            trip_q = trip_q.where(Trip.vehicle_id == vehicle_id)
+        if driver_id:
+            trip_q = trip_q.where(Trip.driver_id == driver_id)
+        trips = (await db.execute(trip_q)).scalars().all()
+
+        drv_stats = {
+            d.id: {
+                "drv": d,
+                "total": 0,
+                "completed": 0,
+                "on_time": 0,
+                "duration_sum": 0,
+                "duration_count": 0,
+                "passengers": 0,
+            }
+            for d in drivers
+        }
+        for t in trips:
+            if t.driver_id in drv_stats:
+                ds = drv_stats[t.driver_id]
+                ds["total"] += 1
+                if t.status == "completed":
+                    ds["completed"] += 1
+                if t.delay <= 0:
+                    ds["on_time"] += 1
+                if t.actual_end and t.actual_start:
+                    ds["duration_sum"] += (
+                        t.actual_end - t.actual_start
+                    ).total_seconds() / 60.0
+                    ds["duration_count"] += 1
+                ds["passengers"] += t.passengers
+
+        result = []
+        for d_id, ds in drv_stats.items():
+            total = ds["total"]
+            result.append(
+                DriverReportData(
+                    driver_id=d_id,
+                    driver_name=ds["drv"].name,
+                    trips_completed=ds["completed"],
+                    on_time_rate=round(
+                        (ds["on_time"] / total * 100) if total else 0.0, 1
+                    ),
+                    avg_trip_duration_minutes=round(
+                        (ds["duration_sum"] / ds["duration_count"])
+                        if ds["duration_count"]
+                        else 0.0,
+                        1,
+                    ),
+                    total_passengers=ds["passengers"],
+                )
+            )
+        return result
+    return []

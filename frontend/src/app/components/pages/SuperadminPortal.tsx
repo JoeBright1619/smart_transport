@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router';
 import { Building2, Bus, RefreshCw, Users, UserCheck, Activity, Info } from 'lucide-react';
 import type { SuperadminAnalytics, TenantRead, TenantDetail } from '../../lib/api-types';
 import { setStoredToken } from '../../lib/api-client';
@@ -24,10 +25,14 @@ export function SuperadminPortal() {
   const [tenants, setTenants] = useState<TenantRead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { tab } = useParams<{ tab: string }>();
+  const navigate = useNavigate();
   const [actionTenantId, setActionTenantId] = useState<string | null>(null);
   const [selectedTenant, setSelectedTenant] = useState<TenantDetail | null>(null);
-  const [activeTab, setActiveTab] = useState('analytics');
+  const [tenantDetailActive, setTenantDetailActive] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
+
+  const activeTab = tenantDetailActive ? 'tenant-detail' : (tab ?? 'analytics');
 
   const loadPortal = useCallback(async () => {
     setLoading(true);
@@ -100,8 +105,8 @@ export function SuperadminPortal() {
   };
 
   const handleSelectTenant = async (tenantId: string) => {
+    setTenantDetailActive(true);
     setLoadingDetail(true);
-    setActiveTab('tenant-detail');
     try {
       const detail = await superadminService.getTenant(tenantId);
       setSelectedTenant(detail);
@@ -161,7 +166,15 @@ export function SuperadminPortal() {
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => {
+          if (value === 'tenant-detail') return;
+          setTenantDetailActive(false);
+          navigate(`/superadmin/${value}`);
+        }}
+        className="space-y-4"
+      >
         <TabsList>
           <TabsTrigger value="analytics">
             <Activity className="mr-2 size-4" />

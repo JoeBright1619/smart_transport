@@ -1,4 +1,6 @@
 from datetime import date as date_type
+from datetime import datetime
+from typing import Literal, Union
 
 from pydantic import Field
 
@@ -41,3 +43,47 @@ class AnalyticsDaily(APIModel):
 class AnalyticsResponseData(APIModel):
     summary: AnalyticsSummary
     daily: list[AnalyticsDaily]
+
+
+class RouteReportData(APIModel):
+    route_id: str
+    route_name: str
+    on_time_rate: float
+    avg_trip_duration_minutes: float
+    total_passengers: int
+    utilisation_percentage: float
+
+
+class DailyReportData(APIModel):
+    date: date_type
+    total_trips: int
+    completed_trips: int
+    cancelled_trips: int
+    total_passengers: int
+
+
+class FleetReportData(APIModel):
+    vehicle_id: str
+    registration_number: str
+    utilisation_percentage: float
+    maintenance_events: int
+    total_km: float
+    status: str
+
+
+class DriverReportData(APIModel):
+    driver_id: str
+    driver_name: str
+    trips_completed: int
+    on_time_rate: float
+    avg_trip_duration_minutes: float
+    total_passengers: int
+
+
+class FilteredReportResponse(APIModel):
+    report_type: Literal["route", "daily", "fleet", "driver"]
+    filters_applied: dict
+    generated_at: datetime
+    data: list[
+        Union[RouteReportData, DailyReportData, FleetReportData, DriverReportData]
+    ]

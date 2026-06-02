@@ -38,6 +38,14 @@ export const router = createBrowserRouter([
         path: 'superadmin',
         element: (
           <SuperadminRoute>
+            <Navigate to="/superadmin/analytics" replace />
+          </SuperadminRoute>
+        ),
+      },
+      {
+        path: 'superadmin/:tab',
+        element: (
+          <SuperadminRoute>
             <SuperadminPortal />
           </SuperadminRoute>
         ),

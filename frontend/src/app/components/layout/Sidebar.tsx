@@ -15,6 +15,7 @@ import {
   Shield,
   LogOut,
   Building2,
+  Activity,
 } from 'lucide-react';
 import { cn } from '../ui/utils';
 import { useAuth } from '../../lib/auth-context';
@@ -23,8 +24,14 @@ import React from 'react';
 
 const navigation = [
   {
-    name: 'Platform Admin',
-    href: '/superadmin',
+    name: 'Analytics',
+    href: '/superadmin/analytics',
+    icon: Activity,
+    roles: ['superadmin'],
+  },
+  {
+    name: 'Tenants',
+    href: '/superadmin/tenants',
     icon: Building2,
     roles: ['superadmin'],
   },
@@ -76,7 +83,9 @@ export function Sidebar() {
       <nav className="flex-1 overflow-y-auto p-4 sidebar-scroll">
         <div className="space-y-1">
           {filteredNavigation.map((item) => {
-            const isActive = location.pathname === item.href;
+            const isActive =
+            location.pathname === item.href ||
+            location.pathname.startsWith(item.href + '/');
             return (
               <Link
                 key={item.name}

@@ -65,3 +65,25 @@ async def test_accepts_date_range_params(client, admin):
         headers=auth_headers(admin),
     )
     assert r.status_code == 200
+
+
+async def test_filtered_report_route(client, admin):
+    r = await client.get(
+        "/api/v1/analytics/report?report_type=route&date_from=2026-05-01&date_to=2026-05-07",
+        headers=auth_headers(admin),
+    )
+    assert r.status_code == 200
+    res = r.json()
+    assert res["data"]["reportType"] == "route"
+    assert isinstance(res["data"]["data"], list)
+
+
+async def test_filtered_report_daily(client, admin):
+    r = await client.get(
+        "/api/v1/analytics/report?report_type=daily&date_from=2026-05-01&date_to=2026-05-07",
+        headers=auth_headers(admin),
+    )
+    assert r.status_code == 200
+    res = r.json()
+    assert res["data"]["reportType"] == "daily"
+    assert isinstance(res["data"]["data"], list)
