@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { AnalyticsData, RouteRead, TripRead, VehicleRead } from '../../../lib/api-types';
+import type { AnalyticsData, DriverRead, RouteRead, TripRead, VehicleRead } from '../../../lib/api-types';
 import * as analyticsService from '../../../services/analytics.service';
 import * as routesService from '../../../services/routes.service';
 import * as tripsService from '../../../services/trips.service';
 import * as vehiclesService from '../../../services/vehicles.service';
+import * as driversService from '../../../services/drivers.service';
 import {
   buildFleetStatus,
   buildRoutePerformance,
@@ -20,6 +21,7 @@ export function useAnalyticsPage() {
   const [vehicles, setVehicles] = useState<VehicleRead[]>([]);
   const [routes, setRoutes] = useState<RouteRead[]>([]);
   const [trips, setTrips] = useState<TripRead[]>([]);
+  const [drivers, setDrivers] = useState<DriverRead[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,16 +30,18 @@ export function useAnalyticsPage() {
     setError(null);
 
     try {
-      const [analyticsData, vehiclesResult, routesResult, tripsResult] = await Promise.all([
+      const [analyticsData, vehiclesResult, routesResult, tripsResult, driversResult] = await Promise.all([
         analyticsService.getAnalytics({ from, to }),
         vehiclesService.listVehicles({ pageSize: 100 }),
         routesService.listRoutes({ pageSize: 100 }),
         tripsService.listTrips({ pageSize: 100 }),
+        driversService.listDrivers({ pageSize: 100 }),
       ]);
       setData(analyticsData);
       setVehicles(vehiclesResult.items);
       setRoutes(routesResult.items);
       setTrips(tripsResult.items);
+      setDrivers(driversResult.items);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to load analytics');
     } finally {
@@ -63,6 +67,9 @@ export function useAnalyticsPage() {
     routePerformance,
     fleetStatus,
     fleetHealth: vehicles,
+    routes,
+    vehicles,
+    drivers,
     setFrom,
     setTo,
     retry: loadAnalytics,

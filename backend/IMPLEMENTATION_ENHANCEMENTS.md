@@ -6,12 +6,13 @@
 > - Keep the **Current Task Pointer** below updated after each completed task.
 > - **DO NOT proceed to the next task without explicit user approval.**
 > - Use the `master` branch for all tasks and use commit messages exactly as provided.
+> - **File size rule:** No implementation file should exceed 250–300 lines. If a file grows beyond this, split it using named imports/exports rather than adding more code to the same file.
 
 ---
 
 ## Current Task Pointer
 
-**Next task:** Task 10.2 — Frontend: Filtered Report UI with Export
+**Next task:** Task 10.3 — Passenger Trip History Report
 
 ---
 
@@ -86,7 +87,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `feat: add filtered report UI with route, daily, fleet, and driver views and CSV/PDF export`
 
-- [ ] Task 10.2 complete
+- [x] Task 10.2 complete
 
 ---
 

@@ -336,6 +336,50 @@ export interface AnalyticsData {
   daily: AnalyticsDaily[];
 }
 
+export interface RouteReportData {
+  routeId: string;
+  routeName: string;
+  onTimeRate: number;
+  avgTripDurationMinutes: number;
+  totalPassengers: number;
+  utilisationPercentage: number;
+}
+
+export interface DailyReportData {
+  date: string;
+  totalTrips: number;
+  completedTrips: number;
+  cancelledTrips: number;
+  totalPassengers: number;
+}
+
+export interface FleetReportData {
+  vehicleId: string;
+  registrationNumber: string;
+  utilisationPercentage: number;
+  maintenanceEvents: number;
+  totalKm: number;
+  status: string;
+}
+
+export interface DriverReportData {
+  driverId: string;
+  driverName: string;
+  tripsCompleted: number;
+  onTimeRate: number;
+  avgTripDurationMinutes: number;
+  totalPassengers: number;
+}
+
+export type ReportType = 'route' | 'daily' | 'fleet' | 'driver';
+
+export interface FilteredReportResponse {
+  reportType: ReportType;
+  filtersApplied: Record<string, unknown>;
+  generatedAt: string;
+  data: (RouteReportData | DailyReportData | FleetReportData | DriverReportData)[];
+}
+
 // Arrivals
 export interface ArrivalEstimate {
   vehicleId: string;

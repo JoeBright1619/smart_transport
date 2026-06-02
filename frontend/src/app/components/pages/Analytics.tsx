@@ -72,6 +72,9 @@ export function Analytics() {
         routePerformance={analytics.routePerformance}
         fleetStatus={analytics.fleetStatus}
         fleetHealth={analytics.fleetHealth}
+        routes={analytics.routes}
+        vehicles={analytics.vehicles}
+        drivers={analytics.drivers}
       />
     </div>
   );

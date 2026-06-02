@@ -1,6 +1,13 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import type { AnalyticsData } from '../../../lib/api-types';
+import type {
+  AnalyticsData,
+  DailyReportData,
+  DriverReportData,
+  FilteredReportResponse,
+  FleetReportData,
+  RouteReportData,
+} from '../../../lib/api-types';
 import { formatRevenue } from './analytics-helpers';
 import type { FleetStatusDatum, RoutePerformanceDatum } from './analytics-helpers';
 
@@ -282,4 +289,135 @@ function slugify(value: string): string {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '') || 'smart-transport'
   );
+}
+
+// ─── Filtered-report PDF export ───────────────────────────────────────────────
+
+type FilteredReportInput = {
+  result: FilteredReportResponse;
+  dateFrom: string;
+  dateTo: string;
+  tenantName?: string;
+  tenantEmail?: string;
+  tenantAddress?: string;
+  tenantPhone?: string;
+  tenantLogoPath?: string;
+};
+
+export async function exportFilteredReportPDF({
+  result,
+  dateFrom,
+  dateTo,
+  tenantName,
+  tenantEmail,
+  tenantAddress,
+  tenantPhone,
+  tenantLogoPath,
+}: FilteredReportInput): Promise<void> {
+  const tenant = {
+    name: tenantName?.trim() || 'Smart Transport',
+    email: tenantEmail?.trim() || undefined,
+    address: tenantAddress?.trim() || undefined,
+    phone: tenantPhone?.trim() || undefined,
+    logoPath: tenantLogoPath?.trim() || undefined,
+  };
+
+  let logoDataUrl: string | undefined;
+  if (tenant.logoPath) {
+    try { logoDataUrl = await loadLogoDataUrl(tenant.logoPath); } catch { /* no logo */ }
+  }
+
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const dateRange = `${dateFrom} - ${dateTo}`;
+  const titleMap: Record<string, string> = {
+    route: 'Route Performance Report',
+    daily: 'Daily Operations Report',
+    fleet: 'Fleet Status Report',
+    driver: 'Driver Performance Report',
+  };
+  const title = titleMap[result.reportType] ?? 'Filtered Analytics Report';
+
+  pageHeader(doc, title, dateRange, tenant, logoDataUrl);
+
+  let y = 40;
+  y = sectionTitle(doc, title, y);
+
+  if (result.reportType === 'route') {
+    const rows = result.data as RouteReportData[];
+    autoTable(doc, {
+      startY: y,
+      head: [['Route Name', 'On-Time %', 'Avg Duration (min)', 'Passengers', 'Utilisation %']],
+      body: rows.map((r) => [
+        r.routeName,
+        `${(r.onTimeRate ?? 0).toFixed(1)}%`,
+        (r.avgTripDurationMinutes ?? 0),
+        (r.totalPassengers ?? 0).toLocaleString(),
+        `${(r.utilisationPercentage ?? 0).toFixed(1)}%`,
+      ]),
+      headStyles: { fillColor: BRAND, textColor: '#FFFFFF', fontStyle: 'bold', fontSize: 8 },
+      bodyStyles: { fontSize: 8 },
+      alternateRowStyles: { fillColor: LIGHT },
+      margin: { left: 14, right: 14 },
+    });
+  } else if (result.reportType === 'daily') {
+    const rows = result.data as DailyReportData[];
+    autoTable(doc, {
+      startY: y,
+      head: [['Date', 'Total Trips', 'Completed', 'Cancelled', 'Passengers']],
+      body: rows.map((r) => [r.date, r.totalTrips, r.completedTrips, r.cancelledTrips, (r.totalPassengers ?? 0).toLocaleString()]),
+      headStyles: { fillColor: BRAND, textColor: '#FFFFFF', fontStyle: 'bold', fontSize: 8 },
+      bodyStyles: { fontSize: 8 },
+      alternateRowStyles: { fillColor: LIGHT },
+      margin: { left: 14, right: 14 },
+    });
+  } else if (result.reportType === 'fleet') {
+    const rows = result.data as FleetReportData[];
+    autoTable(doc, {
+      startY: y,
+      head: [['Registration', 'Utilisation %', 'Maintenance Events', 'Total km', 'Status']],
+      body: rows.map((r) => [
+        r.registrationNumber,
+        `${(r.utilisationPercentage ?? 0).toFixed(1)}%`,
+        (r.maintenanceEvents ?? 0),
+        (r.totalKm ?? 0).toLocaleString(),
+        r.status,
+      ]),
+      headStyles: { fillColor: BRAND, textColor: '#FFFFFF', fontStyle: 'bold', fontSize: 8 },
+      bodyStyles: { fontSize: 8 },
+      alternateRowStyles: { fillColor: LIGHT },
+      margin: { left: 14, right: 14 },
+    });
+  } else {
+    const rows = result.data as DriverReportData[];
+    autoTable(doc, {
+      startY: y,
+      head: [['Driver', 'Trips Completed', 'On-Time %', 'Avg Duration (min)', 'Passengers']],
+      body: rows.map((r) => [
+        r.driverName,
+        (r.tripsCompleted ?? 0),
+        `${(r.onTimeRate ?? 0).toFixed(1)}%`,
+        (r.avgTripDurationMinutes ?? 0),
+        (r.totalPassengers ?? 0).toLocaleString(),
+      ]),
+      headStyles: { fillColor: BRAND, textColor: '#FFFFFF', fontStyle: 'bold', fontSize: 8 },
+      bodyStyles: { fontSize: 8 },
+      alternateRowStyles: { fillColor: LIGHT },
+      margin: { left: 14, right: 14 },
+    });
+  }
+
+  const totalPages = doc.getNumberOfPages();
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    doc.setFontSize(7);
+    doc.setTextColor('#94A3B8');
+    doc.text(
+      `Page ${p} of ${totalPages} — ${tenant.name} ${title}`,
+      doc.internal.pageSize.getWidth() / 2,
+      doc.internal.pageSize.getHeight() - 6,
+      { align: 'center' },
+    );
+  }
+
+  doc.save(`${slugify(tenant.name)}-${result.reportType}-report-${dateFrom}-to-${dateTo}.pdf`);
 }
