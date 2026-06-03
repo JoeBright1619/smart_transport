@@ -25,7 +25,7 @@ class User(Base):
         String, ForeignKey("tenants.id"), nullable=True, index=True
     )
 
-    email: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
+    email: Mapped[str] = mapped_column(String, nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(String, nullable=False)
     full_name: Mapped[str] = mapped_column(String, nullable=False)
 

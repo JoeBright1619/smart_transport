@@ -93,6 +93,44 @@ def _smtp_send(msg: MIMEMultipart) -> None:
             srv.send_message(msg)
 
 
+def _console_send(msg: MIMEMultipart) -> None:
+    """Print the email to the logger so dev/test environments can see what would be sent."""
+    body = ""
+    for part in msg.walk():
+        if part.get_content_type() == "text/plain":
+            raw = part.get_payload(decode=True)
+            if isinstance(raw, bytes):
+                body = raw.decode("utf-8", errors="replace")
+            break
+    logger.info(
+        "\n"
+        "╔══════════════════ EMAIL (console backend) ══════════════════╗\n"
+        "  To:      %s\n"
+        "  Subject: %s\n"
+        "  ─────────────────────────────────────────────────────────────\n"
+        "%s"
+        "╚═════════════════════════════════════════════════════════════╝",
+        msg["To"],
+        msg["Subject"],
+        "\n".join(f"  {line}" for line in body.splitlines()),
+    )
+
+
+def _dispatch(msg: MIMEMultipart) -> None:
+    if settings.EMAIL_BACKEND == "smtp":
+        if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
+            logger.warning(
+                "EMAIL_BACKEND=smtp but SMTP_USER/SMTP_PASSWORD are not set — "
+                "falling back to console for %s",
+                msg["To"],
+            )
+            _console_send(msg)
+        else:
+            _smtp_send(msg)
+    else:
+        _console_send(msg)
+
+
 def send_invitation(
     to_email: str,
     to_name: str,
@@ -101,11 +139,6 @@ def send_invitation(
     role: str = "staff member",
 ) -> None:
     """Send a staff invitation email. Logs and returns on failure — does not raise."""
-    if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
-        logger.warning(
-            "SMTP not configured — invitation email skipped for %s", to_email
-        )
-        return
     try:
         html = _INVITE_HTML.format(
             to_name=to_name,
@@ -125,22 +158,19 @@ def send_invitation(
             html,
             text,
         )
-        _smtp_send(msg)
-        logger.info("Invitation email sent to %s", to_email)
+        _dispatch(msg)
+        logger.info("Invitation email dispatched to %s", to_email)
     except Exception as exc:
         logger.error("Failed to send invitation email to %s: %s", to_email, exc)
 
 
 def send_verification(to_email: str, to_name: str, otp_code: str) -> None:
     """Send an OTP verification email. Logs and returns on failure — does not raise."""
-    if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
-        logger.warning("SMTP not configured — OTP email skipped for %s", to_email)
-        return
     try:
         html = _OTP_HTML.format(to_name=to_name, otp_code=otp_code)
         text = _OTP_TEXT.format(otp_code=otp_code)
         msg = _build_message(to_email, "Your verification code", html, text)
-        _smtp_send(msg)
-        logger.info("OTP email sent to %s", to_email)
+        _dispatch(msg)
+        logger.info("OTP email dispatched to %s", to_email)
     except Exception as exc:
         logger.error("Failed to send OTP email to %s: %s", to_email, exc)

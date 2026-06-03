@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     # Frontend base URL (used to build invitation links)
     FRONTEND_URL: str = "http://localhost:5173"
 
+    # "smtp" sends via Gmail SMTP; "console" prints to the logger (dev/test)
+    EMAIL_BACKEND: str = "console"
+
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
     )

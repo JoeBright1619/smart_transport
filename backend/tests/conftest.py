@@ -12,6 +12,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.pool import StaticPool
 
+from app.core.config import settings as _settings
 from app.core.database import Base, get_db
 from app.core.security import create_access_token, hash_password
 from app.models.driver import Driver
@@ -19,6 +20,9 @@ from app.models.route import Route
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.models.vehicle import Vehicle
+
+# Force console email backend for all tests — no real emails sent
+_settings.EMAIL_BACKEND = "console"
 
 _TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 
@@ -120,6 +124,7 @@ def make_user(db: AsyncSession):
         role: str = "admin",
         email: str | None = None,
         password: str = "TestPass123!",
+        status: str = "active",
     ) -> User:
         user = User(
             id=f"user-{uuid.uuid4()}",
@@ -128,6 +133,7 @@ def make_user(db: AsyncSession):
             password_hash=hash_password(password),
             full_name="Test User",
             role=role,
+            status=status,
             is_deleted=False,
         )
         db.add(user)
