@@ -1,6 +1,6 @@
 from datetime import date as date_type
 from datetime import datetime
-from typing import Literal, Union
+from typing import List, Literal, Optional, Union
 
 from pydantic import Field
 
@@ -87,3 +87,26 @@ class FilteredReportResponse(APIModel):
     data: list[
         Union[RouteReportData, DailyReportData, FleetReportData, DriverReportData]
     ]
+
+
+class PassengerTripRecord(APIModel):
+    trip_id: str
+    trip_date: str
+    route_name: str
+    boarding_stop: Optional[str] = None
+    alighting_stop: Optional[str] = None
+    scheduled_departure: Optional[str] = None
+    actual_departure: Optional[str] = None
+    scheduled_arrival: Optional[str] = None
+    actual_arrival: Optional[str] = None
+    on_time: bool = False
+
+
+class PassengerReportResponse(APIModel):
+    passenger_id: str
+    passenger_name: str
+    date_from: str
+    date_to: str
+    generated_at: str
+    message: Optional[str] = None
+    data: List[PassengerTripRecord] = []

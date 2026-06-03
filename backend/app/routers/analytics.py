@@ -8,7 +8,11 @@ from app.core.database import get_db
 from app.core.dependencies import get_current_tenant, require_role
 from app.models.tenant import Tenant
 from app.schemas.common import APIResponse
-from app.schemas.analytics import AnalyticsResponseData, FilteredReportResponse
+from app.schemas.analytics import (
+    AnalyticsResponseData,
+    FilteredReportResponse,
+    PassengerReportResponse,
+)
 from app.services import analytics_service
 
 router = APIRouter(prefix="/api/v1/analytics", tags=["analytics"])
@@ -85,3 +89,35 @@ async def get_filtered_analytics_report(
             data=data,
         )
     )
+
+
+@router.get(
+    "/passenger-report",
+    response_model=APIResponse[PassengerReportResponse],
+    dependencies=[Depends(require_role("admin", "dispatcher"))],
+    summary="Get passenger trip history report",
+    description=(
+        "Returns the trip history for a specific passenger. "
+        "Requires Phase 12 boarding tracking to be enabled for populated results."
+    ),
+)
+async def get_passenger_trip_report(
+    passenger_id: str = Query(..., description="ID of the passenger user"),
+    date_from: date | None = Query(None),
+    date_to: date | None = Query(None),
+    db: AsyncSession = Depends(get_db),
+    tenant: Tenant = Depends(get_current_tenant),
+):
+    if date_to is None:
+        date_to = date.today()
+    if date_from is None:
+        date_from = date_to - timedelta(days=29)
+
+    data = await analytics_service.get_passenger_report(
+        db=db,
+        tenant_id=tenant.id,
+        passenger_id=passenger_id,
+        date_from=date_from,
+        date_to=date_to,
+    )
+    return APIResponse(data=data)

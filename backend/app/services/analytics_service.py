@@ -16,10 +16,12 @@ from app.models.maintenance import MaintenanceRecord
 from app.models.route import Route
 from app.models.trip import Trip
 from app.models.vehicle import Vehicle
+from app.models.user import User
 from app.schemas.analytics import (
     DailyReportData,
     DriverReportData,
     FleetReportData,
+    PassengerReportResponse,
     RouteReportData,
 )
 
@@ -455,3 +457,42 @@ async def get_filtered_report(
             )
         return result
     return []
+
+
+async def get_passenger_report(
+    db: AsyncSession,
+    tenant_id: str,
+    passenger_id: str,
+    date_from: date,
+    date_to: date,
+) -> PassengerReportResponse:
+    from fastapi import HTTPException
+
+    user_q = select(User).where(
+        User.id == passenger_id,
+        User.tenant_id == tenant_id,
+        User.role == "passenger",
+        User.is_deleted.is_(False),
+    )
+    user_result = await db.execute(user_q)
+    user = user_result.scalar_one_or_none()
+
+    if user is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Passenger not found in this tenant.",
+        )
+
+    # Phase 12 boarding records do not exist yet — return a graceful placeholder.
+    return PassengerReportResponse(
+        passenger_id=str(passenger_id),
+        passenger_name=user.full_name or user.email,
+        date_from=str(date_from),
+        date_to=str(date_to),
+        generated_at=datetime.utcnow().isoformat(),
+        message=(
+            "Trip association records are not yet available. "
+            "This report will be populated once passenger boarding tracking is enabled."
+        ),
+        data=[],
+    )

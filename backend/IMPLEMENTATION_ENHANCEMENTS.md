@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 10.3 — Passenger Trip History Report
+**Next task:** Task 11.1 — Gmail SMTP Email Service for Staff Invitations
 
 ---
 
@@ -114,7 +114,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `feat: add passenger trip history report endpoint and UI`
 
-- [ ] Task 10.3 complete
+- [x] Task 10.3 complete
 
 ---
 

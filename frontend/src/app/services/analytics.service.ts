@@ -1,5 +1,5 @@
 import { apiClient } from '../lib/api-client';
-import type { AnalyticsData, ApiResponse } from '../lib/api-types';
+import type { AnalyticsData, ApiResponse, PassengerReportResponse } from '../lib/api-types';
 
 type GetAnalyticsParams = {
   from?: string;
@@ -35,6 +35,25 @@ export async function getFilteredReport(params: GetFilteredReportParams) {
         route_id: params.routeId,
         vehicle_id: params.vehicleId,
         driver_id: params.driverId,
+        date_from: params.dateFrom,
+        date_to: params.dateTo,
+      },
+    }
+  );
+
+  return response.data.data;
+}
+
+export async function getPassengerReport(params: {
+  passengerId: string;
+  dateFrom?: string;
+  dateTo?: string;
+}): Promise<PassengerReportResponse> {
+  const response = await apiClient.get<ApiResponse<PassengerReportResponse>>(
+    '/api/v1/analytics/passenger-report',
+    {
+      params: {
+        passenger_id: params.passengerId,
         date_from: params.dateFrom,
         date_to: params.dateTo,
       },

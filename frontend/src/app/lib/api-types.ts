@@ -371,13 +371,36 @@ export interface DriverReportData {
   totalPassengers: number;
 }
 
-export type ReportType = 'route' | 'daily' | 'fleet' | 'driver';
+export type ReportType = 'route' | 'daily' | 'fleet' | 'driver' | 'passenger';
 
 export interface FilteredReportResponse {
   reportType: ReportType;
   filtersApplied: Record<string, unknown>;
   generatedAt: string;
   data: (RouteReportData | DailyReportData | FleetReportData | DriverReportData)[];
+}
+
+export interface PassengerTripRecord {
+  tripId: string;
+  tripDate: string;
+  routeName: string;
+  boardingStop?: string;
+  alightingStop?: string;
+  scheduledDeparture?: string;
+  actualDeparture?: string;
+  scheduledArrival?: string;
+  actualArrival?: string;
+  onTime: boolean;
+}
+
+export interface PassengerReportResponse {
+  passengerId: string;
+  passengerName: string;
+  dateFrom: string;
+  dateTo: string;
+  generatedAt: string;
+  message?: string;
+  data: PassengerTripRecord[];
 }
 
 // Arrivals

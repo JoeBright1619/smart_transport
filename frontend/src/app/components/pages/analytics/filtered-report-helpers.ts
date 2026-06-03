@@ -3,6 +3,7 @@ import type {
   DriverReportData,
   FilteredReportResponse,
   FleetReportData,
+  PassengerTripRecord,
   ReportType,
   RouteReportData,
 } from '../../../lib/api-types';
@@ -69,6 +70,21 @@ export function buildCsvData(
       r.onTimeRate,
       r.avgTripDurationMinutes,
       r.totalPassengers,
+    ]),
+  ];
+}
+
+export function buildPassengerCsvData(data: PassengerTripRecord[]): (string | number)[][] {
+  return [
+    ['Date', 'Route', 'Boarding Stop', 'Alighting Stop', 'Scheduled Departure', 'Actual Departure', 'On Time'],
+    ...data.map((r) => [
+      r.tripDate,
+      r.routeName,
+      r.boardingStop ?? '',
+      r.alightingStop ?? '',
+      r.scheduledDeparture ?? '',
+      r.actualDeparture ?? '',
+      r.onTime ? 'Yes' : 'No',
     ]),
   ];
 }

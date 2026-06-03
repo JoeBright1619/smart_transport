@@ -29,6 +29,7 @@ import {
   FleetReportTable,
   DriverReportTable,
 } from './FilteredReportTables';
+import { PassengerReportTab } from './PassengerReportTab';
 
 type FilteredReportPanelProps = {
   routes: RouteRead[];
@@ -72,6 +73,7 @@ export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredRepor
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchReport = useCallback(async () => {
+    if (reportType === 'passenger') return;
     setLoading(true);
     setError(null);
     try {
@@ -169,6 +171,7 @@ export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredRepor
             <TabsTrigger value="daily" id="report-tab-daily">Daily</TabsTrigger>
             <TabsTrigger value="fleet" id="report-tab-fleet">Fleet</TabsTrigger>
             <TabsTrigger value="driver" id="report-tab-driver">Driver</TabsTrigger>
+            <TabsTrigger value="passenger" id="report-tab-passenger">Passenger</TabsTrigger>
           </TabsList>
 
           {/* ── Common date range ── */}
@@ -275,6 +278,10 @@ export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredRepor
             ) : (
               <DriverReportTable data={result!.data as DriverReportData[]} />
             )}
+          </TabsContent>
+
+          <TabsContent value="passenger">
+            <PassengerReportTab dateFrom={dateFrom} dateTo={dateTo} />
           </TabsContent>
         </Tabs>
 
