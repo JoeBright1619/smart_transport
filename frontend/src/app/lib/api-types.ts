@@ -68,6 +68,7 @@ export interface UserRead {
   email: string;
   role: UserRole;
   phone: string | null;
+  status: string;
   isDeleted: boolean;
   createdAt: string;
 }
@@ -77,7 +78,12 @@ export interface UserCreate {
   email: string;
   role: TenantUserRole;
   phone?: string;
-  password: string;
+  password?: string;
+}
+
+export interface AcceptInviteRequest {
+  token: string;
+  newPassword: string;
 }
 
 export interface UserUpdate {

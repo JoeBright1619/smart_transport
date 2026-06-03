@@ -1,5 +1,5 @@
 import { apiClient } from '../lib/api-client';
-import type { ApiResponse, PaginatedResponse, UserCreate, UserRead, UserUpdate } from '../lib/api-types';
+import type { AcceptInviteRequest, ApiResponse, PaginatedResponse, UserCreate, UserRead, UserUpdate } from '../lib/api-types';
 
 type ListUsersParams = {
   page?: number;
@@ -47,4 +47,12 @@ export async function updateUser(id: string, data: UserUpdate): Promise<UserRead
 
 export async function deleteUser(id: string): Promise<void> {
   await apiClient.delete(`/api/v1/users/${id}`);
+}
+
+export async function acceptInvite(data: AcceptInviteRequest): Promise<{ message: string }> {
+  const response = await apiClient.post<ApiResponse<{ message: string }>>(
+    '/api/v1/users/accept-invite',
+    { token: data.token, new_password: data.newPassword },
+  );
+  return response.data.data;
 }

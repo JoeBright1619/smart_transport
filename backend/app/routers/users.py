@@ -5,8 +5,8 @@ from app.core.database import get_db
 from app.core.dependencies import get_current_tenant, get_current_user, require_role
 from app.models.tenant import Tenant
 from app.models.user import User
-from app.schemas.common import PaginatedResponse, APIResponse, Meta
-from app.schemas.user import UserCreate, UserRead, UserUpdate
+from app.schemas.common import PaginatedResponse, APIResponse, Meta, MessageResponse
+from app.schemas.user import UserCreate, UserInviteAccept, UserRead, UserUpdate
 from app.services import user_service
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
@@ -48,7 +48,7 @@ async def list_users(
     "",
     response_model=APIResponse[UserRead],
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(require_role("admin"))],
+    dependencies=[Depends(require_role("superadmin", "admin"))],
     summary="Create a user",
     description="Invites a new user into the current tenant. Returns 409 if the email is already taken.",
 )
@@ -58,7 +58,7 @@ async def create_user(
     current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
 ):
-    user = await user_service.create_user(db, data, tenant.id, current_user)
+    user = await user_service.create_user(db, data, tenant.id, current_user, tenant)
     await db.commit()
     return APIResponse(data=UserRead.model_validate(user))
 
@@ -106,7 +106,7 @@ async def update_user(
 @router.delete(
     "/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[Depends(require_role("admin"))],
+    dependencies=[Depends(require_role("superadmin", "admin"))],
     summary="Delete a user",
     description="Soft-deletes a user from the tenant. Requires admin role.",
 )
@@ -118,3 +118,23 @@ async def delete_user(
 ):
     await user_service.delete_user(db, id, tenant.id, current_user)
     await db.commit()
+
+
+@router.post(
+    "/accept-invite",
+    response_model=APIResponse[MessageResponse],
+    summary="Accept a staff invitation",
+    description=(
+        "Sets the password for an invited user and activates their account. "
+        "The token is from the invitation email link. No authentication required."
+    ),
+)
+async def accept_invite(
+    data: UserInviteAccept,
+    db: AsyncSession = Depends(get_db),
+):
+    await user_service.accept_invitation(db, data)
+    await db.commit()
+    return APIResponse(
+        data=MessageResponse(message="Account activated. You can now log in.")
+    )

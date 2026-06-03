@@ -6,10 +6,26 @@ import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Users, Trash2, Edit, UserPlus } from 'lucide-react';
+import { Users, Trash2, Edit, UserPlus, Mail } from 'lucide-react';
 import { useAuth } from '../../lib/auth-context';
 import { listUsers, createUser, updateUser, deleteUser } from '../../services/users.service';
 import type { UserRead, TenantUserRole } from '../../lib/api-types';
+import { toast } from 'sonner';
+
+const STATUS_STYLES: Record<string, string> = {
+  active: 'bg-emerald-100 text-emerald-700',
+  invited: 'bg-amber-100 text-amber-700',
+  pending_verification: 'bg-blue-100 text-blue-700',
+};
+
+function StatusBadge({ status }: { status: string }) {
+  const cls = STATUS_STYLES[status] ?? 'bg-slate-100 text-slate-600';
+  return (
+    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${cls}`}>
+      {status === 'pending_verification' ? 'Pending' : status}
+    </span>
+  );
+}
 
 export function Administration() {
   const [users, setUsers] = useState<UserRead[]>([]);
@@ -24,15 +40,14 @@ export function Administration() {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    role: 'passenger' as TenantUserRole,
+    role: 'dispatcher' as TenantUserRole,
     phone: '',
-    password: '',
   });
 
   const [editData, setEditData] = useState({
     fullName: '',
     phone: '',
-    role: 'passenger' as TenantUserRole,
+    role: 'dispatcher' as TenantUserRole,
   });
 
   const loadUsers = async () => {
@@ -40,33 +55,32 @@ export function Administration() {
     try {
       const data = await listUsers({ pageSize: 100 });
       setUsers(data.items);
-    } catch (err) {
-      console.error(err);
+    } catch {
+      toast.error('Failed to load users');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
+  useEffect(() => { loadUsers(); }, []);
 
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await createUser(formData);
       setIsAddOpen(false);
-      setFormData({ fullName: '', email: '', role: 'passenger', phone: '', password: '' });
+      setFormData({ fullName: '', email: '', role: 'dispatcher', phone: '' });
+      toast.success('Invitation sent! The user will receive an email to set their password.');
       loadUsers();
-    } catch (err) {
-      console.error(err);
-      alert('Failed to add user');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to send invitation';
+      toast.error(msg);
     }
   };
 
   const openEdit = (u: UserRead) => {
     setEditingUser(u);
-    setEditData({ fullName: u.fullName, phone: u.phone || '', role: u.role as TenantUserRole });
+    setEditData({ fullName: u.fullName, phone: u.phone ?? '', role: u.role as TenantUserRole });
     setIsEditOpen(true);
   };
 
@@ -77,21 +91,18 @@ export function Administration() {
       await updateUser(editingUser.id, editData);
       setIsEditOpen(false);
       loadUsers();
-    } catch (err) {
-      console.error(err);
-      alert('Failed to update user');
+    } catch {
+      toast.error('Failed to update user');
     }
   };
 
   const handleDelete = async (u: UserRead) => {
-    if (window.confirm(`Are you sure you want to remove ${u.fullName}?`)) {
-      try {
-        await deleteUser(u.id);
-        loadUsers();
-      } catch (err) {
-        console.error(err);
-        alert('Failed to delete user');
-      }
+    if (!window.confirm(`Remove ${u.fullName} from this organisation?`)) return;
+    try {
+      await deleteUser(u.id);
+      loadUsers();
+    } catch {
+      toast.error('Failed to delete user');
     }
   };
 
@@ -112,9 +123,13 @@ export function Administration() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Invite New User</DialogTitle>
+                <DialogTitle>Invite New Staff Member</DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleAddUser} className="space-y-4">
+              <p className="text-sm text-slate-500 -mt-1">
+                An invitation email will be sent to the address below with a link to set
+                their password.
+              </p>
+              <form onSubmit={handleAddUser} className="space-y-4 pt-1">
                 <Input
                   placeholder="Full Name"
                   required
@@ -123,22 +138,15 @@ export function Administration() {
                 />
                 <Input
                   type="email"
-                  placeholder="Email"
+                  placeholder="Work Email"
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
                 <Input
-                  placeholder="Phone"
+                  placeholder="Phone (optional)"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                />
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  required
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 />
                 <Select
                   value={formData.role}
@@ -151,14 +159,16 @@ export function Administration() {
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="operator">Operator</SelectItem>
                     <SelectItem value="dispatcher">Dispatcher</SelectItem>
-                    <SelectItem value="passenger">Passenger</SelectItem>
                   </SelectContent>
                 </Select>
-                <div className="pt-4 flex justify-end gap-2">
+                <div className="pt-2 flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>
                     Cancel
                   </Button>
-                  <Button type="submit">Send Invite</Button>
+                  <Button type="submit">
+                    <Mail className="mr-1.5 size-4" />
+                    Send Invitation
+                  </Button>
                 </div>
               </form>
             </DialogContent>
@@ -175,7 +185,7 @@ export function Administration() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-slate-500 text-sm">Loading users...</p>
+            <p className="text-slate-500 text-sm">Loading users…</p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -184,8 +194,9 @@ export function Administration() {
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Phone</TableHead>
-                    <TableHead>Created</TableHead>
+                    <TableHead>Joined</TableHead>
                     {isAdmin && <TableHead className="text-right">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
@@ -195,18 +206,24 @@ export function Administration() {
                       <TableCell className="font-medium">{u.fullName}</TableCell>
                       <TableCell>{u.email}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="capitalize">
-                          {u.role}
-                        </Badge>
+                        <Badge variant="outline" className="capitalize">{u.role}</Badge>
                       </TableCell>
-                      <TableCell>{u.phone || '—'}</TableCell>
+                      <TableCell>
+                        <StatusBadge status={u.status ?? 'active'} />
+                      </TableCell>
+                      <TableCell>{u.phone ?? '—'}</TableCell>
                       <TableCell>{new Date(u.createdAt).toLocaleDateString()}</TableCell>
                       {isAdmin && (
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" onClick={() => openEdit(u)}>
                             <Edit className="size-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="text-red-500" onClick={() => handleDelete(u)}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500"
+                            onClick={() => handleDelete(u)}
+                          >
                             <Trash2 className="size-4" />
                           </Button>
                         </TableCell>
@@ -215,7 +232,10 @@ export function Administration() {
                   ))}
                   {users.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={isAdmin ? 6 : 5} className="text-center text-slate-500 py-4">
+                      <TableCell
+                        colSpan={isAdmin ? 7 : 6}
+                        className="text-center text-slate-500 py-4"
+                      >
                         No users found
                       </TableCell>
                     </TableRow>

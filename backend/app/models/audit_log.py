@@ -40,6 +40,8 @@ class AuditLog(Base):
             "login",
             "login_failed",
             "impersonate",
+            "invite",
+            "accept_invite",
             name="audit_action_type_enum",
         ),
         nullable=False,

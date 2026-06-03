@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 11.1 — Gmail SMTP Email Service for Staff Invitations
+**Next task:** Task 11.2 — Passenger Self-Registration with Email OTP Verification
 
 ---
 
@@ -144,7 +144,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `feat: add Gmail SMTP email service and staff invitation flow`
 
-- [ ] Task 11.1 complete
+- [x] Task 11.1 complete
 
 ---
 

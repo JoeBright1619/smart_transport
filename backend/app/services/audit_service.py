@@ -6,7 +6,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.audit_log import AuditLog
 
 AuditActionType = Literal[
-    "create", "update", "soft_delete", "login", "login_failed", "impersonate"
+    "create",
+    "update",
+    "soft_delete",
+    "login",
+    "login_failed",
+    "impersonate",
+    "invite",
+    "accept_invite",
 ]
 
 

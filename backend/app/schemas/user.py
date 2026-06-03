@@ -29,10 +29,13 @@ class UserBase(APIModel):
 
 
 class UserCreate(UserBase):
-    password: str = Field(
+    # Optional — omit when inviting staff (the invite email provides a link to set it).
+    # Provide when seeding or creating accounts that bypass the invitation flow.
+    password: str | None = Field(
+        default=None,
         min_length=8,
         max_length=128,
-        json_schema_extra={"example": "TempPass123!"},
+        json_schema_extra={"example": None},
     )
 
 
@@ -65,5 +68,15 @@ class UserRead(APIModel):
     phone: str | None = Field(
         default=None, json_schema_extra={"example": "+250788234567"}
     )
+    status: str = Field(default="active", json_schema_extra={"example": "active"})
     is_deleted: bool = Field(default=False, json_schema_extra={"example": False})
     created_at: datetime = Field(json_schema_extra={"example": "2026-04-01T08:00:00Z"})
+
+
+class UserInviteAccept(APIModel):
+    token: str = Field(json_schema_extra={"example": "<invite-jwt>"})
+    new_password: str = Field(
+        min_length=8,
+        max_length=128,
+        json_schema_extra={"example": "NewSecurePass123!"},
+    )

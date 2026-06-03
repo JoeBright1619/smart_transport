@@ -3,6 +3,7 @@ import React from 'react';
 import { MainLayout } from './components/layout/MainLayout';
 import { LoginPage } from './components/pages/LoginPage';
 import { RegisterPage } from './components/pages/RegisterPage';
+import { AcceptInvitePage } from './components/pages/AcceptInvitePage';
 import { RoleHomeRedirect } from './components/RoleHomeRedirect';
 import { SuperadminRoute } from './components/SuperadminRoute';
 import { SuperadminPortal } from './components/pages/SuperadminPortal';
@@ -28,6 +29,10 @@ export const router = createBrowserRouter([
   {
     path: '/register',
     Component: RegisterPage,
+  },
+  {
+    path: '/accept-invite',
+    Component: AcceptInvitePage,
   },
   {
     path: '/',

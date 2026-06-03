@@ -42,6 +42,13 @@ class User(Base):
     )
     phone: Mapped[str | None] = mapped_column(String, nullable=True)
 
+    # "active" | "invited" | "pending_verification"
+    status: Mapped[str] = mapped_column(String, nullable=False, default="active")
+    invitation_token_hash: Mapped[str | None] = mapped_column(String, nullable=True)
+    invitation_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
