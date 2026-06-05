@@ -12,6 +12,7 @@ from app.core.geo_math import bearing, haversine_distance, move_along_bearing
 from app.crud.analytics import upsert_daily_analytics
 from app.models.route import RouteStop, Stop
 from app.models.vehicle import Vehicle
+from app.services import boarding_service
 from app.websocket.route_trip_records import create_completed_trip
 
 TICK_SECONDS = 5
@@ -156,22 +157,28 @@ async def _simulate_passengers_at_stop(
     # 1. Alight passengers
     remaining_passengers = []
     revenue = 0.0
+    alighted_count = 0
     for p in passengers:
         if p["dest_index"] == current_stop_index:
             revenue += p["distance_km"] * 60.0
+            alighted_count += 1
         else:
             remaining_passengers.append(p)
 
     # 2. Board new passengers
+    boarded_count = 0
     if current_stop_index < len(stops) - 1:
         capacity = vehicle.capacity if vehicle.capacity else 30
         available_seats = capacity - len(remaining_passengers)
-        boarding_count = randint(0, available_seats) if available_seats > 0 else 0  # nosec B311
+        boarded_count = (
+            randint(0, min(5, available_seats))  # nosec B311
+            if available_seats > 0
+            else 0
+        )
 
-        for _ in range(boarding_count):
+        for _ in range(boarded_count):
             dest_index = randint(current_stop_index + 1, len(stops) - 1)  # nosec B311
 
-            # calculate distance from current_stop_index to dest_index
             dist_m = 0.0
             for i in range(current_stop_index, dest_index):
                 s1 = stops[i]
@@ -187,8 +194,21 @@ async def _simulate_passengers_at_stop(
             )
 
     state["passengers"] = remaining_passengers
+    state["current_occupancy"] = len(remaining_passengers)
 
-    # 3. Add to live daily revenue
+    # 3. Persist boarding records
+    if boarded_count > 0 or alighted_count > 0:
+        await boarding_service.record_stop_events(
+            db,
+            vehicle,
+            stops[current_stop_index].id,
+            boarded_count,
+            min(alighted_count, 3),
+            len(remaining_passengers),
+            now,
+        )
+
+    # 4. Add to live daily revenue
     if revenue > 0:
         await upsert_daily_analytics(
             db=db,

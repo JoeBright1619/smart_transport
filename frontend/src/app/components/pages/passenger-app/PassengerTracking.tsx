@@ -160,6 +160,22 @@ export function PassengerTracking() {
                             {a.distanceToStopKm != null && <p className="text-xs text-slate-500">{a.distanceToStopKm.toFixed(1)} km away</p>}
                           </div>
                         </div>
+                        {a.seatingCapacity > 0 && (
+                          <div className="mt-3 pt-3 border-t">
+                            <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                              <span>{a.currentOccupancy} / {a.seatingCapacity} seats taken</span>
+                              <span className={a.remainingSeats <= 5 ? 'text-orange-500 font-medium' : 'text-green-600'}>
+                                {a.remainingSeats} free
+                              </span>
+                            </div>
+                            <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all ${a.remainingSeats <= 5 ? 'bg-orange-400' : 'bg-green-500'}`}
+                                style={{ width: `${Math.min(100, (a.currentOccupancy / a.seatingCapacity) * 100)}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}

@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 12.2 — Simulated Passenger Boardings and Per-Trip Occupancy Records
+**Next task:** Task 12.3 — Passenger Journey Statistics Dashboard
 
 ---
 
@@ -289,7 +289,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `feat: simulated passenger boardings with per-stop occupancy records`
 
-- [ ] Task 12.2 complete
+- [x] Task 12.2 complete
 
 ---
 
@@ -418,6 +418,6 @@ Fix steps:
 |---|---|---|
 | Phase 10 — Advanced Reporting & Filtered Analytics | 3 tasks | 3 / 3 ✅ |
 | Phase 11 — Authentication, Invitation & Registration Overhaul | 3 tasks | 3 / 3 ✅ |
-| Phase 12 — Passenger Profile, Simulated Boardings & Journey Statistics | 3 tasks | 1 / 3 |
+| Phase 12 — Passenger Profile, Simulated Boardings & Journey Statistics | 3 tasks | 2 / 3 |
 | Phase 13 — Passenger Capacity & Occupancy Tracking | 3 tasks | 0 / 3 |
-| **Total** | **12 tasks** | **7 / 12** |
+| **Total** | **12 tasks** | **8 / 12** |

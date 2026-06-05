@@ -420,6 +420,9 @@ export interface ArrivalEstimate {
   etaMinutes: number | null;
   estimatedArrivalTime: string | null;
   status: string;
+  currentOccupancy: number;
+  seatingCapacity: number;
+  remainingSeats: number;
 }
 
 // Superadmin

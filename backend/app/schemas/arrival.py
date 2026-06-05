@@ -18,3 +18,6 @@ class ArrivalRead(APIModel):
         json_schema_extra={"example": "2026-04-08T17:04:00Z"},
     )
     status: str = Field(json_schema_extra={"example": "active"})
+    current_occupancy: int = Field(default=0, json_schema_extra={"example": 18})
+    seating_capacity: int = Field(default=0, json_schema_extra={"example": 45})
+    remaining_seats: int = Field(default=0, json_schema_extra={"example": 27})

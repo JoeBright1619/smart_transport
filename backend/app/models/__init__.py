@@ -1,6 +1,7 @@
 from app.models.alert import Alert
 from app.models.analytics import AnalyticsRecord
 from app.models.audit_log import AuditLog
+from app.models.boarding_record import BoardingRecord
 from app.models.driver import Driver
 from app.models.maintenance import MaintenanceRecord
 from app.models.passenger_profile import PassengerProfile
@@ -16,6 +17,7 @@ __all__ = [
     "Alert",
     "AnalyticsRecord",
     "AuditLog",
+    "BoardingRecord",
     "Driver",
     "MaintenanceRecord",
     "PassengerProfile",

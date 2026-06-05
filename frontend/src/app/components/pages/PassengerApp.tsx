@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Bus, Clock, Phone, User } from 'lucide-react';
+import { Bus, Clock, History, Phone, User } from 'lucide-react';
 import { useAuth } from '../../lib/auth-context';
 import { PassengerTracking } from './passenger-app/PassengerTracking';
 import { PassengerProfileSection } from './passenger-app/PassengerProfileSection';
+import { PassengerTrips } from './passenger-app/PassengerTrips';
 
-type Tab = 'tracking' | 'profile';
+type Tab = 'tracking' | 'trips' | 'profile';
 
 export function PassengerApp() {
   const { user } = useAuth();
@@ -46,8 +47,8 @@ export function PassengerApp() {
           </div>
         </div>
 
-        {/* Tabs — profile tab only for passengers */}
-        <div className="flex gap-2">
+        {/* Tabs — passenger-only tabs for trips and profile */}
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setTab('tracking')}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
@@ -56,6 +57,17 @@ export function PassengerApp() {
           >
             Live Tracking
           </button>
+          {isPassenger && (
+            <button
+              onClick={() => setTab('trips')}
+              className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                tab === 'trips' ? 'bg-white text-blue-700' : 'bg-white/15 text-white hover:bg-white/25'
+              }`}
+            >
+              <History className="size-3.5" />
+              My Trips
+            </button>
+          )}
           {isPassenger && (
             <button
               onClick={() => setTab('profile')}
@@ -71,7 +83,9 @@ export function PassengerApp() {
       </div>
 
       {/* Tab content */}
-      {tab === 'tracking' ? <PassengerTracking /> : <PassengerProfileSection />}
+      {tab === 'tracking' && <PassengerTracking />}
+      {tab === 'trips' && <PassengerTrips />}
+      {tab === 'profile' && <PassengerProfileSection />}
     </div>
   );
 }

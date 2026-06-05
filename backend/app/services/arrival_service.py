@@ -135,6 +135,11 @@ async def get_arrivals_for_stop(
             estimated_arrival_time = now + timedelta(minutes=eta_minutes)
             arrival_status = "active"
 
+        v_state = _state.get(vehicle.id, {})
+        current_occupancy = int(
+            v_state.get("current_occupancy", len(v_state.get("passengers", [])))
+        )
+        seating_capacity = vehicle.capacity or 45
         arrivals.append(
             ArrivalRead(
                 vehicle_id=vehicle.id,
@@ -146,6 +151,9 @@ async def get_arrivals_for_stop(
                 eta_minutes=eta_minutes,
                 estimated_arrival_time=estimated_arrival_time,
                 status=arrival_status,
+                current_occupancy=current_occupancy,
+                seating_capacity=seating_capacity,
+                remaining_seats=max(0, seating_capacity - current_occupancy),
             )
         )
 
