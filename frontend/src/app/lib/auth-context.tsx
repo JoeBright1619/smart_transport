@@ -28,6 +28,7 @@ type JwtPayload = {
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
+  loginFromToken: (accessToken: string, userSummary: AuthUserSummary) => void;
   register: (payload: {
     companyName: string;
     contactEmail: string;
@@ -158,6 +159,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const loginFromToken = (accessToken: string, userSummary: AuthUserSummary): void => {
+    setStoredToken(accessToken);
+    setUser(userFromAuthSummary(userSummary));
+  };
+
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       const response = await authService.login(email, password);
@@ -207,6 +213,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       user,
       login,
+      loginFromToken,
       register,
       logout,
       isAuthenticated: !!user,

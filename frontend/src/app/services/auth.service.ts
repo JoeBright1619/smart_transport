@@ -46,3 +46,35 @@ export async function refresh(): Promise<RefreshTokenResponse> {
 export async function logout(): Promise<void> {
   await apiClient.post('/auth/logout');
 }
+
+export type PassengerRegisterPayload = {
+  fullName: string;
+  email: string;
+  phone?: string;
+  password: string;
+};
+
+export async function registerPassenger(payload: PassengerRegisterPayload): Promise<{ message: string }> {
+  const response = await apiClient.post<ApiResponse<{ message: string }>>('/auth/register/passenger', {
+    fullName: payload.fullName,
+    email: payload.email,
+    phone: payload.phone,
+    password: payload.password,
+  });
+  return response.data.data;
+}
+
+export async function verifyEmail(email: string, otp: string): Promise<TokenResponse> {
+  const response = await apiClient.post<ApiResponse<TokenResponse>>('/auth/verify-email', {
+    email,
+    otp,
+  });
+  return response.data.data;
+}
+
+export async function resendOtp(email: string): Promise<{ message: string }> {
+  const response = await apiClient.post<ApiResponse<{ message: string }>>('/auth/resend-otp', {
+    email,
+  });
+  return response.data.data;
+}

@@ -49,6 +49,16 @@ class User(Base):
         DateTime(timezone=True), nullable=True
     )
 
+    # Email OTP verification (passenger self-registration)
+    otp_code: Mapped[str | None] = mapped_column(String, nullable=True)
+    otp_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    otp_resent_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    email_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
     is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

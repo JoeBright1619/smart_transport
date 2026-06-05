@@ -108,3 +108,33 @@ class TokenResponse(APIModel):
 
 class RefreshTokenResponse(APIModel):
     access_token: str = Field(json_schema_extra={"example": "<new_jwt>"})
+
+
+class PassengerRegisterRequest(APIModel):
+    full_name: str = Field(
+        min_length=1, max_length=255, json_schema_extra={"example": "Alice Mutoni"}
+    )
+    email: str = Field(
+        min_length=3, max_length=255, json_schema_extra={"example": "alice@example.rw"}
+    )
+    phone: str | None = Field(
+        default=None, max_length=50, json_schema_extra={"example": "+250788000001"}
+    )
+    password: str = Field(
+        min_length=8, max_length=128, json_schema_extra={"example": "MyPass123!"}
+    )
+
+
+class VerifyEmailRequest(APIModel):
+    email: str = Field(
+        min_length=3, max_length=255, json_schema_extra={"example": "alice@example.rw"}
+    )
+    otp: str = Field(
+        min_length=6, max_length=6, json_schema_extra={"example": "482951"}
+    )
+
+
+class ResendOtpRequest(APIModel):
+    email: str = Field(
+        min_length=3, max_length=255, json_schema_extra={"example": "alice@example.rw"}
+    )

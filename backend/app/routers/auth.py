@@ -17,13 +17,16 @@ from app.schemas.auth import (
     AuthTenantSummary,
     AuthUserSummary,
     LoginRequest,
+    PassengerRegisterRequest,
     RefreshTokenResponse,
     RegisterRequest,
     RegisterResponse,
+    ResendOtpRequest,
     TokenResponse,
+    VerifyEmailRequest,
 )
-from app.schemas.common import APIResponse
-from app.services import audit_service, tenant_service
+from app.schemas.common import APIResponse, MessageResponse
+from app.services import audit_service, passenger_service, tenant_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -237,6 +240,13 @@ async def login(
             "Invalid email or password",
         )
 
+    if user.status == "pending_verification":
+        _raise_error(
+            status.HTTP_403_FORBIDDEN,
+            "EMAIL_NOT_VERIFIED",
+            "Please verify your email before logging in",
+        )
+
     if not verify_password(data.password, user.password_hash):
         await audit_service.log(
             db=db,
@@ -352,3 +362,84 @@ async def logout(
     _clear_refresh_cookie(response)
     response.status_code = status.HTTP_204_NO_CONTENT
     return response
+
+
+@router.post(
+    "/register/passenger",
+    status_code=status.HTTP_201_CREATED,
+    response_model=APIResponse[MessageResponse],
+    summary="Passenger self-registration",
+    description=(
+        "Creates a passenger account and sends a 6-digit OTP to the provided email. "
+        "The account is activated only after the OTP is verified."
+    ),
+)
+async def register_passenger(
+    data: PassengerRegisterRequest,
+    db: AsyncSession = Depends(get_db),
+) -> APIResponse[MessageResponse]:
+    await passenger_service.register_passenger(
+        db,
+        full_name=data.full_name,
+        email=data.email,
+        password=data.password,
+        phone=data.phone,
+    )
+    await db.commit()
+    return APIResponse(
+        data=MessageResponse(message="Verification code sent to your email.")
+    )
+
+
+@router.post(
+    "/verify-email",
+    response_model=APIResponse[TokenResponse],
+    summary="Verify passenger email with OTP",
+    description=(
+        "Confirms the 6-digit OTP sent at registration. "
+        "Activates the account and returns a login token."
+    ),
+)
+async def verify_email(
+    data: VerifyEmailRequest,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+) -> APIResponse[TokenResponse]:
+    user = await passenger_service.verify_email_otp(db, email=data.email, otp=data.otp)
+    refresh_token = await _create_refresh_token(db, user.id)
+    await audit_service.log(
+        db=db,
+        user_id=user.id,
+        tenant_id=None,
+        entity_type="User",
+        entity_id=user.id,
+        action_type="login",
+        metadata={"source": "email_verify"},
+    )
+    await db.commit()
+    _set_refresh_cookie(response, refresh_token)
+    return APIResponse(
+        data=TokenResponse(
+            access_token=_access_token_for_user(user),
+            user=_auth_user_summary(user),
+        )
+    )
+
+
+@router.post(
+    "/resend-otp",
+    response_model=APIResponse[MessageResponse],
+    summary="Resend email verification OTP",
+    description="Re-generates and re-sends the OTP. Rate-limited to once per 60 seconds.",
+)
+async def resend_otp(
+    data: ResendOtpRequest,
+    db: AsyncSession = Depends(get_db),
+) -> APIResponse[MessageResponse]:
+    await passenger_service.resend_otp(db, email=data.email)
+    await db.commit()
+    return APIResponse(
+        data=MessageResponse(
+            message="A new verification code has been sent to your email."
+        )
+    )

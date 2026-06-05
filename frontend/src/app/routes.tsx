@@ -3,6 +3,7 @@ import React from 'react';
 import { MainLayout } from './components/layout/MainLayout';
 import { LoginPage } from './components/pages/LoginPage';
 import { RegisterPage } from './components/pages/RegisterPage';
+import { TenantRegisterPage } from './components/pages/TenantRegisterPage';
 import { AcceptInvitePage } from './components/pages/AcceptInvitePage';
 import { RoleHomeRedirect } from './components/RoleHomeRedirect';
 import { SuperadminRoute } from './components/SuperadminRoute';
@@ -29,6 +30,10 @@ export const router = createBrowserRouter([
   {
     path: '/register',
     Component: RegisterPage,
+  },
+  {
+    path: '/register/company',
+    Component: TenantRegisterPage,
   },
   {
     path: '/accept-invite',
