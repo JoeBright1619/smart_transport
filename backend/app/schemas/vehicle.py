@@ -22,6 +22,7 @@ class VehicleCreate(APIModel):
         min_length=1, max_length=100, json_schema_extra={"example": "Yutong ZK6120"}
     )
     capacity: int = Field(gt=0, json_schema_extra={"example": 60})
+    seating_capacity: int = Field(default=45, gt=0, json_schema_extra={"example": 45})
     status: VehicleStatus = Field(default="idle", json_schema_extra={"example": "idle"})
 
 
@@ -31,6 +32,9 @@ class VehicleUpdate(APIModel):
     )
     fuel: int | None = Field(
         default=None, ge=0, le=100, json_schema_extra={"example": 45}
+    )
+    seating_capacity: int | None = Field(
+        default=None, gt=0, json_schema_extra={"example": 45}
     )
     route_id: str | None = Field(
         default=None, json_schema_extra={"example": "route-uuid"}
@@ -45,6 +49,8 @@ class VehicleRead(APIModel):
     registration_number: str = Field(json_schema_extra={"example": "RAD 001 A"})
     model: str = Field(json_schema_extra={"example": "Yutong ZK6120"})
     capacity: int = Field(json_schema_extra={"example": 60})
+    seating_capacity: int = Field(default=45, json_schema_extra={"example": 45})
+    current_occupancy: int = Field(default=0, json_schema_extra={"example": 18})
     status: VehicleStatus = Field(json_schema_extra={"example": "active"})
     speed: int | None = Field(default=None, json_schema_extra={"example": 35})
     heading: int | None = Field(default=None, json_schema_extra={"example": 90})
@@ -69,3 +75,7 @@ class VehicleRead(APIModel):
         if self.lat is not None and self.lng is not None:
             return Location(lat=self.lat, lng=self.lng)
         return None
+
+    @computed_field
+    def remaining_seats(self) -> int:
+        return max(0, self.seating_capacity - self.current_occupancy)

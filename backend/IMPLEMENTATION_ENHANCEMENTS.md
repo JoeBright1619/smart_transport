@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 13.1 — Vehicle Capacity Model and Simulated Occupancy Fields
+**Next task:** Task 13.2 — Real-Time Occupancy via WebSocket and Tracking UI
 
 ---
 
@@ -347,7 +347,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `feat: add vehicle seating capacity and simulation-driven occupancy tracking`
 
-- [ ] Task 13.1 complete
+- [x] Task 13.1 complete
 
 ---
 
@@ -419,5 +419,5 @@ Fix steps:
 | Phase 10 — Advanced Reporting & Filtered Analytics | 3 tasks | 3 / 3 ✅ |
 | Phase 11 — Authentication, Invitation & Registration Overhaul | 3 tasks | 3 / 3 ✅ |
 | Phase 12 — Passenger Profile, Simulated Boardings & Journey Statistics | 3 tasks | 3 / 3 ✅ |
-| Phase 13 — Passenger Capacity & Occupancy Tracking | 3 tasks | 0 / 3 |
-| **Total** | **12 tasks** | **9 / 12** |
+| Phase 13 — Passenger Capacity & Occupancy Tracking | 3 tasks | 1 / 3 |
+| **Total** | **12 tasks** | **10 / 12** |

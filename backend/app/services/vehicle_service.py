@@ -93,6 +93,7 @@ async def create_vehicle(
         registration_number=data.registration_number,
         model=data.model,
         capacity=data.capacity,
+        seating_capacity=data.seating_capacity,
         status=data.status,
     )
     db.add(vehicle)
@@ -144,10 +145,13 @@ async def update_vehicle(
         vehicle.status = new_status
     if "fuel" in update_data:
         vehicle.fuel = update_data["fuel"]
+    if "seating_capacity" in update_data:
+        vehicle.seating_capacity = update_data["seating_capacity"]
     if "route_id" in update_data:
         vehicle.route_id = update_data["route_id"]
     if "driver_id" in update_data:
         vehicle.driver_id = update_data["driver_id"]
+    # current_occupancy is owned by the simulation — silently ignored if passed
 
     await db.flush()
     await audit_service.log(

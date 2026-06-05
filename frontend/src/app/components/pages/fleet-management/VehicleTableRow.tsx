@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import type { DriverRead, RouteRead, VehicleRead, VehicleStatus, VehicleUpdate } from '../../../lib/api-types';
 import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
+import { Input } from '../../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { TableCell, TableRow } from '../../ui/table';
 import {
@@ -30,12 +32,33 @@ export function VehicleTableRow({
   deleteVehicle,
 }: VehicleTableRowProps) {
   const fuel = vehicle.fuel ?? 0;
+  const [seatEdit, setSeatEdit] = useState(String(vehicle.seatingCapacity));
+
+  const commitSeatingCapacity = () => {
+    const value = Number(seatEdit);
+    if (value > 0 && value !== vehicle.seatingCapacity) {
+      void updateVehicle(vehicle.id, { seatingCapacity: value });
+    } else {
+      setSeatEdit(String(vehicle.seatingCapacity));
+    }
+  };
 
   return (
     <TableRow>
       <TableCell className="font-medium">{vehicle.registrationNumber}</TableCell>
       <TableCell>{vehicle.model}</TableCell>
       <TableCell>{vehicle.capacity}</TableCell>
+      <TableCell>
+        <Input
+          type="number"
+          min="1"
+          value={seatEdit}
+          disabled={disabled}
+          onChange={(e) => setSeatEdit(e.target.value)}
+          onBlur={commitSeatingCapacity}
+          className="w-16 h-7 text-sm px-2"
+        />
+      </TableCell>
       <TableCell>
         <Select
           value={vehicle.status}

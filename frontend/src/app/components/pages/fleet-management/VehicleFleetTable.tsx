@@ -89,6 +89,7 @@ export function VehicleFleetTable({
                   <TableHead>Registration</TableHead>
                   <TableHead>Model</TableHead>
                   <TableHead>Capacity</TableHead>
+                  <TableHead>Seats</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Driver</TableHead>
                   <TableHead>Route</TableHead>

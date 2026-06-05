@@ -245,6 +245,8 @@ async def update_trip(
                 vehicle.status = "idle"
             vehicle.driver_id = None
             vehicle.route_id = None
+            if new_status == "completed":
+                vehicle.current_occupancy = 0
 
     await db.flush()
     await audit_service.log(

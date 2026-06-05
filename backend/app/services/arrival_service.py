@@ -139,7 +139,7 @@ async def get_arrivals_for_stop(
         current_occupancy = int(
             v_state.get("current_occupancy", len(v_state.get("passengers", [])))
         )
-        seating_capacity = vehicle.capacity or 45
+        seating_capacity = vehicle.seating_capacity
         arrivals.append(
             ArrivalRead(
                 vehicle_id=vehicle.id,

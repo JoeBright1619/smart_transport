@@ -168,7 +168,7 @@ async def _simulate_passengers_at_stop(
     # 2. Board new passengers
     boarded_count = 0
     if current_stop_index < len(stops) - 1:
-        capacity = vehicle.capacity if vehicle.capacity else 30
+        capacity = vehicle.seating_capacity
         available_seats = capacity - len(remaining_passengers)
         boarded_count = (
             randint(0, min(5, available_seats))  # nosec B311

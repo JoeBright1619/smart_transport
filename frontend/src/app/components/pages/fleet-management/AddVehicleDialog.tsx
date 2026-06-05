@@ -84,6 +84,21 @@ export function AddVehicleDialog({
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="seatingCapacity">Seating Capacity</Label>
+              <Input
+                id="seatingCapacity"
+                type="number"
+                min="1"
+                value={form.seatingCapacity}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    seatingCapacity: event.target.value,
+                  }))
+                }
+              />
+            </div>
+            <div className="space-y-2">
               <Label>Status</Label>
               <Select
                 value={form.status}
