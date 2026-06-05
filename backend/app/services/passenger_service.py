@@ -1,4 +1,4 @@
-"""Passenger self-registration: register, verify email OTP, resend OTP."""
+"""Passenger self-registration, OTP verification, and profile management."""
 
 from __future__ import annotations
 
@@ -8,12 +8,20 @@ from hashlib import sha256
 from typing import Any
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
+from app.models.passenger_profile import PassengerProfile
+from app.models.route import Route, Stop
 from app.models.user import User
+from app.schemas.passenger import (
+    PassengerProfileRead,
+    PassengerProfileUpdate,
+    ResolvedRoute,
+    ResolvedStop,
+)
 from app.services import audit_service
 
 
@@ -172,3 +180,121 @@ async def resend_otp(db: AsyncSession, email: str) -> None:
     from app.core.email import send_verification
 
     send_verification(user.email, user.full_name, otp)
+
+
+# ---------------------------------------------------------------------------
+# Passenger profile
+# ---------------------------------------------------------------------------
+
+
+async def create_profile(db: AsyncSession, user_id: str) -> PassengerProfile:
+    """Create a blank PassengerProfile for a newly activated passenger."""
+    profile = PassengerProfile(user_id=user_id)
+    db.add(profile)
+    await db.flush()
+    return profile
+
+
+async def _resolve_profile(
+    db: AsyncSession, profile: PassengerProfile, user: User
+) -> PassengerProfileRead:
+    """Enrich a profile with resolved route and stop names."""
+    resolved_routes: list[ResolvedRoute] = []
+    if profile.preferred_routes:
+        rows = await db.execute(
+            select(Route.id, Route.name, Route.number, Route.color).where(
+                Route.id.in_(profile.preferred_routes), Route.is_deleted.is_(False)
+            )
+        )
+        resolved_routes = [
+            ResolvedRoute(id=r.id, name=r.name, number=r.number, color=r.color)
+            for r in rows
+        ]
+
+    resolved_stops: list[ResolvedStop] = []
+    if profile.preferred_stops:
+        rows = await db.execute(
+            select(Stop.id, Stop.name).where(
+                Stop.id.in_(profile.preferred_stops), Stop.is_deleted.is_(False)
+            )
+        )
+        resolved_stops = [ResolvedStop(id=r.id, name=r.name) for r in rows]
+
+    return PassengerProfileRead(
+        id=profile.id,
+        user_id=profile.user_id,
+        full_name=user.full_name,
+        email=user.email,
+        phone=profile.phone or user.phone,
+        preferred_routes=resolved_routes,
+        preferred_stops=resolved_stops,
+        notify_on_arrival=profile.notify_on_arrival,
+        notify_on_delay=profile.notify_on_delay,
+        total_trips_recorded=profile.total_trips_recorded,
+    )
+
+
+async def get_profile(db: AsyncSession, user: User) -> PassengerProfileRead:
+    profile = await db.scalar(
+        select(PassengerProfile).where(PassengerProfile.user_id == user.id)
+    )
+    if profile is None:
+        profile = await create_profile(db, user.id)
+        await db.flush()
+    return await _resolve_profile(db, profile, user)
+
+
+async def update_profile(
+    db: AsyncSession, user: User, data: PassengerProfileUpdate
+) -> PassengerProfileRead:
+    profile = await db.scalar(
+        select(PassengerProfile).where(PassengerProfile.user_id == user.id)
+    )
+    if profile is None:
+        profile = await create_profile(db, user.id)
+
+    if data.phone is not None:
+        profile.phone = data.phone
+    if data.preferred_routes is not None:
+        profile.preferred_routes = data.preferred_routes
+    if data.preferred_stops is not None:
+        profile.preferred_stops = data.preferred_stops
+    if data.notify_on_arrival is not None:
+        profile.notify_on_arrival = data.notify_on_arrival
+    if data.notify_on_delay is not None:
+        profile.notify_on_delay = data.notify_on_delay
+
+    await db.flush()
+    return await _resolve_profile(db, profile, user)
+
+
+async def list_passengers(
+    db: AsyncSession, page: int, page_size: int
+) -> tuple[list[dict[str, Any]], int]:
+    offset = (page - 1) * page_size
+    total = await db.scalar(
+        select(func.count())
+        .select_from(User)
+        .where(User.role == "passenger", User.is_deleted.is_(False))
+    )
+    rows = await db.execute(
+        select(User, PassengerProfile)
+        .outerjoin(PassengerProfile, PassengerProfile.user_id == User.id)
+        .where(User.role == "passenger", User.is_deleted.is_(False))
+        .order_by(User.created_at.desc())
+        .offset(offset)
+        .limit(page_size)
+    )
+    result = []
+    for user, profile in rows:
+        result.append(
+            {
+                "id": user.id,
+                "full_name": user.full_name,
+                "email": user.email,
+                "phone": (profile.phone if profile else None) or user.phone,
+                "total_trips_recorded": profile.total_trips_recorded if profile else 0,
+                "created_at": user.created_at,
+            }
+        )
+    return result, total or 0

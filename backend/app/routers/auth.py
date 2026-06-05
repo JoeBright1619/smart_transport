@@ -406,6 +406,7 @@ async def verify_email(
     db: AsyncSession = Depends(get_db),
 ) -> APIResponse[TokenResponse]:
     user = await passenger_service.verify_email_otp(db, email=data.email, otp=data.otp)
+    await passenger_service.create_profile(db, user.id)
     refresh_token = await _create_refresh_token(db, user.id)
     await audit_service.log(
         db=db,

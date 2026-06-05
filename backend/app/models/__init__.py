@@ -3,6 +3,7 @@ from app.models.analytics import AnalyticsRecord
 from app.models.audit_log import AuditLog
 from app.models.driver import Driver
 from app.models.maintenance import MaintenanceRecord
+from app.models.passenger_profile import PassengerProfile
 from app.models.refresh_token import RefreshToken
 from app.models.route import Route, RouteStop, Stop
 from app.models.tenant import Tenant
@@ -17,6 +18,7 @@ __all__ = [
     "AuditLog",
     "Driver",
     "MaintenanceRecord",
+    "PassengerProfile",
     "RefreshToken",
     "Route",
     "RouteStop",
