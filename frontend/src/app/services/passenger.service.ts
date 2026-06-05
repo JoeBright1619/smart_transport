@@ -43,6 +43,34 @@ export interface PassengerListItem {
   createdAt: string;
 }
 
+export interface RouteUsage {
+  routeId: string;
+  routeName: string;
+  tripCount: number;
+}
+
+export interface WeeklyTrips {
+  weekLabel: string;
+  trips: number;
+}
+
+export interface PassengerStats {
+  totalTrips: number;
+  routesUsed: RouteUsage[];
+  favouriteStop: string | null;
+  onTimeRate: number;
+  avgWaitMinutes: number;
+  thisWeekTrips: number;
+  lastWeekTrips: number;
+  weeklyTrips: WeeklyTrips[];
+  hasEnoughData: boolean;
+}
+
+export async function getMyStats(): Promise<PassengerStats> {
+  const res = await apiClient.get<ApiResponse<PassengerStats>>('/api/v1/passengers/me/stats');
+  return res.data.data;
+}
+
 export async function getMyProfile(): Promise<PassengerProfile> {
   const res = await apiClient.get<ApiResponse<PassengerProfile>>('/api/v1/passengers/me');
   return res.data.data;

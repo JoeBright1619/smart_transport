@@ -9,8 +9,9 @@ from app.schemas.passenger import (
     PassengerListItem,
     PassengerProfileRead,
     PassengerProfileUpdate,
+    PassengerStatsRead,
 )
-from app.services import passenger_service
+from app.services import passenger_service, passenger_stats_service
 
 router = APIRouter(prefix="/api/v1/passengers", tags=["passengers"])
 
@@ -28,6 +29,20 @@ async def get_my_profile(
     profile = await passenger_service.get_profile(db, current_user)
     await db.commit()
     return APIResponse(data=profile)
+
+
+@router.get(
+    "/me/stats",
+    response_model=APIResponse[PassengerStatsRead],
+    summary="Get my journey statistics",
+    description="Returns trip counts, top routes, favourite stop, and weekly breakdown.",
+)
+async def get_my_stats(
+    current_user: User = Depends(require_role("passenger")),
+    db: AsyncSession = Depends(get_db),
+) -> APIResponse[PassengerStatsRead]:
+    stats = await passenger_stats_service.get_passenger_stats(db, current_user.id)
+    return APIResponse(data=stats)
 
 
 @router.patch(

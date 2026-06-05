@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from datetime import date, datetime, timezone
 
-from sqlalchemy import and_, select
+from sqlalchemy import and_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.boarding_record import BoardingRecord
+from app.models.passenger_profile import PassengerProfile
 from app.models.route import Stop
 from app.models.vehicle import Vehicle
 from app.schemas.boarding import BoardingRecordRead, PassengerTripRead
@@ -21,6 +22,7 @@ async def record_stop_events(
     alighting_count: int,
     occupancy_after_boarding: int,
     now: datetime,
+    passenger_id: str | None = None,
 ) -> None:
     """Persist one boarding row and one alighting row for a stop visit."""
     if alighting_count > 0:
@@ -28,6 +30,7 @@ async def record_stop_events(
         db.add(
             BoardingRecord(
                 stop_id=stop_id,
+                passenger_id=passenger_id,
                 event_type="alighted",
                 count=alighting_count,
                 recorded_at=now,
@@ -40,6 +43,7 @@ async def record_stop_events(
         db.add(
             BoardingRecord(
                 stop_id=stop_id,
+                passenger_id=passenger_id,
                 event_type="boarded",
                 count=boarding_count,
                 recorded_at=now,
@@ -47,6 +51,12 @@ async def record_stop_events(
                 tenant_id=vehicle.tenant_id,
             )
         )
+        if passenger_id:
+            await db.execute(
+                update(PassengerProfile)
+                .where(PassengerProfile.user_id == passenger_id)
+                .values(total_trips_recorded=PassengerProfile.total_trips_recorded + 1)
+            )
 
 
 async def list_boardings(

@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Bus, Clock, History, Phone, User } from 'lucide-react';
+import { BarChart2, Bus, Clock, History, Phone, User } from 'lucide-react';
 import { useAuth } from '../../lib/auth-context';
 import { PassengerTracking } from './passenger-app/PassengerTracking';
 import { PassengerProfileSection } from './passenger-app/PassengerProfileSection';
+import { PassengerStats } from './passenger-app/PassengerStats';
 import { PassengerTrips } from './passenger-app/PassengerTrips';
 
-type Tab = 'tracking' | 'trips' | 'profile';
+type Tab = 'tracking' | 'trips' | 'stats' | 'profile';
 
 export function PassengerApp() {
   const { user } = useAuth();
@@ -70,6 +71,17 @@ export function PassengerApp() {
           )}
           {isPassenger && (
             <button
+              onClick={() => setTab('stats')}
+              className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                tab === 'stats' ? 'bg-white text-blue-700' : 'bg-white/15 text-white hover:bg-white/25'
+              }`}
+            >
+              <BarChart2 className="size-3.5" />
+              My Stats
+            </button>
+          )}
+          {isPassenger && (
+            <button
               onClick={() => setTab('profile')}
               className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                 tab === 'profile' ? 'bg-white text-blue-700' : 'bg-white/15 text-white hover:bg-white/25'
@@ -85,6 +97,7 @@ export function PassengerApp() {
       {/* Tab content */}
       {tab === 'tracking' && <PassengerTracking />}
       {tab === 'trips' && <PassengerTrips />}
+      {tab === 'stats' && <PassengerStats />}
       {tab === 'profile' && <PassengerProfileSection />}
     </div>
   );

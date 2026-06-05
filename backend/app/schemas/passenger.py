@@ -45,3 +45,26 @@ class PassengerListItem(APIModel):
     phone: str | None = None
     total_trips_recorded: int = 0
     created_at: datetime
+
+
+class RouteUsage(APIModel):
+    route_id: str
+    route_name: str
+    trip_count: int
+
+
+class WeeklyTrips(APIModel):
+    week_label: str
+    trips: int
+
+
+class PassengerStatsRead(APIModel):
+    total_trips: int
+    routes_used: list[RouteUsage] = Field(default_factory=list)
+    favourite_stop: str | None = None
+    on_time_rate: float = 0.0
+    avg_wait_minutes: float = 0.0
+    this_week_trips: int = 0
+    last_week_trips: int = 0
+    weekly_trips: list[WeeklyTrips] = Field(default_factory=list)
+    has_enough_data: bool

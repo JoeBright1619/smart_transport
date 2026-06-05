@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 12.3 — Passenger Journey Statistics Dashboard
+**Next task:** Task 13.1 — Vehicle Capacity Model and Simulated Occupancy Fields
 
 ---
 
@@ -318,7 +318,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `feat: passenger journey statistics dashboard`
 
-- [ ] Task 12.3 complete
+- [x] Task 12.3 complete
 
 ---
 
@@ -418,6 +418,6 @@ Fix steps:
 |---|---|---|
 | Phase 10 — Advanced Reporting & Filtered Analytics | 3 tasks | 3 / 3 ✅ |
 | Phase 11 — Authentication, Invitation & Registration Overhaul | 3 tasks | 3 / 3 ✅ |
-| Phase 12 — Passenger Profile, Simulated Boardings & Journey Statistics | 3 tasks | 2 / 3 |
+| Phase 12 — Passenger Profile, Simulated Boardings & Journey Statistics | 3 tasks | 3 / 3 ✅ |
 | Phase 13 — Passenger Capacity & Occupancy Tracking | 3 tasks | 0 / 3 |
-| **Total** | **12 tasks** | **8 / 12** |
+| **Total** | **12 tasks** | **9 / 12** |
