@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 11.2 — Passenger Self-Registration with Email OTP Verification
+**Next task:** Task 12.1 — Passenger Profile Management and Preferences
 
 ---
 
@@ -181,7 +181,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `feat: passenger self-registration with email OTP verification`
 
-- [ ] Task 11.2 complete
+- [x] Task 11.2 complete
 
 ---
 
@@ -211,7 +211,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `feat: multi-step passenger registration UX with password strength and OTP input`
 
-- [ ] Task 11.3 complete
+- [x] Task 11.3 complete
 
 ---
 
@@ -416,8 +416,8 @@ Fix steps:
 
 | Phase | Tasks | Status |
 |---|---|---|
-| Phase 10 — Advanced Reporting & Filtered Analytics | 3 tasks | 0 / 3 |
-| Phase 11 — Authentication, Invitation & Registration Overhaul | 3 tasks | 0 / 3 |
+| Phase 10 — Advanced Reporting & Filtered Analytics | 3 tasks | 3 / 3 ✅ |
+| Phase 11 — Authentication, Invitation & Registration Overhaul | 3 tasks | 3 / 3 ✅ |
 | Phase 12 — Passenger Profile, Simulated Boardings & Journey Statistics | 3 tasks | 0 / 3 |
 | Phase 13 — Passenger Capacity & Occupancy Tracking | 3 tasks | 0 / 3 |
-| **Total** | **12 tasks** | **0 / 12** |
+| **Total** | **12 tasks** | **6 / 12** |

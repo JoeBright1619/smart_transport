@@ -1,16 +1,63 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { Bus, Lock, Mail, Phone, User } from 'lucide-react';
+import { Bus, Check, Lock, Mail, Phone, User } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { PasswordStrengthMeter } from '../ui/PasswordStrengthMeter';
 import { useAuth } from '../../lib/auth-context';
 import * as authService from '../../services/auth.service';
 import { toast } from 'sonner';
 import { ApiError } from '../../lib/api-client';
 
 type Step = 1 | 2;
+
+const STEPS = [
+  { label: 'Account details' },
+  { label: 'Verify email' },
+] as const;
+
+function StepIndicator({ current }: { current: Step }) {
+  return (
+    <div className="flex items-center justify-center gap-2 mb-2">
+      {STEPS.map((s, i) => {
+        const num = (i + 1) as Step;
+        const done = current > num;
+        const active = current === num;
+        return (
+          <React.Fragment key={s.label}>
+            {i > 0 && (
+              <div
+                className={`h-px w-10 transition-colors duration-300 ${done ? 'bg-emerald-500' : 'bg-slate-200'}`}
+              />
+            )}
+            <div className="flex flex-col items-center gap-1">
+              <div
+                className={`flex size-7 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors duration-300 ${
+                  done
+                    ? 'border-emerald-500 bg-emerald-500 text-white'
+                    : active
+                    ? 'border-emerald-600 bg-white text-emerald-700'
+                    : 'border-slate-300 bg-white text-slate-400'
+                }`}
+              >
+                {done ? <Check className="size-3.5" /> : num}
+              </div>
+              <span
+                className={`text-[11px] font-medium ${
+                  active ? 'text-slate-700' : done ? 'text-emerald-600' : 'text-slate-400'
+                }`}
+              >
+                {s.label}
+              </span>
+            </div>
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+}
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -58,14 +105,13 @@ export function RegisterPage() {
       setCountdown(60);
       toast.success('Check your email for the verification code');
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message : 'Registration failed';
-      toast.error(msg);
+      toast.error(err instanceof ApiError ? err.message : 'Registration failed');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerify = async (e: React.FormEvent) => {
+  const handleVerify = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     try {
@@ -73,10 +119,7 @@ export function RegisterPage() {
       loginFromToken(response.accessToken, response.user);
       navigate('/');
     } catch (err) {
-      const msg = err instanceof ApiError
-        ? (err.data?.error?.message ?? err.message)
-        : 'Verification failed';
-      toast.error(msg);
+      toast.error(err instanceof ApiError ? err.message : 'Verification failed');
     } finally {
       setLoading(false);
     }
@@ -89,10 +132,7 @@ export function RegisterPage() {
       setCountdown(60);
       toast.success('New verification code sent');
     } catch (err) {
-      const msg = err instanceof ApiError
-        ? (err.data?.error?.message ?? err.message)
-        : 'Could not resend code';
-      toast.error(msg);
+      toast.error(err instanceof ApiError ? err.message : 'Could not resend code');
     } finally {
       setLoading(false);
     }
@@ -101,11 +141,12 @@ export function RegisterPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 px-4 py-8">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
+        <CardHeader className="text-center pb-2">
           <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-emerald-50">
             <Bus className="size-8 text-emerald-700" />
           </div>
-          <CardTitle className="text-2xl">
+          <StepIndicator current={step} />
+          <CardTitle className="text-2xl mt-2">
             {step === 1 ? 'Create your account' : 'Verify your email'}
           </CardTitle>
           <CardDescription>
@@ -177,7 +218,7 @@ export function RegisterPage() {
                     required
                   />
                 </div>
-                <p className="text-xs text-slate-500">Minimum 8 characters</p>
+                <PasswordStrengthMeter password={password} />
               </div>
 
               <div className="space-y-2">
@@ -194,13 +235,13 @@ export function RegisterPage() {
                     required
                   />
                 </div>
-                {passwordsMatch ? null : (
+                {!passwordsMatch && (
                   <p className="text-xs text-red-600">Passwords do not match</p>
                 )}
               </div>
 
               <Button type="submit" className="w-full" disabled={loading || !passwordsMatch}>
-                {loading ? 'Creating account...' : 'Create Account'}
+                {loading ? 'Creating account...' : 'Continue'}
               </Button>
             </form>
           ) : (
@@ -215,6 +256,7 @@ export function RegisterPage() {
                   className="text-center text-2xl tracking-[0.5em]"
                   maxLength={6}
                   required
+                  autoFocus
                 />
                 <p className="text-xs text-slate-500">Code expires in 15 minutes</p>
               </div>
@@ -223,9 +265,9 @@ export function RegisterPage() {
                 {loading ? 'Verifying...' : 'Verify Email'}
               </Button>
 
-              <div className="text-center text-sm text-slate-600">
+              <div className="text-center text-sm">
                 {countdown > 0 ? (
-                  <span>Resend code in {countdown}s</span>
+                  <span className="text-slate-500">Resend code in {countdown}s</span>
                 ) : (
                   <button
                     type="button"
@@ -238,11 +280,11 @@ export function RegisterPage() {
                 )}
               </div>
 
-              <div className="text-center text-sm text-slate-600">
+              <div className="text-center text-sm">
                 <button
                   type="button"
-                  onClick={() => setStep(1)}
-                  className="text-slate-500 hover:underline"
+                  onClick={() => { setStep(1); setOtp(''); }}
+                  className="text-slate-500 hover:underline text-xs"
                 >
                   Use a different email
                 </button>
