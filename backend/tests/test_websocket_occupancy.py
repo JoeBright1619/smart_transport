@@ -200,3 +200,72 @@ async def test_build_vehicle_update_includes_occupancy_fields(
     assert entry["currentOccupancy"] == 12
     assert entry["seatingCapacity"] == vehicle.seating_capacity
     assert entry["remainingSeats"] == vehicle.seating_capacity - 12
+
+
+# ---------------------------------------------------------------------------
+# Task 1.1 — Realistic boarding cap + DB persistence tests
+# ---------------------------------------------------------------------------
+
+
+async def test_boarding_count_never_exceeds_seating_capacity(db: AsyncSession, vehicle):
+    """After many stops, on-board passenger count must stay within seating capacity."""
+    from app.websocket.route_simulation import _simulate_passengers_at_stop
+
+    stops = _make_stops()
+    state: dict = {"passengers": [], "current_occupancy": 0}
+    now = datetime.now(timezone.utc)
+
+    with patch(
+        "app.websocket.route_simulation.manager.publish_to_tenant",
+        new_callable=AsyncMock,
+    ):
+        for _ in range(20):
+            for stop_idx in range(len(stops) - 1):
+                await _simulate_passengers_at_stop(
+                    db, vehicle, stops, stop_idx, state, now
+                )
+
+    on_board = len(state["passengers"])
+    assert on_board >= 0
+    assert on_board <= vehicle.seating_capacity
+
+
+async def test_alighting_never_makes_occupancy_negative(db: AsyncSession, vehicle):
+    """Occupancy must never go below zero after alighting."""
+    from app.websocket.route_simulation import _simulate_passengers_at_stop
+
+    stops = _make_stops()
+    state: dict = {"passengers": [], "current_occupancy": 0}
+    now = datetime.now(timezone.utc)
+
+    with patch(
+        "app.websocket.route_simulation.manager.publish_to_tenant",
+        new_callable=AsyncMock,
+    ):
+        for stop_idx in range(len(stops)):
+            await _simulate_passengers_at_stop(db, vehicle, stops, stop_idx, state, now)
+            assert state["current_occupancy"] >= 0
+
+
+async def test_vehicle_current_occupancy_persisted_to_db(db: AsyncSession, vehicle):
+    """vehicle.current_occupancy must be set to match in-memory state after a tick."""
+    from sqlalchemy import select
+
+    from app.models.vehicle import Vehicle
+    from app.websocket.route_simulation import _simulate_passengers_at_stop
+
+    stops = _make_stops()
+    state: dict = {"passengers": [], "current_occupancy": 0}
+    now = datetime.now(timezone.utc)
+
+    with patch(
+        "app.websocket.route_simulation.manager.publish_to_tenant",
+        new_callable=AsyncMock,
+    ):
+        await _simulate_passengers_at_stop(db, vehicle, stops, 0, state, now)
+
+    # Refresh from DB to confirm the flush wrote the value
+    fresh = await db.scalar(select(Vehicle).where(Vehicle.id == vehicle.id))
+    assert fresh is not None
+    assert fresh.current_occupancy == state["current_occupancy"]
+    assert fresh.current_occupancy == len(state["passengers"])

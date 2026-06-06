@@ -171,8 +171,9 @@ async def _simulate_passengers_at_stop(
     if current_stop_index < len(stops) - 1:
         capacity = vehicle.seating_capacity
         available_seats = capacity - len(remaining_passengers)
+        board_cap = max(1, vehicle.seating_capacity // 6)
         boarded_count = (
-            randint(0, min(5, available_seats))  # nosec B311
+            randint(0, min(board_cap, available_seats))  # nosec B311
             if available_seats > 0
             else 0
         )
@@ -197,34 +198,38 @@ async def _simulate_passengers_at_stop(
     state["passengers"] = remaining_passengers
     state["current_occupancy"] = len(remaining_passengers)
 
-    # 3. Broadcast immediate occupancy update
+    occupancy_after = len(remaining_passengers)
+
+    # 3. Persist occupancy to DB so value survives page reloads
+    vehicle.current_occupancy = occupancy_after
+    await db.flush()
+
+    # 4. Broadcast immediate occupancy update
     await manager.publish_to_tenant(
         vehicle.tenant_id,
         {
             "type": "vehicle_occupancy_updated",
             "vehicleId": vehicle.id,
-            "currentOccupancy": len(remaining_passengers),
+            "currentOccupancy": occupancy_after,
             "seatingCapacity": vehicle.seating_capacity,
-            "remainingSeats": max(
-                0, vehicle.seating_capacity - len(remaining_passengers)
-            ),
+            "remainingSeats": max(0, vehicle.seating_capacity - occupancy_after),
         },
     )
 
-    # 4. Persist boarding records
+    # 5. Persist boarding records
     if boarded_count > 0 or alighted_count > 0:
         await boarding_service.record_stop_events(
             db,
             vehicle,
             stops[current_stop_index].id,
             boarded_count,
-            min(alighted_count, 3),
-            len(remaining_passengers),
+            alighted_count,
+            occupancy_after,
             now,
             stop_name=stops[current_stop_index].name,
         )
 
-    # 4. Add to live daily revenue
+    # 6. Add to live daily revenue
     if revenue > 0:
         await upsert_daily_analytics(
             db=db,
