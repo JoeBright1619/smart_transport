@@ -35,6 +35,7 @@ class Alert(Base):
             "geofence",
             "speeding",
             "info",
+            "capacity",
             name="alert_type_enum",
         ),
         nullable=False,

@@ -1,4 +1,4 @@
-import { AlertTriangle, Bell, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { AlertTriangle, Bell, CheckCircle, Clock, Users, XCircle } from 'lucide-react';
 import type { AlertRead, AlertSeverity, AlertType } from '../../../lib/api-types';
 
 export type AlertTab = 'unacknowledged' | 'acknowledged' | 'all';
@@ -28,6 +28,7 @@ export const alertTypeOptions: Array<AlertType | 'all'> = [
   'geofence',
   'speeding',
   'info',
+  'capacity',
 ];
 
 export function tabAcknowledgedValue(tab: AlertTab): boolean | undefined {
@@ -69,6 +70,8 @@ export function alertIcon(type: AlertType) {
       return XCircle;
     case 'maintenance':
       return AlertTriangle;
+    case 'capacity':
+      return Users;
     default:
       return Bell;
   }

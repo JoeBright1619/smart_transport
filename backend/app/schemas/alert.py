@@ -5,7 +5,9 @@ from pydantic import Field
 
 from app.schemas.base import APIModel
 
-AlertType = Literal["delay", "breakdown", "maintenance", "geofence", "speeding", "info"]
+AlertType = Literal[
+    "delay", "breakdown", "maintenance", "geofence", "speeding", "info", "capacity"
+]
 AlertSeverity = Literal["low", "medium", "high", "critical"]
 
 

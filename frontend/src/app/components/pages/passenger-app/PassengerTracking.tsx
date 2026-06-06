@@ -161,16 +161,32 @@ export function PassengerTracking() {
                           </div>
                         </div>
                         {a.seatingCapacity > 0 && (
-                          <div className="mt-3 pt-3 border-t">
-                            <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                          <div className="mt-3 pt-3 border-t space-y-2">
+                            <div className="flex items-center justify-between text-xs text-slate-500">
                               <span>{a.currentOccupancy} / {a.seatingCapacity} seats taken</span>
-                              <span className={a.remainingSeats <= 5 ? 'text-orange-500 font-medium' : 'text-green-600'}>
-                                {a.remainingSeats} free
-                              </span>
+                              {a.remainingSeats === 0 ? (
+                                <span className="font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
+                                  Bus is full — wait for next bus
+                                </span>
+                              ) : a.remainingSeats < 10 ? (
+                                <span className="font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                                  Nearly full ({a.remainingSeats} remaining)
+                                </span>
+                              ) : (
+                                <span className="font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
+                                  Seats available ({a.remainingSeats} remaining)
+                                </span>
+                              )}
                             </div>
                             <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
                               <div
-                                className={`h-full rounded-full transition-all ${a.remainingSeats <= 5 ? 'bg-orange-400' : 'bg-green-500'}`}
+                                className={`h-full rounded-full transition-all ${
+                                  a.remainingSeats === 0
+                                    ? 'bg-red-500'
+                                    : a.remainingSeats < 10
+                                    ? 'bg-amber-400'
+                                    : 'bg-green-500'
+                                }`}
                                 style={{ width: `${Math.min(100, (a.currentOccupancy / a.seatingCapacity) * 100)}%` }}
                               />
                             </div>

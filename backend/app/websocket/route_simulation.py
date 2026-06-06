@@ -221,6 +221,7 @@ async def _simulate_passengers_at_stop(
             min(alighted_count, 3),
             len(remaining_passengers),
             now,
+            stop_name=stops[current_stop_index].name,
         )
 
     # 4. Add to live daily revenue

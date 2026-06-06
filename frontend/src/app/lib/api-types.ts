@@ -262,7 +262,18 @@ export type AlertType =
   | 'maintenance'
   | 'geofence'
   | 'speeding'
-  | 'info';
+  | 'info'
+  | 'capacity';
+
+export type OccupancyStatus = 'available' | 'nearly_full' | 'full';
+
+export interface VehicleOccupancyRead {
+  vehicleId: string;
+  seatingCapacity: number;
+  currentOccupancy: number;
+  remainingSeats: number;
+  status: OccupancyStatus;
+}
 export type AlertSeverity = 'low' | 'medium' | 'high' | 'critical';
 
 export interface AlertRead {

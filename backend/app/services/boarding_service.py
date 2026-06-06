@@ -23,6 +23,7 @@ async def record_stop_events(
     occupancy_after_boarding: int,
     now: datetime,
     passenger_id: str | None = None,
+    stop_name: str = "",
 ) -> None:
     """Persist one boarding row and one alighting row for a stop visit."""
     if alighting_count > 0:
@@ -57,6 +58,13 @@ async def record_stop_events(
                 .where(PassengerProfile.user_id == passenger_id)
                 .values(total_trips_recorded=PassengerProfile.total_trips_recorded + 1)
             )
+
+    if occupancy_after_boarding >= vehicle.seating_capacity:
+        from app.services import alert_service  # lazy: avoid circular import
+
+        await alert_service.create_capacity_alert(
+            db, vehicle, occupancy_after_boarding, stop_name
+        )
 
 
 async def list_boardings(

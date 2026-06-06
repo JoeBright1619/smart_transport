@@ -166,3 +166,76 @@ async def auto_generate(
     db.add(alert)
     await db.flush()
     return alert
+
+
+async def create_capacity_alert(
+    db: AsyncSession,
+    vehicle: Vehicle,
+    current_occupancy: int,
+    stop_name: str,
+) -> Alert | None:
+    """Create a capacity alert when a bus reaches or exceeds seating capacity.
+
+    Suppressed if an unacknowledged capacity alert already exists for this vehicle.
+    """
+    from app.websocket.manager import (
+        manager,
+    )  # lazy: avoid circular import at module load
+
+    if current_occupancy < vehicle.seating_capacity:
+        return None
+
+    existing = await db.execute(
+        select(Alert).where(
+            Alert.tenant_id == vehicle.tenant_id,
+            Alert.type == "capacity",
+            Alert.vehicle_id == vehicle.id,
+            Alert.is_acknowledged.is_(False),
+        )
+    )
+    if existing.scalars().first():
+        return None
+
+    if current_occupancy > vehicle.seating_capacity:
+        severity = "critical"
+        title = f"Excess Passengers: {vehicle.registration_number}"
+        message = (
+            f"{vehicle.registration_number} carrying {current_occupancy} passengers "
+            f"({vehicle.seating_capacity} seats) at stop: {stop_name}."
+        )
+    else:
+        severity = "high"
+        title = f"Bus Full: {vehicle.registration_number}"
+        message = (
+            f"{vehicle.registration_number} is at full capacity ({vehicle.seating_capacity} seats) "
+            f"at stop: {stop_name}."
+        )
+
+    alert = Alert(
+        tenant_id=vehicle.tenant_id,
+        type="capacity",
+        severity=severity,
+        title=title,
+        message=message,
+        vehicle_id=vehicle.id,
+        is_acknowledged=False,
+    )
+    db.add(alert)
+    await db.flush()
+
+    await manager.publish_to_tenant(
+        vehicle.tenant_id,
+        {
+            "type": "new_alert",
+            "alert": {
+                "id": alert.id,
+                "type": alert.type,
+                "severity": alert.severity,
+                "title": alert.title,
+                "message": alert.message,
+                "vehicleId": alert.vehicle_id,
+                "isAcknowledged": alert.is_acknowledged,
+            },
+        },
+    )
+    return alert

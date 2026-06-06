@@ -6,7 +6,12 @@ from app.core.dependencies import get_current_tenant, get_current_user, require_
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, APIResponse, Meta
-from app.schemas.vehicle import VehicleCreate, VehicleRead, VehicleUpdate
+from app.schemas.vehicle import (
+    VehicleCreate,
+    VehicleOccupancyRead,
+    VehicleRead,
+    VehicleUpdate,
+)
 from app.services import vehicle_service
 
 router = APIRouter(prefix="/api/v1/vehicles", tags=["vehicles"])
@@ -53,6 +58,39 @@ async def create_vehicle(
     vehicle = await vehicle_service.create_vehicle(db, data, tenant.id, current_user.id)
     await db.commit()
     return APIResponse(data=VehicleRead.model_validate(vehicle))
+
+
+@router.get(
+    "/{id}/occupancy",
+    response_model=APIResponse[VehicleOccupancyRead],
+    dependencies=[
+        Depends(require_role("admin", "operator", "dispatcher", "passenger"))
+    ],
+    summary="Get vehicle occupancy",
+    description="Returns current seat occupancy and availability status for a vehicle.",
+)
+async def get_vehicle_occupancy(
+    id: str,
+    db: AsyncSession = Depends(get_db),
+    tenant: Tenant = Depends(get_current_tenant),
+):
+    vehicle = await vehicle_service.get_vehicle_by_id(db, id, tenant.id)
+    remaining = max(0, vehicle.seating_capacity - vehicle.current_occupancy)
+    if remaining >= 10:
+        occ_status = "available"
+    elif remaining >= 1:
+        occ_status = "nearly_full"
+    else:
+        occ_status = "full"
+    return APIResponse(
+        data=VehicleOccupancyRead(
+            vehicle_id=vehicle.id,
+            seating_capacity=vehicle.seating_capacity,
+            current_occupancy=vehicle.current_occupancy,
+            remaining_seats=remaining,
+            status=occ_status,
+        )
+    )
 
 
 @router.get(

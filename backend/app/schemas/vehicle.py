@@ -7,6 +7,7 @@ from app.schemas.base import APIModel
 
 VehicleStatus = Literal["active", "idle", "maintenance", "offline"]
 EngineStatus = Literal["good", "warning", "critical"]
+OccupancyStatus = Literal["available", "nearly_full", "full"]
 
 
 class Location(APIModel):
@@ -79,3 +80,11 @@ class VehicleRead(APIModel):
     @computed_field
     def remaining_seats(self) -> int:
         return max(0, self.seating_capacity - self.current_occupancy)
+
+
+class VehicleOccupancyRead(APIModel):
+    vehicle_id: str = Field(json_schema_extra={"example": "veh-uuid"})
+    seating_capacity: int = Field(json_schema_extra={"example": 45})
+    current_occupancy: int = Field(json_schema_extra={"example": 38})
+    remaining_seats: int = Field(json_schema_extra={"example": 7})
+    status: OccupancyStatus = Field(json_schema_extra={"example": "nearly_full"})

@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 13.3 — Capacity Alerts and Passenger-Facing Seat Availability
+**Next task:** All tasks complete ✅
 
 ---
 
@@ -408,7 +408,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `feat: capacity alerts for full buses with passenger-facing seat availability`
 
-- [ ] Task 13.3 complete
+- [x] Task 13.3 complete
 
 ---
 
@@ -419,5 +419,5 @@ Fix steps:
 | Phase 10 — Advanced Reporting & Filtered Analytics | 3 tasks | 3 / 3 ✅ |
 | Phase 11 — Authentication, Invitation & Registration Overhaul | 3 tasks | 3 / 3 ✅ |
 | Phase 12 — Passenger Profile, Simulated Boardings & Journey Statistics | 3 tasks | 3 / 3 ✅ |
-| Phase 13 — Passenger Capacity & Occupancy Tracking | 3 tasks | 1 / 3 |
+| Phase 13 — Passenger Capacity & Occupancy Tracking | 3 tasks | 3 / 3 ✅ |
 | **Total** | **12 tasks** | **10 / 12** |
