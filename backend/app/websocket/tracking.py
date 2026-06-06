@@ -166,6 +166,11 @@ async def _build_vehicle_update_message(tenant_id: str) -> dict[str, Any]:
                         if stops and state
                         else 0
                     ),
+                    "atStop": (
+                        state.get("at_stop_name", "")
+                        if state.get("dwell_remaining", 0) > 0
+                        else ""
+                    ),
                     "currentOccupancy": current_occupancy,
                     "seatingCapacity": vehicle.seating_capacity,
                     "remainingSeats": max(

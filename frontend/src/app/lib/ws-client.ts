@@ -45,6 +45,7 @@ export class VehicleTrackingSocket {
               engineStatus: v.engineStatus,
               nextStopName: v.nextStopName ?? '',
               progressPct: v.progressPct ?? 0,
+              atStop: v.atStop ?? '',
               currentOccupancy: v.currentOccupancy,
               seatingCapacity: v.seatingCapacity,
               remainingSeats: v.remainingSeats,

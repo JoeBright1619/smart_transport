@@ -6,6 +6,7 @@ import type { VehicleRead } from '../../../lib/api-types';
 export type TrackedVehicle = VehicleRead & {
   nextStopName?: string;
   progressPct?: number;
+  atStop?: string;
 };
 
 export const STATUS_COLOR: Record<string, string> = {

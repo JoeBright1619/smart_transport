@@ -21,6 +21,7 @@ OPEN_ROAD_SPEED = 35
 DECEL_START_DIST = 250
 FUEL_CONSUMPTION_PCT_PER_KM = 1.0
 LOW_FUEL_THRESHOLD = 15
+DWELL_TICKS = 2
 
 _state: dict[str, dict[str, Any]] = {}
 _route_stops_cache: dict[str, list["StopPoint"]] = {}
@@ -75,6 +76,24 @@ async def advance_vehicle(
         return None
 
     state = get_or_init_state(vehicle.id, len(stops))
+
+    # Bus pauses at each stop for DWELL_TICKS before moving on
+    dwell = int(state.get("dwell_remaining", 0))
+    if dwell > 0:
+        state["dwell_remaining"] = dwell - 1
+        fuel_pct = float(
+            state.get("fuel_pct", vehicle.fuel if vehicle.fuel is not None else 100)
+        )
+        vehicle.fuel = round(fuel_pct)
+        return {
+            "lat": vehicle.lat,
+            "lng": vehicle.lng,
+            "speed": 0,
+            "heading": vehicle.heading or 0,
+            "fuel": round(fuel_pct),
+            "fuel_drop": 0.0,
+        }
+
     target = stops[int(state["next_stop_index"])]
     dist_m = haversine_distance(vehicle.lat, vehicle.lng, target.lat, target.lng)
     current_speed = vehicle.speed or 0
@@ -99,6 +118,8 @@ async def advance_vehicle(
 
         current_stop_index = int(state["next_stop_index"])
         state["next_stop_index"] = (current_stop_index + 1) % len(stops)
+        state["dwell_remaining"] = DWELL_TICKS
+        state["at_stop_name"] = stops[current_stop_index].name
 
         await _simulate_passengers_at_stop(
             db, vehicle, stops, current_stop_index, state, now
@@ -154,39 +175,78 @@ async def _simulate_passengers_at_stop(
 ) -> None:
     """Simulate passengers boarding and alighting at a stop and calculate revenue."""
     passengers = state.setdefault("passengers", [])
+    is_terminal = current_stop_index == 0
+    is_last_stop = current_stop_index == len(stops) - 1
+    capacity = vehicle.seating_capacity
 
-    # 1. Alight passengers
+    # 1. Alight passengers (and keep through-passengers at the last stop)
     remaining_passengers = []
     revenue = 0.0
     alighted_count = 0
-    for p in passengers:
-        if p["dest_index"] == current_stop_index:
-            revenue += p["distance_km"] * 60.0
-            alighted_count += 1
-        else:
-            remaining_passengers.append(p)
+
+    if is_last_stop and len(stops) > 2:
+        # Keep 3-6 passengers who stay on for the return trip
+        n_through = min(randint(3, 6), len(passengers))  # nosec B311
+        for i, p in enumerate(passengers):
+            if i < n_through:
+                # Reassign destination for the next loop
+                remaining_passengers.append(
+                    {
+                        "origin_index": 0,
+                        "dest_index": randint(1, len(stops) - 1),  # nosec B311
+                        "distance_km": 1.0,
+                    }
+                )
+            elif p["dest_index"] == current_stop_index:
+                revenue += p["distance_km"] * 60.0
+                alighted_count += 1
+            else:
+                remaining_passengers.append(p)
+    else:
+        for p in passengers:
+            if p["dest_index"] == current_stop_index:
+                revenue += p["distance_km"] * 60.0
+                alighted_count += 1
+            else:
+                remaining_passengers.append(p)
 
     # 2. Board new passengers
     boarded_count = 0
-    if current_stop_index < len(stops) - 1:
-        capacity = vehicle.seating_capacity
-        available_seats = capacity - len(remaining_passengers)
-        board_cap = max(1, vehicle.seating_capacity // 6)
-        boarded_count = (
-            randint(0, min(board_cap, available_seats))  # nosec B311
-            if available_seats > 0
-            else 0
-        )
+    available_seats = capacity - len(remaining_passengers)
 
+    if is_terminal and len(stops) > 1 and available_seats > 0:
+        # Terminal: fill 70–85% of seats — bus departs well-loaded from the station
+        target = randint(int(capacity * 0.70), int(capacity * 0.85))  # nosec B311
+        boarded_count = min(target, available_seats)
+        for _ in range(boarded_count):
+            dest_index = randint(1, len(stops) - 1)  # nosec B311
+            dist_m = sum(
+                haversine_distance(
+                    stops[i].lat, stops[i].lng, stops[i + 1].lat, stops[i + 1].lng
+                )
+                for i in range(0, dest_index)
+            )
+            remaining_passengers.append(
+                {
+                    "origin_index": current_stop_index,
+                    "dest_index": dest_index,
+                    "distance_km": dist_m / 1000.0,
+                }
+            )
+    elif not is_last_stop and available_seats > 0:
+        # Intermediate stop: board 3–7 passengers (guaranteed at least some)
+        board_cap = max(1, capacity // 6)
+        lower = min(max(1, board_cap // 2), available_seats)
+        upper = min(board_cap, available_seats)
+        boarded_count = randint(lower, upper)  # nosec B311
         for _ in range(boarded_count):
             dest_index = randint(current_stop_index + 1, len(stops) - 1)  # nosec B311
-
-            dist_m = 0.0
-            for i in range(current_stop_index, dest_index):
-                s1 = stops[i]
-                s2 = stops[i + 1]
-                dist_m += haversine_distance(s1.lat, s1.lng, s2.lat, s2.lng)
-
+            dist_m = sum(
+                haversine_distance(
+                    stops[i].lat, stops[i].lng, stops[i + 1].lat, stops[i + 1].lng
+                )
+                for i in range(current_stop_index, dest_index)
+            )
             remaining_passengers.append(
                 {
                     "origin_index": current_stop_index,

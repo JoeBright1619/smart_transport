@@ -53,7 +53,8 @@ export function VehicleTracking() {
                   currentLocation: { lat: pos.lat, lng: pos.lng },
                   speed: pos.speed, heading: pos.heading, fuel: pos.fuel,
                   status: pos.status, engineStatus: pos.engineStatus || updated[idx].engineStatus,
-                  nextStopName: pos.nextStopName, progressPct: pos.progressPct, lastUpdate: pos.timestamp,
+                  nextStopName: pos.nextStopName, progressPct: pos.progressPct,
+                  atStop: pos.atStop, lastUpdate: pos.timestamp,
                   ...(pos.currentOccupancy !== undefined && {
                     currentOccupancy: pos.currentOccupancy,
                     seatingCapacity: pos.seatingCapacity ?? updated[idx].seatingCapacity,
@@ -72,7 +73,8 @@ export function VehicleTracking() {
                 currentLocation: { lat: pos.lat, lng: pos.lng },
                 speed: pos.speed, heading: pos.heading, fuel: pos.fuel,
                 status: pos.status, engineStatus: pos.engineStatus || prev.engineStatus,
-                nextStopName: pos.nextStopName, progressPct: pos.progressPct, lastUpdate: pos.timestamp,
+                nextStopName: pos.nextStopName, progressPct: pos.progressPct,
+                atStop: pos.atStop, lastUpdate: pos.timestamp,
                 ...(pos.currentOccupancy !== undefined && {
                   currentOccupancy: pos.currentOccupancy,
                   seatingCapacity: pos.seatingCapacity ?? prev.seatingCapacity,

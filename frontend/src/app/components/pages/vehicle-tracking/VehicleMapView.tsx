@@ -58,13 +58,17 @@ export function VehicleMapView({ vehicles, routes, drivers, selectedVehicle, sel
             })}
 
             {selectedRoute?.stops.map((stop) => {
-              const isNext = stop.name === selectedVehicle?.nextStopName;
+              const isAt = stop.name === selectedVehicle?.atStop;
+              const isNext = !isAt && stop.name === selectedVehicle?.nextStopName;
               return (
-                <CircleMarker key={stop.id} center={[stop.lat, stop.lng]} radius={isNext ? 9 : 6}
-                  fillColor={isNext ? '#F59E0B' : '#3B82F6'} color="white" weight={2} fillOpacity={0.9}>
+                <CircleMarker key={stop.id} center={[stop.lat, stop.lng]}
+                  radius={isAt || isNext ? 9 : 6}
+                  fillColor={isAt ? '#F59E0B' : isNext ? '#3B82F6' : '#3B82F6'}
+                  color={isAt ? '#D97706' : 'white'} weight={isAt ? 3 : 2} fillOpacity={0.9}>
                   <Popup>
                     <p className="font-medium text-sm">{stop.name}</p>
-                    {isNext && <p className="text-xs text-amber-600 mt-0.5">Next stop</p>}
+                    {isAt && <p className="text-xs text-amber-600 mt-0.5">Bus stopped here</p>}
+                    {isNext && <p className="text-xs text-blue-600 mt-0.5">Next stop</p>}
                   </Popup>
                 </CircleMarker>
               );
@@ -93,7 +97,10 @@ export function VehicleMapView({ vehicles, routes, drivers, selectedVehicle, sel
                       <p className="text-sm text-slate-600">{vehicle.model}</p>
                       {route && <p className="text-sm text-blue-600">Route {route.number} — {route.name}</p>}
                       {driver && <p className="text-sm">Driver: {driver.name}</p>}
-                      {vehicle.nextStopName && <p className="text-sm text-amber-600">Next: {vehicle.nextStopName}</p>}
+                      {vehicle.atStop
+                        ? <p className="text-sm font-medium text-amber-600">At stop: {vehicle.atStop}</p>
+                        : vehicle.nextStopName && <p className="text-sm text-amber-600">Next: {vehicle.nextStopName}</p>
+                      }
                       {vehicle.status === 'active' && (
                         <p className="text-sm" style={{ color: occupancyColor(occupancyRatio) }}>
                           {vehicle.currentOccupancy} / {vehicle.seatingCapacity} seats · {vehicle.remainingSeats} remaining
@@ -157,10 +164,19 @@ export function VehicleMapView({ vehicles, routes, drivers, selectedVehicle, sel
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Next Stop</p>
-                  <p className="font-medium text-sm mt-1">{selectedVehicle.nextStopName || '—'}</p>
-                  {selectedVehicle.progressPct !== undefined && (
-                    <p className="text-xs text-slate-400">{selectedVehicle.progressPct}% to stop</p>
+                  <p className="text-xs text-slate-500">{selectedVehicle.atStop ? 'At Stop' : 'Next Stop'}</p>
+                  {selectedVehicle.atStop ? (
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="inline-block size-2 shrink-0 rounded-full bg-amber-500 animate-pulse" />
+                      <p className="font-medium text-sm text-amber-600">{selectedVehicle.atStop}</p>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="font-medium text-sm mt-1">{selectedVehicle.nextStopName || '—'}</p>
+                      {selectedVehicle.progressPct !== undefined && (
+                        <p className="text-xs text-slate-400">{selectedVehicle.progressPct}% to stop</p>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

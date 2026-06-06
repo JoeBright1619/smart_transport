@@ -481,6 +481,7 @@ export type WsVehiclePosition = {
   engineStatus?: EngineStatus;
   nextStopName?: string;
   progressPct?: number;
+  atStop?: string;
   currentOccupancy?: number;
   seatingCapacity?: number;
   remainingSeats?: number;

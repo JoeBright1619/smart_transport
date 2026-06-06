@@ -81,7 +81,12 @@ export function VehicleListPanel({
                     </div>
                     <p className="text-xs text-slate-500 mt-1">{vehicle.model}</p>
                     {route && <p className="text-xs text-blue-600 mt-1">Route {route.number}</p>}
-                    {vehicle.nextStopName && (
+                    {vehicle.atStop ? (
+                      <div className="mt-1 flex items-center gap-1.5">
+                        <span className="inline-block size-2 shrink-0 rounded-full bg-amber-500 animate-pulse" />
+                        <p className="text-xs font-medium text-amber-600">At stop: {vehicle.atStop}</p>
+                      </div>
+                    ) : vehicle.nextStopName ? (
                       <div className="mt-1">
                         <p className="text-xs text-slate-500">Next: {vehicle.nextStopName}</p>
                         <div className="mt-0.5 h-1 w-full rounded-full bg-slate-200">
@@ -91,7 +96,7 @@ export function VehicleListPanel({
                           />
                         </div>
                       </div>
-                    )}
+                    ) : null}
                     {driver && <p className="text-xs text-slate-500">{driver.name}</p>}
                   </div>
                   <Badge
