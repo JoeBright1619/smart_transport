@@ -470,9 +470,19 @@ export type WsVehiclePosition = {
   engineStatus?: EngineStatus;
   nextStopName?: string;
   progressPct?: number;
+  currentOccupancy?: number;
+  seatingCapacity?: number;
+  remainingSeats?: number;
 };
 
-export type WsMessage = {
-  type: 'vehicle_positions';
-  vehicles: WsVehiclePosition[];
+export type WsOccupancyUpdate = {
+  type: 'vehicle_occupancy_updated';
+  vehicleId: string;
+  currentOccupancy: number;
+  seatingCapacity: number;
+  remainingSeats: number;
 };
+
+export type WsMessage =
+  | { type: 'vehicle_positions'; vehicles: WsVehiclePosition[] }
+  | WsOccupancyUpdate;

@@ -68,7 +68,30 @@ async def test_list_returns_401_without_token(client):
 
 
 async def test_create_happy_path(client, admin):
-    r = await client.post("/api/v1/routes", json=_CREATE, headers=auth_headers(admin))
+    # Routes now reference existing global stops by ID — create them first.
+    stop_a = (
+        await client.post(
+            "/api/v1/stops",
+            json={"name": "Stop A", "lat": -1.95, "lng": 30.06},
+            headers=auth_headers(admin),
+        )
+    ).json()["data"]
+    stop_b = (
+        await client.post(
+            "/api/v1/stops",
+            json={"name": "Stop B", "lat": -1.94, "lng": 30.07},
+            headers=auth_headers(admin),
+        )
+    ).json()["data"]
+
+    payload = {
+        **{k: v for k, v in _CREATE.items() if k != "stops"},
+        "stops": [
+            {"stopId": stop_a["id"], "order": 1},
+            {"stopId": stop_b["id"], "order": 2},
+        ],
+    }
+    r = await client.post("/api/v1/routes", json=payload, headers=auth_headers(admin))
     assert r.status_code == 201
     body = r.json()["data"]
     assert body["name"] == "Test Route"

@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from datetime import datetime, timedelta, timezone
+from typing import TYPE_CHECKING
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
@@ -8,7 +11,9 @@ from app.core.geo_math import haversine_distance
 from app.models.route import Route, RouteStop, Stop
 from app.models.vehicle import Vehicle
 from app.schemas.arrival import ArrivalRead
-from app.websocket.route_simulation import StopPoint, _state, get_stops_cached
+
+if TYPE_CHECKING:
+    from app.websocket.route_simulation import StopPoint
 
 
 def _error_detail(code: str, message: str) -> dict:
@@ -36,6 +41,8 @@ def _fallback_next_stop_index(vehicle: Vehicle, stops: list[StopPoint]) -> int:
 
 
 def _next_stop_index(vehicle: Vehicle, stops: list[StopPoint]) -> int:
+    from app.websocket.route_simulation import _state  # lazy: avoid circular import
+
     state = _state.get(vehicle.id, {})
     next_stop_index = int(state.get("next_stop_index", -1))
     if 0 <= next_stop_index < len(stops):
@@ -112,6 +119,11 @@ async def get_arrivals_for_stop(
             )
         )
     ).all()
+
+    from app.websocket.route_simulation import (
+        _state,
+        get_stops_cached,
+    )  # lazy: avoid circular import
 
     now = datetime.now(timezone.utc)
     arrivals: list[ArrivalRead] = []

@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 13.2 — Real-Time Occupancy via WebSocket and Tracking UI
+**Next task:** Task 13.3 — Capacity Alerts and Passenger-Facing Seat Availability
 
 ---
 
@@ -371,7 +371,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `feat: real-time occupancy broadcast and tracking UI seat availability`
 
-- [ ] Task 13.2 complete
+- [x] Task 13.2 complete
 
 ---
 

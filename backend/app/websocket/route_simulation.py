@@ -13,6 +13,7 @@ from app.crud.analytics import upsert_daily_analytics
 from app.models.route import RouteStop, Stop
 from app.models.vehicle import Vehicle
 from app.services import boarding_service
+from app.websocket.manager import manager
 from app.websocket.route_trip_records import create_completed_trip
 
 TICK_SECONDS = 5
@@ -196,7 +197,21 @@ async def _simulate_passengers_at_stop(
     state["passengers"] = remaining_passengers
     state["current_occupancy"] = len(remaining_passengers)
 
-    # 3. Persist boarding records
+    # 3. Broadcast immediate occupancy update
+    await manager.publish_to_tenant(
+        vehicle.tenant_id,
+        {
+            "type": "vehicle_occupancy_updated",
+            "vehicleId": vehicle.id,
+            "currentOccupancy": len(remaining_passengers),
+            "seatingCapacity": vehicle.seating_capacity,
+            "remainingSeats": max(
+                0, vehicle.seating_capacity - len(remaining_passengers)
+            ),
+        },
+    )
+
+    # 4. Persist boarding records
     if boarded_count > 0 or alighted_count > 0:
         await boarding_service.record_stop_events(
             db,

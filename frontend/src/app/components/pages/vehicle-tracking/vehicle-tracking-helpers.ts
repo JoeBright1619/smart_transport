@@ -15,8 +15,15 @@ export const STATUS_COLOR: Record<string, string> = {
   offline: '#6B7280',
 };
 
-export function createVehicleIcon(status: string, heading: number, isSelected: boolean) {
-  const color = STATUS_COLOR[status] ?? '#6B7280';
+export function occupancyColor(ratio: number): string {
+  if (ratio >= 1) return '#EF4444';
+  if (ratio >= 0.8) return '#F59E0B';
+  return '#10B981';
+}
+
+export function createVehicleIcon(status: string, heading: number, isSelected: boolean, occupancyRatio = 0) {
+  let color = STATUS_COLOR[status] ?? '#6B7280';
+  if (status === 'active' && occupancyRatio > 0) color = occupancyColor(occupancyRatio);
   const svg = isSelected
     ? `<svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
         <g transform="rotate(${heading},22,22)">

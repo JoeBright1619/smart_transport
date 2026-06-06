@@ -45,11 +45,16 @@ export class VehicleTrackingSocket {
               engineStatus: v.engineStatus,
               nextStopName: v.nextStopName ?? '',
               progressPct: v.progressPct ?? 0,
+              currentOccupancy: v.currentOccupancy,
+              seatingCapacity: v.seatingCapacity,
+              remainingSeats: v.remainingSeats,
             })),
           };
           this.onMessage(mappedMessage);
         } else if (rawData.type === 'vehicle_positions') {
           this.onMessage(rawData);
+        } else if (rawData.type === 'vehicle_occupancy_updated') {
+          this.onMessage(rawData as WsMessage);
         }
       } catch (err) {
         console.error('Error parsing WS message', err);

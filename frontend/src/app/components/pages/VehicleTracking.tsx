@@ -42,21 +42,60 @@ export function VehicleTracking() {
       setConnectionStatus('connecting');
       socketRef.current = new VehicleTrackingSocket(
         (msg) => {
-          if (msg.type !== 'vehicle_positions') return;
-          setVehicles(prev => {
-            const updated = [...prev];
-            msg.vehicles.forEach(pos => {
-              const idx = updated.findIndex(v => v.id === pos.vehicleId);
-              if (idx !== -1) updated[idx] = { ...updated[idx], currentLocation: { lat: pos.lat, lng: pos.lng }, speed: pos.speed, heading: pos.heading, fuel: pos.fuel, status: pos.status, engineStatus: pos.engineStatus || updated[idx].engineStatus, nextStopName: pos.nextStopName, progressPct: pos.progressPct, lastUpdate: pos.timestamp };
+          if (msg.type === 'vehicle_positions') {
+            setVehicles(prev => {
+              const updated = [...prev];
+              msg.vehicles.forEach(pos => {
+                const idx = updated.findIndex(v => v.id === pos.vehicleId);
+                if (idx === -1) return;
+                updated[idx] = {
+                  ...updated[idx],
+                  currentLocation: { lat: pos.lat, lng: pos.lng },
+                  speed: pos.speed, heading: pos.heading, fuel: pos.fuel,
+                  status: pos.status, engineStatus: pos.engineStatus || updated[idx].engineStatus,
+                  nextStopName: pos.nextStopName, progressPct: pos.progressPct, lastUpdate: pos.timestamp,
+                  ...(pos.currentOccupancy !== undefined && {
+                    currentOccupancy: pos.currentOccupancy,
+                    seatingCapacity: pos.seatingCapacity ?? updated[idx].seatingCapacity,
+                    remainingSeats: pos.remainingSeats ?? updated[idx].remainingSeats,
+                  }),
+                };
+              });
+              return updated;
             });
-            return updated;
-          });
-          setSelectedVehicle(prev => {
-            if (!prev) return prev;
-            const pos = msg.vehicles.find(v => v.vehicleId === prev.id);
-            if (!pos) return prev;
-            return { ...prev, currentLocation: { lat: pos.lat, lng: pos.lng }, speed: pos.speed, heading: pos.heading, fuel: pos.fuel, status: pos.status, engineStatus: pos.engineStatus || prev.engineStatus, nextStopName: pos.nextStopName, progressPct: pos.progressPct, lastUpdate: pos.timestamp };
-          });
+            setSelectedVehicle(prev => {
+              if (!prev) return prev;
+              const pos = msg.vehicles.find(v => v.vehicleId === prev.id);
+              if (!pos) return prev;
+              return {
+                ...prev,
+                currentLocation: { lat: pos.lat, lng: pos.lng },
+                speed: pos.speed, heading: pos.heading, fuel: pos.fuel,
+                status: pos.status, engineStatus: pos.engineStatus || prev.engineStatus,
+                nextStopName: pos.nextStopName, progressPct: pos.progressPct, lastUpdate: pos.timestamp,
+                ...(pos.currentOccupancy !== undefined && {
+                  currentOccupancy: pos.currentOccupancy,
+                  seatingCapacity: pos.seatingCapacity ?? prev.seatingCapacity,
+                  remainingSeats: pos.remainingSeats ?? prev.remainingSeats,
+                }),
+              };
+            });
+          } else if (msg.type === 'vehicle_occupancy_updated') {
+            const occupancyPatch = {
+              currentOccupancy: msg.currentOccupancy,
+              seatingCapacity: msg.seatingCapacity,
+              remainingSeats: msg.remainingSeats,
+            };
+            setVehicles(prev => {
+              const updated = [...prev];
+              const idx = updated.findIndex(v => v.id === msg.vehicleId);
+              if (idx !== -1) updated[idx] = { ...updated[idx], ...occupancyPatch };
+              return updated;
+            });
+            setSelectedVehicle(prev =>
+              prev?.id === msg.vehicleId ? { ...prev, ...occupancyPatch } : prev
+            );
+          }
         },
         undefined,
         () => { if (mounted) { setConnectionStatus('disconnected'); reconnectTimer = window.setTimeout(connectWs, 5000); } },

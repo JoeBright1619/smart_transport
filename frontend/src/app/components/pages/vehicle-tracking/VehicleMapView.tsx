@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Badge } from '../../ui/badge';
 import { Battery, AlertCircle } from 'lucide-react';
 import type { RouteRead, DriverRead } from '../../../lib/api-types';
-import { createVehicleIcon, MapController } from './vehicle-tracking-helpers';
+import { createVehicleIcon, occupancyColor, MapController } from './vehicle-tracking-helpers';
 import type { TrackedVehicle } from './vehicle-tracking-helpers';
 
 const MAP_CENTER: [number, number] = [-1.9536, 30.0606];
@@ -75,11 +75,14 @@ export function VehicleMapView({ vehicles, routes, drivers, selectedVehicle, sel
               const isSelected = selectedVehicle?.id === vehicle.id;
               const driver = drivers.find(d => d.id === vehicle.driverId);
               const route = routes.find(r => r.id === vehicle.routeId);
+              const occupancyRatio = vehicle.seatingCapacity > 0
+                ? vehicle.currentOccupancy / vehicle.seatingCapacity
+                : 0;
               return (
                 <Marker
                   key={vehicle.id}
                   position={[vehicle.currentLocation.lat, vehicle.currentLocation.lng]}
-                  icon={createVehicleIcon(vehicle.status, vehicle.heading ?? 0, isSelected)}
+                  icon={createVehicleIcon(vehicle.status, vehicle.heading ?? 0, isSelected, occupancyRatio)}
                   zIndexOffset={isSelected ? 1000 : 0}
                   ref={(m) => { if (m) markerRefs.current.set(vehicle.id, m); else markerRefs.current.delete(vehicle.id); }}
                   eventHandlers={{ click: () => onSelectVehicle(vehicle) }}
@@ -91,6 +94,11 @@ export function VehicleMapView({ vehicles, routes, drivers, selectedVehicle, sel
                       {route && <p className="text-sm text-blue-600">Route {route.number} — {route.name}</p>}
                       {driver && <p className="text-sm">Driver: {driver.name}</p>}
                       {vehicle.nextStopName && <p className="text-sm text-amber-600">Next: {vehicle.nextStopName}</p>}
+                      {vehicle.status === 'active' && (
+                        <p className="text-sm" style={{ color: occupancyColor(occupancyRatio) }}>
+                          {vehicle.currentOccupancy} / {vehicle.seatingCapacity} seats · {vehicle.remainingSeats} remaining
+                        </p>
+                      )}
                       <Badge variant={vehicle.status === 'active' ? 'default' : vehicle.status === 'maintenance' ? 'destructive' : 'secondary'}>
                         {vehicle.status}
                       </Badge>
@@ -103,7 +111,7 @@ export function VehicleMapView({ vehicles, routes, drivers, selectedVehicle, sel
 
           <div className="absolute bottom-4 left-4 z-[1000] bg-white/95 backdrop-blur-sm rounded-lg shadow-md p-3 text-xs space-y-1.5 pointer-events-none">
             <p className="font-semibold text-slate-700">Legend</p>
-            {[['bg-green-500','Active'],['bg-yellow-500','Idle'],['bg-red-500','Maintenance'],['bg-slate-400','Offline']].map(([cls, label]) => (
+            {[['bg-green-500','Active / low occupancy'],['bg-yellow-500','Idle / 80%+ full'],['bg-red-500','Maintenance / at capacity'],['bg-slate-400','Offline']].map(([cls, label]) => (
               <div key={label} className="flex items-center gap-2"><span className={`size-2.5 rounded-full ${cls} shrink-0`}/><span>{label}</span></div>
             ))}
             {selectedVehicle && (
@@ -156,6 +164,29 @@ export function VehicleMapView({ vehicles, routes, drivers, selectedVehicle, sel
                   )}
                 </div>
               </div>
+              {selectedVehicle.status === 'active' && (
+                <div className="mt-3 pt-3 border-t border-slate-100">
+                  <p className="text-xs text-slate-500 mb-1">Occupancy</p>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
+                      {(() => {
+                        const ratio = selectedVehicle.seatingCapacity > 0
+                          ? selectedVehicle.currentOccupancy / selectedVehicle.seatingCapacity
+                          : 0;
+                        return (
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ width: `${Math.min(100, ratio * 100)}%`, backgroundColor: occupancyColor(ratio) }}
+                          />
+                        );
+                      })()}
+                    </div>
+                    <span className="text-sm shrink-0">
+                      {selectedVehicle.currentOccupancy}/{selectedVehicle.seatingCapacity} seats · {selectedVehicle.remainingSeats} remaining
+                    </span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

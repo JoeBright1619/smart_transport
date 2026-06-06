@@ -4,6 +4,7 @@ import { Input } from '../../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { Search, Gauge, Battery } from 'lucide-react';
 import type { RouteRead, DriverRead } from '../../../lib/api-types';
+import { occupancyColor } from './vehicle-tracking-helpers';
 import type { TrackedVehicle } from './vehicle-tracking-helpers';
 
 type Props = {
@@ -108,6 +109,31 @@ export function VehicleListPanel({
                     <span className="flex items-center gap-1"><Gauge className="size-3" />{Math.round(vehicle.speed)} km/h</span>
                     <span className="flex items-center gap-1"><Battery className="size-3" />{vehicle.fuel}%</span>
                   </div>
+                )}
+                {vehicle.status === 'active' ? (
+                  <div className="mt-2">
+                    {(() => {
+                      const ratio = vehicle.seatingCapacity > 0
+                        ? vehicle.currentOccupancy / vehicle.seatingCapacity
+                        : 0;
+                      return (
+                        <>
+                          <div className="flex justify-between text-xs text-slate-500 mb-0.5">
+                            <span>{vehicle.currentOccupancy}/{vehicle.seatingCapacity} seats</span>
+                            <span>{vehicle.remainingSeats} remaining</span>
+                          </div>
+                          <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-500"
+                              style={{ width: `${Math.min(100, ratio * 100)}%`, backgroundColor: occupancyColor(ratio) }}
+                            />
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                ) : (
+                  <p className="mt-1.5 text-xs text-slate-400 italic">Not in service</p>
                 )}
               </div>
             );

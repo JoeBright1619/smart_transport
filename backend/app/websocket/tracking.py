@@ -147,6 +147,9 @@ async def _build_vehicle_update_message(tenant_id: str) -> dict[str, Any]:
                 await get_stops_cached(db, vehicle.route_id) if vehicle.route_id else []
             )
             state = _state.get(vehicle.id, {})
+            current_occupancy = int(
+                state.get("current_occupancy", vehicle.current_occupancy)
+            )
             vehicle_data.append(
                 {
                     "vehicleId": vehicle.id,
@@ -162,6 +165,11 @@ async def _build_vehicle_update_message(tenant_id: str) -> dict[str, Any]:
                         compute_progress_pct(vehicle, stops, state)
                         if stops and state
                         else 0
+                    ),
+                    "currentOccupancy": current_occupancy,
+                    "seatingCapacity": vehicle.seating_capacity,
+                    "remainingSeats": max(
+                        0, vehicle.seating_capacity - current_occupancy
                     ),
                 }
             )
