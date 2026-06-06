@@ -63,7 +63,7 @@ export function VehicleMapView({ vehicles, routes, drivers, selectedVehicle, sel
               return (
                 <CircleMarker key={stop.id} center={[stop.lat, stop.lng]}
                   radius={isAt || isNext ? 9 : 6}
-                  fillColor={isAt ? '#F59E0B' : isNext ? '#3B82F6' : '#3B82F6'}
+                  fillColor={isAt || isNext ? '#F59E0B' : '#3B82F6'}
                   color={isAt ? '#D97706' : 'white'} weight={isAt ? 3 : 2} fillOpacity={0.9}>
                   <Popup>
                     <p className="font-medium text-sm">{stop.name}</p>
