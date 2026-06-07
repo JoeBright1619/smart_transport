@@ -500,3 +500,35 @@ export type WsOccupancyUpdate = {
 export type WsMessage =
   | { type: 'vehicle_positions'; vehicles: WsVehiclePosition[] }
   | WsOccupancyUpdate;
+
+// Passenger usage report (superadmin)
+export interface RouteUsageCount {
+  routeName: string;
+  count: number;
+}
+
+export interface StopUsageCount {
+  stopName: string;
+  count: number;
+}
+
+export interface BoardingTimelineEntry {
+  boardedAt: string;
+  routeName: string;
+  stopName: string;
+  tripStatus: string;
+}
+
+export interface PassengerUsageReport {
+  passengerId: string;
+  passengerName: string;
+  email: string;
+  dateFrom: string;
+  dateTo: string;
+  generatedAt: string;
+  totalBoardings: number;
+  mostUsedRoutes: RouteUsageCount[];
+  mostUsedStops: StopUsageCount[];
+  timeline: BoardingTimelineEntry[];
+  message?: string;
+}

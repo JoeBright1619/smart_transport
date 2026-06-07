@@ -3,6 +3,7 @@ import type {
   ApiResponse,
   ImpersonateResponse,
   PaginatedResponse,
+  PassengerUsageReport,
   SuperadminAnalytics,
   TenantDetail,
   TenantRead,
@@ -85,6 +86,18 @@ export async function suspendPassenger(id: string): Promise<UserRead> {
 export async function reactivatePassenger(id: string): Promise<UserRead> {
   const response = await apiClient.post<ApiResponse<UserRead>>(
     `/superadmin/passengers/${id}/reactivate`,
+  );
+  return response.data.data;
+}
+
+export async function getPassengerReport(
+  id: string,
+  dateFrom: string,
+  dateTo: string,
+): Promise<PassengerUsageReport> {
+  const response = await apiClient.get<ApiResponse<PassengerUsageReport>>(
+    `/superadmin/passengers/${id}/report`,
+    { params: { date_from: dateFrom, date_to: dateTo } },
   );
   return response.data.data;
 }

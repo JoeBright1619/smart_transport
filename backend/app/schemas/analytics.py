@@ -110,3 +110,34 @@ class PassengerReportResponse(APIModel):
     generated_at: str
     message: Optional[str] = None
     data: List[PassengerTripRecord] = []
+
+
+class RouteUsageCount(APIModel):
+    route_name: str
+    count: int
+
+
+class StopUsageCount(APIModel):
+    stop_name: str
+    count: int
+
+
+class BoardingTimelineEntry(APIModel):
+    boarded_at: str
+    route_name: str
+    stop_name: str
+    trip_status: str
+
+
+class PassengerUsageReport(APIModel):
+    passenger_id: str
+    passenger_name: str
+    email: str
+    date_from: str
+    date_to: str
+    generated_at: str
+    total_boardings: int
+    most_used_routes: List[RouteUsageCount]
+    most_used_stops: List[StopUsageCount]
+    timeline: List[BoardingTimelineEntry]
+    message: Optional[str] = None

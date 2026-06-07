@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Search, UserX, UserCheck } from 'lucide-react';
+import { Search, UserX, UserCheck, FileText } from 'lucide-react';
 import type { UserRead } from '../../../lib/api-types';
 import * as superadminService from '../../../services/superadmin.service';
+import { PassengerReportModal } from './PassengerReportModal';
 import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
@@ -18,6 +19,7 @@ export function SuperadminPassengersTab() {
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [reportPassenger, setReportPassenger] = useState<UserRead | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchTerm), 300);
@@ -100,6 +102,7 @@ export function SuperadminPassengersTab() {
                 <TableHead>Registered</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
+                <TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -145,6 +148,12 @@ export function SuperadminPassengersTab() {
                         </div>
                       )}
                     </TableCell>
+                    <TableCell>
+                      <Button size="sm" variant="ghost"
+                        onClick={() => setReportPassenger(p)}>
+                        <FileText className="mr-1 size-3" />Report
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -152,6 +161,14 @@ export function SuperadminPassengersTab() {
           </Table>
         )}
       </CardContent>
+
+      {reportPassenger && (
+        <PassengerReportModal
+          passenger={reportPassenger}
+          open={true}
+          onClose={() => setReportPassenger(null)}
+        />
+      )}
     </Card>
   );
 }

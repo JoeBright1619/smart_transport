@@ -15,7 +15,9 @@ from app.schemas.superadmin import (
     SuperadminTenantUpdate,
 )
 from app.schemas.user import UserRead
+from app.schemas.analytics import PassengerUsageReport
 from app.services import superadmin_service
+from app.services import passenger_report_service
 
 router = APIRouter(tags=["superadmin"])
 
@@ -160,6 +162,29 @@ async def reactivate_passenger(
     user = await superadmin_service.reactivate_passenger(db, id)
     await db.commit()
     return APIResponse(data=user)
+
+
+@router.get(
+    "/passengers/{id}/report",
+    response_model=APIResponse[PassengerUsageReport],
+    dependencies=[Depends(require_role("superadmin"))],
+    summary="Get passenger transport usage report",
+    description=(
+        "Returns boarding history, most-used routes/stops, and a trip timeline for a "
+        "passenger in the given date range. Returns totalBoardings=0 (not an error) "
+        "if no data exists for the period."
+    ),
+)
+async def get_passenger_report(
+    id: str,
+    date_from: date = Query(alias="date_from"),
+    date_to: date = Query(alias="date_to"),
+    db: AsyncSession = Depends(get_db),
+) -> APIResponse[PassengerUsageReport]:
+    report = await passenger_report_service.get_passenger_usage_report(
+        db, id, date_from, date_to
+    )
+    return APIResponse(data=report)
 
 
 @router.get(
