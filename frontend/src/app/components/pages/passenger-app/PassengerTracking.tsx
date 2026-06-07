@@ -3,17 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
-import type { RouteRead, StopRead, ArrivalEstimate } from '../../../lib/api-types';
-import { listRoutes } from '../../../services/routes.service';
-import { getArrivals } from '../../../services/arrivals.service';
-import { MapPin, Clock, Navigation, Heart, Search } from 'lucide-react';
+import type { GlobalStopRead, ArrivalEstimate } from '../../../lib/api-types';
+import { getPublicStops, getCrossTenantArrivals } from '../../../services/arrivals.service';
+import { MapPin, Clock, Navigation, Heart, Search, Building2 } from 'lucide-react';
 
 export function PassengerTracking() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [routes, setRoutes] = useState<RouteRead[]>([]);
-  const [allStops, setAllStops] = useState<StopRead[]>([]);
+  const [allStops, setAllStops] = useState<GlobalStopRead[]>([]);
   const [selectedStop, setSelectedStop] = useState<string | null>(null);
   const [arrivals, setArrivals] = useState<ArrivalEstimate[]>([]);
+  const [countdown, setCountdown] = useState(10);
   const [favoriteStops, setFavoriteStops] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem('passenger-favourite-stops');
@@ -24,23 +23,27 @@ export function PassengerTracking() {
   });
 
   useEffect(() => {
-    listRoutes({ isActive: true, pageSize: 100 }).then((res) => {
-      setRoutes(res.items);
-      const stopMap = new Map<string, StopRead>();
-      res.items.forEach((route) => route.stops.forEach((s) => stopMap.set(s.id, s)));
-      setAllStops(Array.from(stopMap.values()));
-    }).catch(() => {});
+    getPublicStops().then(setAllStops).catch(() => {});
   }, []);
 
   useEffect(() => {
     if (!selectedStop) { setArrivals([]); return; }
     const fetch = () =>
-      getArrivals(selectedStop).then((data) =>
-        setArrivals([...data].sort((a, b) => (a.etaMinutes ?? 999) - (b.etaMinutes ?? 999)))
-      ).catch(() => {});
+      getCrossTenantArrivals(selectedStop)
+        .then((data) => {
+          setArrivals([...data].sort((a, b) => (a.etaMinutes ?? 999) - (b.etaMinutes ?? 999)));
+          setCountdown(10);
+        })
+        .catch(() => {});
     fetch();
     const id = setInterval(fetch, 10000);
     return () => clearInterval(id);
+  }, [selectedStop]);
+
+  useEffect(() => {
+    if (!selectedStop) return;
+    const tick = setInterval(() => setCountdown((c) => (c > 0 ? c - 1 : 0)), 1000);
+    return () => clearInterval(tick);
   }, [selectedStop]);
 
   useEffect(() => {
@@ -51,10 +54,16 @@ export function PassengerTracking() {
     s.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
   const favoriteStopsList = allStops.filter((s) => favoriteStops.includes(s.id));
-  const selectedStopName = allStops.find((s) => s.id === selectedStop)?.name;
+  const selectedStopData = allStops.find((s) => s.id === selectedStop);
 
   const toggleFavorite = (id: string) =>
     setFavoriteStops((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
+  const operatorSummary = arrivals.reduce<Record<string, Set<string>>>((acc, a) => {
+    if (!acc[a.tenantName]) acc[a.tenantName] = new Set();
+    acc[a.tenantName].add(a.routeNumber);
+    return acc;
+  }, {});
 
   return (
     <div className="space-y-6">
@@ -99,110 +108,123 @@ export function PassengerTracking() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {filteredStops.map((stop) => {
-                  const routesAtStop = routes.filter((r) => r.stops.some((s) => s.id === stop.id));
-                  return (
-                    <div key={stop.id} onClick={() => setSelectedStop(stop.id)}
-                      className={`cursor-pointer rounded-lg border p-3 transition-colors ${selectedStop === stop.id ? 'border-blue-500 bg-blue-50' : 'hover:bg-slate-50'}`}>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <MapPin className="size-4 text-slate-400" />
-                            <p className="font-medium">{stop.name}</p>
-                          </div>
-                          <p className="text-xs text-slate-500 mt-1 ml-6">
-                            {routesAtStop.length} route{routesAtStop.length !== 1 ? 's' : ''} available
-                          </p>
-                          <div className="flex flex-wrap gap-1 mt-2 ml-6">
-                            {routesAtStop.map((r) => (
-                              <Badge key={r.id} variant="secondary" className="text-xs">{r.number}</Badge>
-                            ))}
-                          </div>
-                        </div>
-                        <button onClick={(e) => { e.stopPropagation(); toggleFavorite(stop.id); }} className="ml-2 p-1">
-                          <Heart className={`size-4 ${favoriteStops.includes(stop.id) ? 'fill-red-500 text-red-500' : 'text-slate-300'}`} />
-                        </button>
+                {filteredStops.map((stop) => (
+                  <div key={stop.id} onClick={() => setSelectedStop(stop.id)}
+                    className={`cursor-pointer rounded-lg border p-3 transition-colors ${selectedStop === stop.id ? 'border-blue-500 bg-blue-50' : 'hover:bg-slate-50'}`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="size-4 text-slate-400" />
+                        <p className="font-medium">{stop.name}</p>
                       </div>
+                      <button onClick={(e) => { e.stopPropagation(); toggleFavorite(stop.id); }} className="ml-2 p-1">
+                        <Heart className={`size-4 ${favoriteStops.includes(stop.id) ? 'fill-red-500 text-red-500' : 'text-slate-300'}`} />
+                      </button>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
+          {selectedStopData && arrivals.length > 0 && (
+            <Card>
+              <CardContent className="pt-4 pb-3">
+                <p className="font-semibold text-sm mb-2">{selectedStopData.name}</p>
+                {Object.entries(operatorSummary).map(([tenant, routes]) => (
+                  <div key={tenant} className="flex items-start gap-2 mt-1.5">
+                    <Building2 className="size-3.5 text-slate-400 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs font-medium text-slate-700">{tenant}</p>
+                      <div className="flex flex-wrap gap-1 mt-0.5">
+                        {[...routes].map((r) => (
+                          <Badge key={r} variant="secondary" className="text-xs">Route {r}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
           {selectedStop && arrivals.length > 0 && (
             <Card className="border-blue-200 bg-blue-50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <Clock className="size-5 text-blue-600" />Next Arrivals at {selectedStopName}
+                  <Clock className="size-5 text-blue-600" />Next Arrivals at {selectedStopData?.name}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {arrivals.map((a) => {
-                    const route = routes.find((r) => r.id === a.routeId);
-                    return (
-                      <div key={a.vehicleId} className="rounded-lg bg-white p-4 shadow-sm">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-semibold text-sm">{a.registrationNumber}</p>
-                            <p className="text-xs text-slate-500">{a.routeName}</p>
-                            {route && <Badge style={{ backgroundColor: route.color }} className="mt-2 text-white">Route {route.number}</Badge>}
-                          </div>
-                          <div className="text-right">
-                            {a.etaMinutes !== null && a.etaMinutes < 2
-                              ? <span className="text-green-600 font-bold text-sm">Arriving now</span>
-                              : a.etaMinutes !== null
-                              ? <span className="font-bold text-sm">{a.etaMinutes} min</span>
-                              : <span className="text-slate-400 text-sm">Stopped</span>}
-                            {a.distanceToStopKm != null && <p className="text-xs text-slate-500">{a.distanceToStopKm.toFixed(1)} km away</p>}
+                  {arrivals.map((a) => (
+                    <div key={a.vehicleId} className="rounded-lg bg-white p-4 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-sm">{a.registrationNumber}</p>
+                          <p className="text-xs text-slate-500">{a.routeName}</p>
+                          <div className="flex items-center gap-1.5 mt-1.5">
+                            <Badge variant="secondary" className="text-xs">Route {a.routeNumber}</Badge>
+                            <span className="flex items-center gap-1 text-xs text-slate-400">
+                              <Building2 className="size-3" />{a.tenantName}
+                            </span>
                           </div>
                         </div>
-                        {a.seatingCapacity > 0 && (
-                          <div className="mt-3 pt-3 border-t space-y-2">
-                            <div className="flex items-center justify-between text-xs text-slate-500">
-                              <span>{a.currentOccupancy} / {a.seatingCapacity} seats taken</span>
-                              {a.remainingSeats === 0 ? (
-                                <span className="font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
-                                  Bus is full — wait for next bus
-                                </span>
-                              ) : a.remainingSeats < 10 ? (
-                                <span className="font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-                                  Nearly full ({a.remainingSeats} remaining)
-                                </span>
-                              ) : (
-                                <span className="font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
-                                  Seats available ({a.remainingSeats} remaining)
-                                </span>
-                              )}
-                            </div>
-                            <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                              <div
-                                className={`h-full rounded-full transition-all ${
-                                  a.remainingSeats === 0
-                                    ? 'bg-red-500'
-                                    : a.remainingSeats < 10
-                                    ? 'bg-amber-400'
-                                    : 'bg-green-500'
-                                }`}
-                                style={{ width: `${Math.min(100, (a.currentOccupancy / a.seatingCapacity) * 100)}%` }}
-                              />
-                            </div>
-                          </div>
-                        )}
+                        <div className="text-right">
+                          {a.etaMinutes !== null && a.etaMinutes < 2
+                            ? <span className="text-green-600 font-bold text-sm">Arriving now</span>
+                            : a.etaMinutes !== null
+                            ? <span className="font-bold text-sm">{a.etaMinutes} min</span>
+                            : <span className="text-slate-400 text-sm">Stopped</span>}
+                          {a.distanceToStopKm != null && (
+                            <p className="text-xs text-slate-500">{a.distanceToStopKm.toFixed(1)} km away</p>
+                          )}
+                        </div>
                       </div>
-                    );
-                  })}
+                      {a.seatingCapacity > 0 && (
+                        <div className="mt-3 pt-3 border-t space-y-2">
+                          <div className="flex items-center justify-between text-xs text-slate-500">
+                            <span>{a.currentOccupancy} / {a.seatingCapacity} seats taken</span>
+                            {a.remainingSeats === 0 ? (
+                              <span className="font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
+                                Bus is full
+                              </span>
+                            ) : a.remainingSeats < 10 ? (
+                              <span className="font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                                Nearly full ({a.remainingSeats} left)
+                              </span>
+                            ) : (
+                              <span className="font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
+                                {a.remainingSeats} seats free
+                              </span>
+                            )}
+                          </div>
+                          <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${
+                                a.remainingSeats === 0 ? 'bg-red-500' : a.remainingSeats < 10 ? 'bg-amber-400' : 'bg-green-500'
+                              }`}
+                              style={{ width: `${Math.min(100, (a.currentOccupancy / a.seatingCapacity) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
           )}
+
           {selectedStop && arrivals.length === 0 && (
             <Card className="border-blue-200 bg-blue-50">
-              <CardContent className="pt-6 text-center text-sm text-slate-500">
-                No vehicles currently approaching this stop.
+              <CardContent className="pt-6 pb-5 text-center space-y-1">
+                <p className="text-sm text-slate-600">No buses currently approaching this stop.</p>
+                <p className="text-xs text-slate-400">
+                  Auto-refreshes every 10 seconds · next refresh in{' '}
+                  <span className="font-semibold text-blue-600">{countdown}s</span>
+                </p>
               </CardContent>
             </Card>
           )}

@@ -431,6 +431,8 @@ export interface ArrivalEstimate {
   registrationNumber: string;
   routeId: string;
   routeName: string;
+  routeNumber: string;
+  tenantName: string;
   distanceToStopKm: number;
   currentSpeedKmh: number;
   etaMinutes: number | null;
