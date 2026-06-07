@@ -50,6 +50,13 @@ async def list_stops(db: AsyncSession, tenant_id: str) -> Sequence[Stop]:
     return result.scalars().all()
 
 
+async def list_all_stops(db: AsyncSession) -> Sequence[Stop]:
+    result = await db.execute(
+        select(Stop).where(Stop.is_deleted.is_(False)).order_by(Stop.name.asc())
+    )
+    return result.scalars().all()
+
+
 async def create_stop(db: AsyncSession, data, tenant_id: str) -> Stop:
     existing_stops = await list_stops(db, tenant_id)
     normalized_name = data.name.strip().casefold()

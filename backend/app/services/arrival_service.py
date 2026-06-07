@@ -10,7 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.geo_math import haversine_distance
 from app.models.route import Route, RouteStop, Stop
 from app.models.vehicle import Vehicle
-from app.schemas.arrival import ArrivalRead
+from app.models.tenant import Tenant
+from app.schemas.arrival import ArrivalRead, PublicArrivalRead
 
 if TYPE_CHECKING:
     from app.websocket.route_simulation import StopPoint
@@ -158,6 +159,93 @@ async def get_arrivals_for_stop(
                 registration_number=vehicle.registration_number,
                 route_id=route.id,
                 route_name=route.name,
+                distance_to_stop_km=round(distance_km, 2),
+                current_speed_kmh=speed,
+                eta_minutes=eta_minutes,
+                estimated_arrival_time=estimated_arrival_time,
+                status=arrival_status,
+                current_occupancy=current_occupancy,
+                seating_capacity=seating_capacity,
+                remaining_seats=max(0, seating_capacity - current_occupancy),
+            )
+        )
+
+    return sorted(
+        arrivals,
+        key=lambda item: item.eta_minutes if item.eta_minutes is not None else 10**9,
+    )
+
+
+async def get_cross_tenant_arrivals(
+    db: AsyncSession,
+    stop_id: str,
+) -> list[PublicArrivalRead]:
+    stop = await db.scalar(
+        select(Stop).where(Stop.id == stop_id, Stop.is_deleted.is_(False))
+    )
+    if stop is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=_error_detail("NOT_FOUND", "Stop not found"),
+        )
+
+    rows = (
+        await db.execute(
+            select(Vehicle, Route, Tenant)
+            .join(Route, Vehicle.route_id == Route.id)
+            .join(Tenant, Vehicle.tenant_id == Tenant.id)
+            .join(RouteStop, RouteStop.route_id == Route.id)
+            .where(
+                RouteStop.stop_id == stop.id,
+                Vehicle.status == "active",
+                Vehicle.is_deleted.is_(False),
+                Vehicle.lat.is_not(None),
+                Vehicle.lng.is_not(None),
+                Route.is_active.is_(True),
+                Route.is_deleted.is_(False),
+            )
+        )
+    ).all()
+
+    from app.websocket.route_simulation import (
+        _state,
+        get_stops_cached,
+    )  # lazy: avoid circular import
+
+    now = datetime.now(timezone.utc)
+    arrivals: list[PublicArrivalRead] = []
+    for vehicle, route, tenant in rows:
+        if vehicle.route_id is None:
+            continue
+
+        stops = await get_stops_cached(db, vehicle.route_id)
+        distance_km = _route_distance_to_stop_km(vehicle, stops, stop.id)
+        if distance_km is None:
+            continue
+
+        speed = vehicle.speed or 0
+        if speed == 0:
+            eta_minutes = None
+            estimated_arrival_time = None
+            arrival_status = "stopped"
+        else:
+            eta_minutes = round((distance_km / speed) * 60)
+            estimated_arrival_time = now + timedelta(minutes=eta_minutes)
+            arrival_status = "active"
+
+        v_state = _state.get(vehicle.id, {})
+        current_occupancy = int(
+            v_state.get("current_occupancy", len(v_state.get("passengers", [])))
+        )
+        seating_capacity = vehicle.seating_capacity
+        arrivals.append(
+            PublicArrivalRead(
+                vehicle_id=vehicle.id,
+                registration_number=vehicle.registration_number,
+                route_id=route.id,
+                route_name=route.name,
+                route_number=route.number,
+                tenant_name=tenant.name,
                 distance_to_stop_km=round(distance_km, 2),
                 current_speed_kmh=speed,
                 eta_minutes=eta_minutes,

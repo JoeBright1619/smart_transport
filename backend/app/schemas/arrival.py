@@ -21,3 +21,8 @@ class ArrivalRead(APIModel):
     current_occupancy: int = Field(default=0, json_schema_extra={"example": 18})
     seating_capacity: int = Field(default=0, json_schema_extra={"example": 45})
     remaining_seats: int = Field(default=0, json_schema_extra={"example": 27})
+
+
+class PublicArrivalRead(ArrivalRead):
+    route_number: str = Field(json_schema_extra={"example": "101"})
+    tenant_name: str = Field(json_schema_extra={"example": "Kigali Bus Co."})

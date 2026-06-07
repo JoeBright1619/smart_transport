@@ -13,6 +13,17 @@ router = APIRouter(prefix="/api/v1/stops", tags=["routes"])
 
 
 @router.get(
+    "/public",
+    response_model=APIResponse[list[GlobalStopRead]],
+    summary="List all public stops (cross-tenant)",
+    description="Returns all stops across all tenants. No authentication required.",
+)
+async def list_public_stops(db: AsyncSession = Depends(get_db)):
+    stops = await route_service.list_all_stops(db)
+    return APIResponse(data=[GlobalStopRead.model_validate(stop) for stop in stops])
+
+
+@router.get(
     "",
     response_model=APIResponse[list[GlobalStopRead]],
     summary="List global stops",
