@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { Building2, Bus, RefreshCw, Users, UserCheck, Activity, Info } from 'lucide-react';
+import { SuperadminPassengersTab } from './superadmin/SuperadminPassengersTab';
 import type { SuperadminAnalytics, TenantRead, TenantDetail } from '../../lib/api-types';
 import { setStoredToken } from '../../lib/api-client';
 import * as superadminService from '../../services/superadmin.service';
@@ -184,6 +185,10 @@ export function SuperadminPortal() {
             <Building2 className="mr-2 size-4" />
             Tenants
           </TabsTrigger>
+          <TabsTrigger value="passengers">
+            <Users className="mr-2 size-4" />
+            Passengers
+          </TabsTrigger>
           <TabsTrigger value="tenant-detail" disabled={!selectedTenant && !loadingDetail}>
             <Info className="mr-2 size-4" />
             Tenant Detail
@@ -317,6 +322,10 @@ export function SuperadminPortal() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="passengers">
+          <SuperadminPassengersTab />
         </TabsContent>
 
         <TabsContent value="tenant-detail" className="space-y-4">

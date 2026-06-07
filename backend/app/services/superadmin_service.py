@@ -4,6 +4,8 @@ from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from sqlalchemy import or_
+
 from app.core.security import create_access_token
 from app.models.tenant import Tenant
 from app.models.trip import Trip
@@ -14,6 +16,7 @@ from app.schemas.superadmin import (
     SuperadminTenantDetail,
     SuperadminTenantRead,
 )
+from app.schemas.user import UserRead
 from app.services import audit_service
 
 
@@ -236,3 +239,54 @@ async def get_platform_analytics(
         total_trips_today=total_trips_today,
         total_passengers_today=total_passengers_today,
     )
+
+
+async def list_passengers(
+    db: AsyncSession,
+    search: str | None = None,
+    page: int = 1,
+    page_size: int = 20,
+) -> tuple[list[UserRead], int]:
+    query = select(User).where(User.role == "passenger")
+    if search:
+        term = f"%{search}%"
+        query = query.where(or_(User.full_name.ilike(term), User.email.ilike(term)))
+    total = await db.scalar(select(func.count()).select_from(query.subquery())) or 0
+    rows = (
+        await db.scalars(
+            query.order_by(User.created_at.desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+        )
+    ).all()
+    return [UserRead.model_validate(u) for u in rows], total
+
+
+def _require_passenger(user: User | None, user_id: str) -> User:
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=_error_detail("NOT_FOUND", "Passenger not found"),
+        )
+    if user.role != "passenger":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=_error_detail("FORBIDDEN", "User is not a passenger"),
+        )
+    return user
+
+
+async def suspend_passenger(db: AsyncSession, user_id: str) -> UserRead:
+    user = await db.scalar(select(User).where(User.id == user_id))
+    _require_passenger(user, user_id)
+    user.is_deleted = True  # type: ignore[union-attr]
+    await db.flush()
+    return UserRead.model_validate(user)
+
+
+async def reactivate_passenger(db: AsyncSession, user_id: str) -> UserRead:
+    user = await db.scalar(select(User).where(User.id == user_id))
+    _require_passenger(user, user_id)
+    user.is_deleted = False  # type: ignore[union-attr]
+    await db.flush()
+    return UserRead.model_validate(user)

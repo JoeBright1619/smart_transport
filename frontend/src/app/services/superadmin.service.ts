@@ -6,6 +6,7 @@ import type {
   SuperadminAnalytics,
   TenantDetail,
   TenantRead,
+  UserRead,
 } from '../lib/api-types';
 
 type ListTenantsParams = {
@@ -57,6 +58,34 @@ export async function impersonateTenant(id: string): Promise<ImpersonateResponse
     `/superadmin/tenants/${id}/impersonate`,
   );
 
+  return response.data.data;
+}
+
+export async function listPassengers(params?: {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+}): Promise<{ items: UserRead[]; total: number }> {
+  const response = await apiClient.get<PaginatedResponse<UserRead>>('/superadmin/passengers', {
+    params: { page: params?.page, pageSize: params?.pageSize, search: params?.search },
+  });
+  return {
+    items: response.data.data,
+    total: response.data.meta?.total ?? response.data.data.length,
+  };
+}
+
+export async function suspendPassenger(id: string): Promise<UserRead> {
+  const response = await apiClient.post<ApiResponse<UserRead>>(
+    `/superadmin/passengers/${id}/suspend`,
+  );
+  return response.data.data;
+}
+
+export async function reactivatePassenger(id: string): Promise<UserRead> {
+  const response = await apiClient.post<ApiResponse<UserRead>>(
+    `/superadmin/passengers/${id}/reactivate`,
+  );
   return response.data.data;
 }
 

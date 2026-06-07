@@ -14,6 +14,7 @@ from app.schemas.superadmin import (
     SuperadminTenantRead,
     SuperadminTenantUpdate,
 )
+from app.schemas.user import UserRead
 from app.services import superadmin_service
 
 router = APIRouter(tags=["superadmin"])
@@ -105,6 +106,60 @@ async def impersonate_tenant(
     )
     await db.commit()
     return APIResponse(data=ImpersonationResponse(access_token=token))
+
+
+@router.get(
+    "/passengers",
+    response_model=PaginatedResponse[UserRead],
+    dependencies=[Depends(require_role("superadmin"))],
+    summary="List all passenger accounts",
+    description="Returns paginated passenger-role users platform-wide. Includes suspended users.",
+)
+async def list_passengers(
+    search: str | None = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100, alias="pageSize"),
+    db: AsyncSession = Depends(get_db),
+) -> PaginatedResponse[UserRead]:
+    passengers, total = await superadmin_service.list_passengers(
+        db, search, page, page_size
+    )
+    return PaginatedResponse(
+        data=passengers,
+        meta=Meta(total=total, page=page, pageSize=page_size),
+    )
+
+
+@router.post(
+    "/passengers/{id}/suspend",
+    response_model=APIResponse[UserRead],
+    dependencies=[Depends(require_role("superadmin"))],
+    summary="Suspend a passenger account",
+    description="Sets is_deleted=True on the user. Returns 403 if the user is not a passenger.",
+)
+async def suspend_passenger(
+    id: str,
+    db: AsyncSession = Depends(get_db),
+) -> APIResponse[UserRead]:
+    user = await superadmin_service.suspend_passenger(db, id)
+    await db.commit()
+    return APIResponse(data=user)
+
+
+@router.post(
+    "/passengers/{id}/reactivate",
+    response_model=APIResponse[UserRead],
+    dependencies=[Depends(require_role("superadmin"))],
+    summary="Reactivate a suspended passenger account",
+    description="Sets is_deleted=False on the user. Returns 403 if the user is not a passenger.",
+)
+async def reactivate_passenger(
+    id: str,
+    db: AsyncSession = Depends(get_db),
+) -> APIResponse[UserRead]:
+    user = await superadmin_service.reactivate_passenger(db, id)
+    await db.commit()
+    return APIResponse(data=user)
 
 
 @router.get(
