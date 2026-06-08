@@ -28,6 +28,7 @@ class PassengerProfileRead(APIModel):
     preferred_stops: list[ResolvedStop] = Field(default_factory=list)
     notify_on_arrival: bool = True
     notify_on_delay: bool = True
+    notification_threshold_minutes: int = 10
     total_trips_recorded: int = 0
 
 
@@ -37,6 +38,7 @@ class PassengerProfileUpdate(APIModel):
     preferred_stops: list[str] | None = None
     notify_on_arrival: bool | None = None
     notify_on_delay: bool | None = None
+    notification_threshold_minutes: int | None = Field(default=None, ge=1, le=120)
 
 
 class PassengerListItem(APIModel):

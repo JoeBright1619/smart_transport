@@ -231,6 +231,7 @@ async def _resolve_profile(
         preferred_stops=resolved_stops,
         notify_on_arrival=profile.notify_on_arrival,
         notify_on_delay=profile.notify_on_delay,
+        notification_threshold_minutes=profile.notification_threshold_minutes,
         total_trips_recorded=profile.total_trips_recorded,
     )
 
@@ -264,6 +265,8 @@ async def update_profile(
         profile.notify_on_arrival = data.notify_on_arrival
     if data.notify_on_delay is not None:
         profile.notify_on_delay = data.notify_on_delay
+    if data.notification_threshold_minutes is not None:
+        profile.notification_threshold_minutes = data.notification_threshold_minutes
 
     await db.flush()
     return await _resolve_profile(db, profile, user)
@@ -283,6 +286,8 @@ async def get_passenger_notifications(
     if profile is None or not profile.preferred_stops:
         return []
 
+    threshold = profile.notification_threshold_minutes
+
     stop_rows = await db.execute(
         select(Stop.id, Stop.name).where(
             Stop.id.in_(profile.preferred_stops),
@@ -297,11 +302,16 @@ async def get_passenger_notifications(
             arrivals = await get_cross_tenant_arrivals(db, stop_id)
         except HTTPException:
             continue
-        if arrivals:
+        within_window = [
+            a
+            for a in arrivals
+            if a.eta_minutes is not None and a.eta_minutes <= threshold
+        ]
+        if within_window:
             result.append(
                 PassengerNotification(
                     stop_name=stop_names.get(stop_id, stop_id),
-                    arrivals=arrivals,
+                    arrivals=within_window,
                 )
             )
     return result

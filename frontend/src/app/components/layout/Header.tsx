@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Bell, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Button } from '../ui/button';
@@ -48,8 +48,9 @@ export function Header() {
   const [alerts, setAlerts] = useState<AlertRead[]>([]);
   const [unacknowledgedCount, setUnacknowledgedCount] = useState(0);
 
-  // Passenger notifications state
+  // Passenger notifications state + session-level "seen" tracking (vehicleId:stopName)
   const [passengerNotifs, setPassengerNotifs] = useState<PassengerNotification[]>([]);
+  const seenRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -70,11 +71,33 @@ export function Header() {
     return () => clearInterval(id);
   }, [fetchAlerts]);
 
-  // Passenger: poll favourite-stop notifications
+  // Passenger: poll favourite-stop notifications, filtering out already-seen bus+stop pairs
   const fetchPassengerNotifs = useCallback(() => {
     if (!isPassenger) return;
-    getMyNotifications().then(setPassengerNotifs).catch(() => {});
+    getMyNotifications().then((raw) => {
+      // Build the set of keys currently returned by the API
+      const currentKeys = new Set(
+        raw.flatMap((n) => n.arrivals.map((a) => `${n.stopName}:${a.vehicleId}`))
+      );
+      // Evict keys that are no longer approaching (bus arrived / left)
+      seenRef.current.forEach((k) => { if (!currentKeys.has(k)) seenRef.current.delete(k); });
+      // Strip seen buses from the result
+      const filtered = raw
+        .map((n) => ({
+          ...n,
+          arrivals: n.arrivals.filter((a) => !seenRef.current.has(`${n.stopName}:${a.vehicleId}`)),
+        }))
+        .filter((n) => n.arrivals.length > 0);
+      setPassengerNotifs(filtered);
+    }).catch(() => {});
   }, [isPassenger]);
+
+  const clearPassengerNotifs = () => {
+    passengerNotifs.forEach((n) =>
+      n.arrivals.forEach((a) => seenRef.current.add(`${n.stopName}:${a.vehicleId}`))
+    );
+    setPassengerNotifs([]);
+  };
 
   useEffect(() => {
     fetchPassengerNotifs();
@@ -118,33 +141,44 @@ export function Header() {
                 No buses approaching your favourite stops
               </div>
             ) : (
-              passengerNotifs.slice(0, 5).map((n) => {
-                const first = n.arrivals[0];
-                return (
-                  <DropdownMenuItem
-                    key={n.stopName}
-                    className="flex flex-col items-start gap-0.5 px-3 py-2.5 cursor-pointer"
-                    onClick={() => { navigate('/passenger-notifications'); setOpen(false); }}
+              <>
+                <div className="flex items-center justify-between px-3 py-1.5">
+                  <span className="text-xs text-slate-400">{passengerNotifs.length} stop{passengerNotifs.length !== 1 ? 's' : ''} with approaching buses</span>
+                  <button
+                    onClick={clearPassengerNotifs}
+                    className="text-xs text-slate-500 hover:text-slate-700 underline"
                   >
-                    <div className="flex items-center gap-1.5 w-full">
-                      <MapPin className="size-3.5 text-slate-400 shrink-0" />
-                      <span className="font-medium text-sm leading-tight line-clamp-1">{n.stopName}</span>
-                    </div>
-                    {first && (
-                      <div className="flex w-full items-center justify-between text-xs text-slate-500 pl-5">
-                        <span className="line-clamp-1">{first.registrationNumber} · {first.routeName}</span>
-                        <span className="shrink-0 ml-2 font-semibold text-blue-600">
-                          {first.etaMinutes != null && first.etaMinutes < 2
-                            ? 'Now'
-                            : first.etaMinutes != null
-                            ? `${first.etaMinutes} min`
-                            : 'Stopped'}
-                        </span>
+                    Clear all
+                  </button>
+                </div>
+                {passengerNotifs.slice(0, 5).map((n) => {
+                  const first = n.arrivals[0];
+                  return (
+                    <DropdownMenuItem
+                      key={n.stopName}
+                      className="flex flex-col items-start gap-0.5 px-3 py-2.5 cursor-pointer"
+                      onClick={() => { navigate('/passenger-notifications'); setOpen(false); }}
+                    >
+                      <div className="flex items-center gap-1.5 w-full">
+                        <MapPin className="size-3.5 text-slate-400 shrink-0" />
+                        <span className="font-medium text-sm leading-tight line-clamp-1">{n.stopName}</span>
                       </div>
-                    )}
-                  </DropdownMenuItem>
-                );
-              })
+                      {first && (
+                        <div className="flex w-full items-center justify-between text-xs text-slate-500 pl-5">
+                          <span className="line-clamp-1">{first.registrationNumber} · {first.routeName}</span>
+                          <span className="shrink-0 ml-2 font-semibold text-blue-600">
+                            {first.etaMinutes != null && first.etaMinutes < 2
+                              ? 'Now'
+                              : first.etaMinutes != null
+                              ? `${first.etaMinutes} min`
+                              : 'Stopped'}
+                          </span>
+                        </div>
+                      )}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </>
             )
           ) : isStaff ? (
             alerts.length === 0 ? (

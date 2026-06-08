@@ -44,7 +44,7 @@ export function PassengerProfileSection() {
   const [phone, setPhone] = useState('');
   const [selectedStops, setSelectedStops] = useState<string[]>([]);
   const [notifyArrival, setNotifyArrival] = useState(true);
-  const [notifyDelay, setNotifyDelay] = useState(true);
+  const [notifyThreshold, setNotifyThreshold] = useState(10);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -53,7 +53,7 @@ export function PassengerProfileSection() {
       setPhone(p.phone ?? '');
       setSelectedStops(p.preferredStops.map((s) => s.id));
       setNotifyArrival(p.notifyOnArrival);
-      setNotifyDelay(p.notifyOnDelay);
+      setNotifyThreshold(p.notificationThresholdMinutes);
     }).catch(() => {});
 
     getPublicStops().then(setAllStops).catch(() => {});
@@ -69,7 +69,7 @@ export function PassengerProfileSection() {
         phone: phone.trim() || null,
         preferredStops: selectedStops,
         notifyOnArrival: notifyArrival,
-        notifyOnDelay: notifyDelay,
+        notificationThresholdMinutes: notifyThreshold,
       });
       setProfile(updated);
       toast.success('Profile saved');
@@ -160,8 +160,16 @@ export function PassengerProfileSection() {
             <Toggle checked={notifyArrival} onChange={setNotifyArrival} label="Arrival notifications" />
           </div>
           <div className="flex items-center justify-between">
-            <p className="text-sm">Delays on my routes</p>
-            <Toggle checked={notifyDelay} onChange={setNotifyDelay} label="Delay notifications" />
+            <p className="text-sm">Notify me when bus is within</p>
+            <select
+              value={notifyThreshold}
+              onChange={(e) => setNotifyThreshold(Number(e.target.value))}
+              className="rounded-md border border-slate-200 bg-white px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {[5, 10, 15, 20, 30].map((m) => (
+                <option key={m} value={m}>{m} min</option>
+              ))}
+            </select>
           </div>
         </CardContent>
       </Card>

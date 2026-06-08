@@ -33,6 +33,9 @@ class PassengerProfile(Base):
         Boolean, nullable=False, default=True
     )
     notify_on_delay: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    notification_threshold_minutes: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=10, server_default="10"
+    )
     total_trips_recorded: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0
     )

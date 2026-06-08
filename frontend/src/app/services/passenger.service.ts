@@ -23,6 +23,7 @@ export interface PassengerProfile {
   preferredStops: ResolvedStop[];
   notifyOnArrival: boolean;
   notifyOnDelay: boolean;
+  notificationThresholdMinutes: number;
   totalTripsRecorded: number;
 }
 
@@ -32,6 +33,7 @@ export interface PassengerProfileUpdate {
   preferredStops?: string[];
   notifyOnArrival?: boolean;
   notifyOnDelay?: boolean;
+  notificationThresholdMinutes?: number;
 }
 
 export interface PassengerListItem {
