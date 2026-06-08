@@ -7,6 +7,7 @@ from app.models.user import User
 from app.schemas.common import APIResponse, Meta, PaginatedResponse
 from app.schemas.passenger import (
     PassengerListItem,
+    PassengerNotification,
     PassengerProfileRead,
     PassengerProfileUpdate,
     PassengerStatsRead,
@@ -59,6 +60,22 @@ async def update_my_profile(
     profile = await passenger_service.update_profile(db, current_user, data)
     await db.commit()
     return APIResponse(data=profile)
+
+
+@router.get(
+    "/me/notifications",
+    response_model=APIResponse[list[PassengerNotification]],
+    summary="Get notifications for favourite stops",
+    description="Returns buses approaching the passenger's favourite stops. Empty list if none are approaching.",
+)
+async def get_my_notifications(
+    current_user: User = Depends(require_role("passenger")),
+    db: AsyncSession = Depends(get_db),
+) -> APIResponse[list[PassengerNotification]]:
+    notifications = await passenger_service.get_passenger_notifications(
+        db, current_user
+    )
+    return APIResponse(data=notifications)
 
 
 @router.get(

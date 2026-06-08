@@ -18,6 +18,7 @@ import { Drivers } from './components/pages/Drivers';
 import { Maintenance } from './components/pages/Maintenance';
 import { Analytics } from './components/pages/Analytics';
 import { Alerts } from './components/pages/Alerts';
+import { PassengerNotificationsPage } from './components/pages/PassengerNotificationsPage';
 import { Administration } from './components/pages/Administration';
 import { Security } from './components/pages/Security';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -70,6 +71,7 @@ export const router = createBrowserRouter([
       { path: 'maintenance', Component: Maintenance },
       { path: 'analytics', Component: Analytics },
       { path: 'alerts', Component: Alerts },
+      { path: 'passenger-notifications', Component: PassengerNotificationsPage },
       { path: 'admin', Component: Administration },
       { path: 'security', Component: Security },
     ],

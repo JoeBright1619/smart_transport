@@ -5,26 +5,30 @@ import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import type { GlobalStopRead, ArrivalEstimate } from '../../../lib/api-types';
 import { getPublicStops, getCrossTenantArrivals } from '../../../services/arrivals.service';
+import { getMyProfile, updateMyProfile } from '../../../services/passenger.service';
+import { useAuth } from '../../../lib/auth-context';
 import { MapPin, Clock, Navigation, Heart, Search, Building2 } from 'lucide-react';
 
 export function PassengerTracking() {
+  const { user } = useAuth();
+  const isPassenger = user?.role === 'passenger';
+  const [preferredStopIds, setPreferredStopIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [allStops, setAllStops] = useState<GlobalStopRead[]>([]);
   const [selectedStop, setSelectedStop] = useState<string | null>(null);
   const [arrivals, setArrivals] = useState<ArrivalEstimate[]>([]);
   const [countdown, setCountdown] = useState(10);
-  const [favoriteStops, setFavoriteStops] = useState<string[]>(() => {
-    try {
-      const stored = localStorage.getItem('passenger-favourite-stops');
-      if (!stored) return [];
-      const parsed = JSON.parse(stored);
-      return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : [];
-    } catch { return []; }
-  });
 
   useEffect(() => {
     getPublicStops().then(setAllStops).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!isPassenger) return;
+    getMyProfile()
+      .then((p) => setPreferredStopIds(p.preferredStops.map((s) => s.id)))
+      .catch(() => {});
+  }, [isPassenger]);
 
   useEffect(() => {
     if (!selectedStop) { setArrivals([]); return; }
@@ -46,18 +50,23 @@ export function PassengerTracking() {
     return () => clearInterval(tick);
   }, [selectedStop]);
 
-  useEffect(() => {
-    try { localStorage.setItem('passenger-favourite-stops', JSON.stringify(favoriteStops)); } catch {}
-  }, [favoriteStops]);
-
   const filteredStops = allStops.filter((s) =>
     s.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  const favoriteStopsList = allStops.filter((s) => favoriteStops.includes(s.id));
+  const favoriteStopsList = allStops.filter((s) => preferredStopIds.includes(s.id));
   const selectedStopData = allStops.find((s) => s.id === selectedStop);
 
-  const toggleFavorite = (id: string) =>
-    setFavoriteStops((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  const toggleFavorite = async (id: string) => {
+    const newIds = preferredStopIds.includes(id)
+      ? preferredStopIds.filter((x) => x !== id)
+      : [...preferredStopIds, id];
+    setPreferredStopIds(newIds);
+    try {
+      await updateMyProfile({ preferredStops: newIds });
+    } catch {
+      setPreferredStopIds(preferredStopIds);
+    }
+  };
 
   const operatorSummary = arrivals.reduce<Record<string, Set<string>>>((acc, a) => {
     if (!acc[a.tenantName]) acc[a.tenantName] = new Set();
@@ -116,9 +125,14 @@ export function PassengerTracking() {
                         <MapPin className="size-4 text-slate-400" />
                         <p className="font-medium">{stop.name}</p>
                       </div>
-                      <button onClick={(e) => { e.stopPropagation(); toggleFavorite(stop.id); }} className="ml-2 p-1">
-                        <Heart className={`size-4 ${favoriteStops.includes(stop.id) ? 'fill-red-500 text-red-500' : 'text-slate-300'}`} />
-                      </button>
+                      {isPassenger && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); void toggleFavorite(stop.id); }}
+                          className="ml-2 p-1"
+                        >
+                          <Heart className={`size-4 ${preferredStopIds.includes(stop.id) ? 'fill-red-500 text-red-500' : 'text-slate-300'}`} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}

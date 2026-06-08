@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 4.2 — Fix Passenger Profile: Favourite Stops Selection Returns 403
+**Next task:** — (Phase 4 complete)
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -81,7 +81,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `fix: passenger profile favourite stops use public stops endpoint instead of tenant routes`
 
-- [ ] Task 4.2 complete
+- [x] Task 4.2 complete
 
 ---
 
@@ -106,7 +106,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `fix: passenger alerts 403 and bus-approaching notifications for favourite stops`
 
-- [ ] Task 4.3 complete
+- [x] Task 4.3 complete
 
 ---
 

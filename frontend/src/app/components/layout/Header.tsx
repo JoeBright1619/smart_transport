@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -12,7 +12,9 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { listAlerts, acknowledgeAlert } from '../../services/alerts.service';
-import type { AlertRead, AlertSeverity } from '../../lib/api-types';
+import { getMyNotifications } from '../../services/passenger.service';
+import type { AlertRead, AlertSeverity, PassengerNotification } from '../../lib/api-types';
+import { useAuth } from '../../lib/auth-context';
 
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -31,37 +33,62 @@ const SEVERITY_CLASS: Record<AlertSeverity, string> = {
   low: 'bg-slate-100 text-slate-600',
 };
 
+const STAFF_ROLES = new Set(['admin', 'operator', 'dispatcher']);
+
 export function Header() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isStaff = user?.role ? STAFF_ROLES.has(user.role) : false;
+  const isPassenger = user?.role === 'passenger';
+
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [open, setOpen] = useState(false);
+
+  // Staff alerts state
   const [alerts, setAlerts] = useState<AlertRead[]>([]);
   const [unacknowledgedCount, setUnacknowledgedCount] = useState(0);
-  const [open, setOpen] = useState(false);
+
+  // Passenger notifications state
+  const [passengerNotifs, setPassengerNotifs] = useState<PassengerNotification[]>([]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
+  // Staff: poll tenant alerts
   const fetchAlerts = useCallback(() => {
+    if (!isStaff) return;
     listAlerts({ isAcknowledged: false, pageSize: 5 })
-      .then(res => {
-        setAlerts(res.items);
-        setUnacknowledgedCount(res.total);
-      })
+      .then(res => { setAlerts(res.items); setUnacknowledgedCount(res.total); })
       .catch(() => {});
-  }, []);
+  }, [isStaff]);
 
   useEffect(() => {
     fetchAlerts();
-    const interval = setInterval(fetchAlerts, 30_000);
-    return () => clearInterval(interval);
+    const id = setInterval(fetchAlerts, 30_000);
+    return () => clearInterval(id);
   }, [fetchAlerts]);
+
+  // Passenger: poll favourite-stop notifications
+  const fetchPassengerNotifs = useCallback(() => {
+    if (!isPassenger) return;
+    getMyNotifications().then(setPassengerNotifs).catch(() => {});
+  }, [isPassenger]);
+
+  useEffect(() => {
+    fetchPassengerNotifs();
+    const id = setInterval(fetchPassengerNotifs, 30_000);
+    return () => clearInterval(id);
+  }, [fetchPassengerNotifs]);
 
   function handleAcknowledge(id: string, e: React.MouseEvent) {
     e.stopPropagation();
     acknowledgeAlert(id).then(fetchAlerts).catch(() => {});
   }
+
+  const badgeCount = isPassenger ? passengerNotifs.length : unacknowledgedCount;
+  const viewAllPath = isPassenger ? '/passenger-notifications' : '/alerts';
 
   return (
     <header className="flex h-16 items-center justify-end border-b bg-white px-6 gap-4">
@@ -69,9 +96,9 @@ export function Header() {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="size-5" />
-            {unacknowledgedCount > 0 && (
+            {badgeCount > 0 && (
               <Badge className="absolute -right-1 -top-1 size-5 p-0 flex items-center justify-center text-xs">
-                {unacknowledgedCount > 99 ? '99+' : unacknowledgedCount}
+                {badgeCount > 99 ? '99+' : badgeCount}
               </Badge>
             )}
           </Button>
@@ -79,43 +106,83 @@ export function Header() {
         <DropdownMenuContent align="end" className="w-80">
           <DropdownMenuLabel className="flex items-center justify-between">
             <span>Notifications</span>
-            {unacknowledgedCount > 0 && (
-              <span className="text-xs font-normal text-slate-500">{unacknowledgedCount} unread</span>
+            {badgeCount > 0 && (
+              <span className="text-xs font-normal text-slate-500">{badgeCount} active</span>
             )}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {alerts.length === 0 ? (
-            <div className="px-3 py-4 text-sm text-slate-500 text-center">No new alerts</div>
-          ) : (
-            alerts.map(alert => (
-              <DropdownMenuItem
-                key={alert.id}
-                className="flex flex-col items-start gap-1 px-3 py-2.5 cursor-pointer"
-                onClick={() => { navigate('/alerts'); setOpen(false); }}
-              >
-                <div className="flex w-full items-center justify-between gap-2">
-                  <span className="font-medium text-sm leading-tight line-clamp-1">{alert.title}</span>
-                  <span className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-medium ${SEVERITY_CLASS[alert.severity]}`}>
-                    {alert.severity}
-                  </span>
-                </div>
-                <div className="flex w-full items-center justify-between text-xs text-slate-400">
-                  <span className="line-clamp-1">{alert.message}</span>
-                  <button
-                    className="shrink-0 ml-2 hover:text-slate-600 underline"
-                    onClick={(e) => handleAcknowledge(alert.id, e)}
+
+          {isPassenger ? (
+            passengerNotifs.length === 0 ? (
+              <div className="px-3 py-4 text-sm text-slate-500 text-center">
+                No buses approaching your favourite stops
+              </div>
+            ) : (
+              passengerNotifs.slice(0, 5).map((n) => {
+                const first = n.arrivals[0];
+                return (
+                  <DropdownMenuItem
+                    key={n.stopName}
+                    className="flex flex-col items-start gap-0.5 px-3 py-2.5 cursor-pointer"
+                    onClick={() => { navigate('/passenger-notifications'); setOpen(false); }}
                   >
-                    Dismiss
-                  </button>
-                </div>
-                <span className="text-xs text-slate-300">{relativeTime(alert.createdAt)}</span>
-              </DropdownMenuItem>
-            ))
+                    <div className="flex items-center gap-1.5 w-full">
+                      <MapPin className="size-3.5 text-slate-400 shrink-0" />
+                      <span className="font-medium text-sm leading-tight line-clamp-1">{n.stopName}</span>
+                    </div>
+                    {first && (
+                      <div className="flex w-full items-center justify-between text-xs text-slate-500 pl-5">
+                        <span className="line-clamp-1">{first.registrationNumber} · {first.routeName}</span>
+                        <span className="shrink-0 ml-2 font-semibold text-blue-600">
+                          {first.etaMinutes != null && first.etaMinutes < 2
+                            ? 'Now'
+                            : first.etaMinutes != null
+                            ? `${first.etaMinutes} min`
+                            : 'Stopped'}
+                        </span>
+                      </div>
+                    )}
+                  </DropdownMenuItem>
+                );
+              })
+            )
+          ) : isStaff ? (
+            alerts.length === 0 ? (
+              <div className="px-3 py-4 text-sm text-slate-500 text-center">No new alerts</div>
+            ) : (
+              alerts.map(alert => (
+                <DropdownMenuItem
+                  key={alert.id}
+                  className="flex flex-col items-start gap-1 px-3 py-2.5 cursor-pointer"
+                  onClick={() => { navigate('/alerts'); setOpen(false); }}
+                >
+                  <div className="flex w-full items-center justify-between gap-2">
+                    <span className="font-medium text-sm leading-tight line-clamp-1">{alert.title}</span>
+                    <span className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-medium ${SEVERITY_CLASS[alert.severity]}`}>
+                      {alert.severity}
+                    </span>
+                  </div>
+                  <div className="flex w-full items-center justify-between text-xs text-slate-400">
+                    <span className="line-clamp-1">{alert.message}</span>
+                    <button
+                      className="shrink-0 ml-2 hover:text-slate-600 underline"
+                      onClick={(e) => handleAcknowledge(alert.id, e)}
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                  <span className="text-xs text-slate-300">{relativeTime(alert.createdAt)}</span>
+                </DropdownMenuItem>
+              ))
+            )
+          ) : (
+            <div className="px-3 py-4 text-sm text-slate-500 text-center">No notifications</div>
           )}
+
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className="justify-center text-sm text-blue-600 font-medium cursor-pointer"
-            onClick={() => { navigate('/alerts'); setOpen(false); }}
+            onClick={() => { navigate(viewAllPath); setOpen(false); }}
           >
             View all alerts
           </DropdownMenuItem>

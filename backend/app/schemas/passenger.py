@@ -2,6 +2,7 @@ from datetime import datetime
 
 from pydantic import Field
 
+from app.schemas.arrival import PublicArrivalRead
 from app.schemas.base import APIModel
 
 
@@ -68,3 +69,8 @@ class PassengerStatsRead(APIModel):
     last_week_trips: int = 0
     weekly_trips: list[WeeklyTrips] = Field(default_factory=list)
     has_enough_data: bool
+
+
+class PassengerNotification(APIModel):
+    stop_name: str
+    arrivals: list[PublicArrivalRead]

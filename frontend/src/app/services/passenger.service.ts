@@ -1,5 +1,5 @@
 import { apiClient } from '../lib/api-client';
-import type { ApiResponse, PaginatedResponse } from '../lib/api-types';
+import type { ApiResponse, PaginatedResponse, PassengerNotification } from '../lib/api-types';
 
 export interface ResolvedRoute {
   id: string;
@@ -78,6 +78,13 @@ export async function getMyProfile(): Promise<PassengerProfile> {
 
 export async function updateMyProfile(data: PassengerProfileUpdate): Promise<PassengerProfile> {
   const res = await apiClient.patch<ApiResponse<PassengerProfile>>('/api/v1/passengers/me', data);
+  return res.data.data;
+}
+
+export async function getMyNotifications(): Promise<PassengerNotification[]> {
+  const res = await apiClient.get<ApiResponse<PassengerNotification[]>>(
+    '/api/v1/passengers/me/notifications',
+  );
   return res.data.data;
 }
 

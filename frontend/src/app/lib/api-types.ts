@@ -443,6 +443,11 @@ export interface ArrivalEstimate {
   remainingSeats: number;
 }
 
+export interface PassengerNotification {
+  stopName: string;
+  arrivals: ArrivalEstimate[];
+}
+
 // Superadmin
 export interface TenantRead {
   id: string;

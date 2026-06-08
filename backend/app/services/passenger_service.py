@@ -17,6 +17,7 @@ from app.models.passenger_profile import PassengerProfile
 from app.models.route import Route, Stop
 from app.models.user import User
 from app.schemas.passenger import (
+    PassengerNotification,
     PassengerProfileRead,
     PassengerProfileUpdate,
     ResolvedRoute,
@@ -266,6 +267,44 @@ async def update_profile(
 
     await db.flush()
     return await _resolve_profile(db, profile, user)
+
+
+async def get_passenger_notifications(
+    db: AsyncSession,
+    user: User,
+) -> list[PassengerNotification]:
+    """Return approaching-bus arrivals for each of the passenger's favourite stops."""
+    from fastapi import HTTPException
+    from app.services.arrival_service import get_cross_tenant_arrivals
+
+    profile = await db.scalar(
+        select(PassengerProfile).where(PassengerProfile.user_id == user.id)
+    )
+    if profile is None or not profile.preferred_stops:
+        return []
+
+    stop_rows = await db.execute(
+        select(Stop.id, Stop.name).where(
+            Stop.id.in_(profile.preferred_stops),
+            Stop.is_deleted.is_(False),
+        )
+    )
+    stop_names = {r.id: r.name for r in stop_rows}
+
+    result: list[PassengerNotification] = []
+    for stop_id in profile.preferred_stops:
+        try:
+            arrivals = await get_cross_tenant_arrivals(db, stop_id)
+        except HTTPException:
+            continue
+        if arrivals:
+            result.append(
+                PassengerNotification(
+                    stop_name=stop_names.get(stop_id, stop_id),
+                    arrivals=arrivals,
+                )
+            )
+    return result
 
 
 async def list_passengers(
