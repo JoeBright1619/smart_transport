@@ -2,18 +2,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from random import uniform, randint
+from random import uniform
 from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.geo_math import bearing, haversine_distance, move_along_bearing
-from app.crud.analytics import upsert_daily_analytics
 from app.models.route import RouteStop, Stop
 from app.models.vehicle import Vehicle
-from app.services import boarding_service
-from app.websocket.manager import manager
+from app.websocket.passenger_simulation import simulate_passengers_at_stop
 from app.websocket.route_trip_records import create_completed_trip
 
 TICK_SECONDS = 5
@@ -121,7 +119,7 @@ async def advance_vehicle(
         state["dwell_remaining"] = DWELL_TICKS
         state["at_stop_name"] = stops[current_stop_index].name
 
-        await _simulate_passengers_at_stop(
+        await simulate_passengers_at_stop(
             db, vehicle, stops, current_stop_index, state, now
         )
 
@@ -163,140 +161,6 @@ async def _create_completed_trip(
 ) -> None:
     """Create a completed trip for a vehicle that has finished its route loop."""
     await create_completed_trip(db, vehicle, state, now)
-
-
-async def _simulate_passengers_at_stop(
-    db: AsyncSession,
-    vehicle: Vehicle,
-    stops: list[StopPoint],
-    current_stop_index: int,
-    state: dict[str, Any],
-    now: datetime,
-) -> None:
-    """Simulate passengers boarding and alighting at a stop and calculate revenue."""
-    passengers = state.setdefault("passengers", [])
-    is_terminal = current_stop_index == 0
-    is_last_stop = current_stop_index == len(stops) - 1
-    capacity = vehicle.seating_capacity
-
-    # 1. Alight passengers (and keep through-passengers at the last stop)
-    remaining_passengers = []
-    revenue = 0.0
-    alighted_count = 0
-
-    if is_last_stop and len(stops) > 2:
-        # Keep 3-6 passengers who stay on for the return trip
-        n_through = min(randint(3, 6), len(passengers))  # nosec B311
-        for i, p in enumerate(passengers):
-            if i < n_through:
-                # Reassign destination for the next loop
-                remaining_passengers.append(
-                    {
-                        "origin_index": 0,
-                        "dest_index": randint(1, len(stops) - 1),  # nosec B311
-                        "distance_km": 1.0,
-                    }
-                )
-            elif p["dest_index"] == current_stop_index:
-                revenue += p["distance_km"] * 60.0
-                alighted_count += 1
-            else:
-                remaining_passengers.append(p)
-    else:
-        for p in passengers:
-            if p["dest_index"] == current_stop_index:
-                revenue += p["distance_km"] * 60.0
-                alighted_count += 1
-            else:
-                remaining_passengers.append(p)
-
-    # 2. Board new passengers
-    boarded_count = 0
-    available_seats = capacity - len(remaining_passengers)
-
-    if is_terminal and len(stops) > 1 and available_seats > 0:
-        # Terminal: fill 70–85% of seats — bus departs well-loaded from the station
-        target = randint(int(capacity * 0.70), int(capacity * 0.85))  # nosec B311
-        boarded_count = min(target, available_seats)
-        for _ in range(boarded_count):
-            dest_index = randint(1, len(stops) - 1)  # nosec B311
-            dist_m = sum(
-                haversine_distance(
-                    stops[i].lat, stops[i].lng, stops[i + 1].lat, stops[i + 1].lng
-                )
-                for i in range(0, dest_index)
-            )
-            remaining_passengers.append(
-                {
-                    "origin_index": current_stop_index,
-                    "dest_index": dest_index,
-                    "distance_km": dist_m / 1000.0,
-                }
-            )
-    elif not is_last_stop and available_seats > 0:
-        # Intermediate stop: board 3–7 passengers (guaranteed at least some)
-        board_cap = max(1, capacity // 6)
-        lower = min(max(1, board_cap // 2), available_seats)
-        upper = min(board_cap, available_seats)
-        boarded_count = randint(lower, upper)  # nosec B311
-        for _ in range(boarded_count):
-            dest_index = randint(current_stop_index + 1, len(stops) - 1)  # nosec B311
-            dist_m = sum(
-                haversine_distance(
-                    stops[i].lat, stops[i].lng, stops[i + 1].lat, stops[i + 1].lng
-                )
-                for i in range(current_stop_index, dest_index)
-            )
-            remaining_passengers.append(
-                {
-                    "origin_index": current_stop_index,
-                    "dest_index": dest_index,
-                    "distance_km": dist_m / 1000.0,
-                }
-            )
-
-    state["passengers"] = remaining_passengers
-    state["current_occupancy"] = len(remaining_passengers)
-
-    occupancy_after = len(remaining_passengers)
-
-    # 3. Persist occupancy to DB so value survives page reloads
-    vehicle.current_occupancy = occupancy_after
-    await db.flush()
-
-    # 4. Broadcast immediate occupancy update
-    await manager.publish_to_tenant(
-        vehicle.tenant_id,
-        {
-            "type": "vehicle_occupancy_updated",
-            "vehicleId": vehicle.id,
-            "currentOccupancy": occupancy_after,
-            "seatingCapacity": vehicle.seating_capacity,
-            "remainingSeats": max(0, vehicle.seating_capacity - occupancy_after),
-        },
-    )
-
-    # 5. Persist boarding records
-    if boarded_count > 0 or alighted_count > 0:
-        await boarding_service.record_stop_events(
-            db,
-            vehicle,
-            stops[current_stop_index].id,
-            boarded_count,
-            alighted_count,
-            occupancy_after,
-            now,
-            stop_name=stops[current_stop_index].name,
-        )
-
-    # 6. Add to live daily revenue
-    if revenue > 0:
-        await upsert_daily_analytics(
-            db=db,
-            tenant_id=vehicle.tenant_id,
-            record_date=now.date(),
-            revenue=revenue,
-        )
 
 
 def get_or_init_state(vehicle_id: str, stop_count: int) -> dict[str, Any]:

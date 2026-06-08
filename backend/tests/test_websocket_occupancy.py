@@ -56,14 +56,16 @@ def _make_stops():
 
 
 async def test_simulate_passengers_updates_current_occupancy(db: AsyncSession, vehicle):
-    from app.websocket.route_simulation import _simulate_passengers_at_stop
+    from app.websocket.passenger_simulation import (
+        simulate_passengers_at_stop as _simulate_passengers_at_stop,
+    )
 
     stops = _make_stops()
     state: dict = {"passengers": [], "current_occupancy": 0}
     now = datetime.now(timezone.utc)
 
     with patch(
-        "app.websocket.route_simulation.manager.publish_to_tenant",
+        "app.websocket.passenger_simulation.manager.publish_to_tenant",
         new_callable=AsyncMock,
     ):
         await _simulate_passengers_at_stop(db, vehicle, stops, 0, state, now)
@@ -75,14 +77,16 @@ async def test_simulate_passengers_updates_current_occupancy(db: AsyncSession, v
 async def test_simulate_passengers_occupancy_does_not_exceed_capacity(
     db: AsyncSession, vehicle
 ):
-    from app.websocket.route_simulation import _simulate_passengers_at_stop
+    from app.websocket.passenger_simulation import (
+        simulate_passengers_at_stop as _simulate_passengers_at_stop,
+    )
 
     stops = _make_stops()
     state: dict = {"passengers": [], "current_occupancy": 0}
     now = datetime.now(timezone.utc)
 
     with patch(
-        "app.websocket.route_simulation.manager.publish_to_tenant",
+        "app.websocket.passenger_simulation.manager.publish_to_tenant",
         new_callable=AsyncMock,
     ):
         for stop_idx in range(len(stops) - 1):
@@ -97,14 +101,16 @@ async def test_simulate_passengers_occupancy_does_not_exceed_capacity(
 
 
 async def test_simulate_passengers_publishes_occupancy_event(db: AsyncSession, vehicle):
-    from app.websocket.route_simulation import _simulate_passengers_at_stop
+    from app.websocket.passenger_simulation import (
+        simulate_passengers_at_stop as _simulate_passengers_at_stop,
+    )
 
     stops = _make_stops()
     state: dict = {"passengers": [], "current_occupancy": 0}
     now = datetime.now(timezone.utc)
 
     with patch(
-        "app.websocket.route_simulation.manager.publish_to_tenant",
+        "app.websocket.passenger_simulation.manager.publish_to_tenant",
         new_callable=AsyncMock,
     ) as mock_publish:
         await _simulate_passengers_at_stop(db, vehicle, stops, 0, state, now)
@@ -128,14 +134,16 @@ async def test_simulate_passengers_publishes_occupancy_event(db: AsyncSession, v
 async def test_simulate_passengers_publishes_correct_remaining_seats(
     db: AsyncSession, vehicle
 ):
-    from app.websocket.route_simulation import _simulate_passengers_at_stop
+    from app.websocket.passenger_simulation import (
+        simulate_passengers_at_stop as _simulate_passengers_at_stop,
+    )
 
     stops = _make_stops()
     state: dict = {"passengers": [], "current_occupancy": 0}
     now = datetime.now(timezone.utc)
 
     with patch(
-        "app.websocket.route_simulation.manager.publish_to_tenant",
+        "app.websocket.passenger_simulation.manager.publish_to_tenant",
         new_callable=AsyncMock,
     ) as mock_publish:
         await _simulate_passengers_at_stop(db, vehicle, stops, 0, state, now)
@@ -209,14 +217,16 @@ async def test_build_vehicle_update_includes_occupancy_fields(
 
 async def test_boarding_count_never_exceeds_seating_capacity(db: AsyncSession, vehicle):
     """After many stops, on-board passenger count must stay within seating capacity."""
-    from app.websocket.route_simulation import _simulate_passengers_at_stop
+    from app.websocket.passenger_simulation import (
+        simulate_passengers_at_stop as _simulate_passengers_at_stop,
+    )
 
     stops = _make_stops()
     state: dict = {"passengers": [], "current_occupancy": 0}
     now = datetime.now(timezone.utc)
 
     with patch(
-        "app.websocket.route_simulation.manager.publish_to_tenant",
+        "app.websocket.passenger_simulation.manager.publish_to_tenant",
         new_callable=AsyncMock,
     ):
         for _ in range(20):
@@ -232,14 +242,16 @@ async def test_boarding_count_never_exceeds_seating_capacity(db: AsyncSession, v
 
 async def test_alighting_never_makes_occupancy_negative(db: AsyncSession, vehicle):
     """Occupancy must never go below zero after alighting."""
-    from app.websocket.route_simulation import _simulate_passengers_at_stop
+    from app.websocket.passenger_simulation import (
+        simulate_passengers_at_stop as _simulate_passengers_at_stop,
+    )
 
     stops = _make_stops()
     state: dict = {"passengers": [], "current_occupancy": 0}
     now = datetime.now(timezone.utc)
 
     with patch(
-        "app.websocket.route_simulation.manager.publish_to_tenant",
+        "app.websocket.passenger_simulation.manager.publish_to_tenant",
         new_callable=AsyncMock,
     ):
         for stop_idx in range(len(stops)):
@@ -252,14 +264,16 @@ async def test_vehicle_current_occupancy_persisted_to_db(db: AsyncSession, vehic
     from sqlalchemy import select
 
     from app.models.vehicle import Vehicle
-    from app.websocket.route_simulation import _simulate_passengers_at_stop
+    from app.websocket.passenger_simulation import (
+        simulate_passengers_at_stop as _simulate_passengers_at_stop,
+    )
 
     stops = _make_stops()
     state: dict = {"passengers": [], "current_occupancy": 0}
     now = datetime.now(timezone.utc)
 
     with patch(
-        "app.websocket.route_simulation.manager.publish_to_tenant",
+        "app.websocket.passenger_simulation.manager.publish_to_tenant",
         new_callable=AsyncMock,
     ):
         await _simulate_passengers_at_stop(db, vehicle, stops, 0, state, now)

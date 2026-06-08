@@ -67,6 +67,37 @@ async def record_stop_events(
         )
 
 
+async def record_single_boarding(
+    db: AsyncSession,
+    trip_id: str | None,
+    stop_id: str,
+    passenger_id: str,
+    event_type: str,
+    tenant_id: str,
+    occupancy_after: int,
+    now: datetime,
+) -> None:
+    """Persist one boarding or alighting row for a single identified passenger."""
+    db.add(
+        BoardingRecord(
+            trip_id=trip_id,
+            stop_id=stop_id,
+            passenger_id=passenger_id,
+            event_type=event_type,
+            count=1,
+            recorded_at=now,
+            occupancy_after=occupancy_after,
+            tenant_id=tenant_id,
+        )
+    )
+    if event_type == "boarded":
+        await db.execute(
+            update(PassengerProfile)
+            .where(PassengerProfile.user_id == passenger_id)
+            .values(total_trips_recorded=PassengerProfile.total_trips_recorded + 1)
+        )
+
+
 async def list_boardings(
     db: AsyncSession,
     tenant_id: str,

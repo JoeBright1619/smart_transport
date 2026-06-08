@@ -192,6 +192,23 @@ async def _seed_users(db: AsyncSession) -> None:
         _log(f"user {uid} {'created' if created else 'already exists'}")
 
 
+async def _seed_passengers(db: AsyncSession) -> None:
+    for n in range(1, 21):
+        uid = f"user-passenger-{n:02d}"
+        _, created = await _get_or_create(
+            db,
+            User,
+            uid,
+            email=f"passenger_{n}@email.com",
+            password_hash=hash_password(_SEED_PASSWORD),
+            full_name=f"name_{n}",
+            role="passenger",
+            tenant_id=None,
+            is_deleted=False,
+        )
+        _log(f"passenger {uid} {'created' if created else 'already exists'}")
+
+
 async def _seed_stop(db: AsyncSession, name: str, lat: float, lng: float) -> str:
     existing = await db.scalar(
         select(Stop).where(
@@ -1020,6 +1037,7 @@ async def seed(reset: bool = False) -> None:
         await _seed_superadmin(db)
         await _seed_tenant(db)
         await _seed_users(db)
+        await _seed_passengers(db)
         await db.flush()
 
         await _seed_routes(db)
