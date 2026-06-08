@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Bell, Heart, MapPin, Phone, Route, Save } from 'lucide-react';
+import { Bell, Heart, MapPin, Phone, Save } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
 import { toast } from 'sonner';
 import { ApiError } from '../../../lib/api-client';
-import type { RouteRead } from '../../../lib/api-types';
-import { listRoutes } from '../../../services/routes.service';
+import type { GlobalStopRead } from '../../../lib/api-types';
+import { getPublicStops } from '../../../services/arrivals.service';
 import * as passengerService from '../../../services/passenger.service';
 import type { PassengerProfile } from '../../../services/passenger.service';
 
@@ -40,9 +40,8 @@ function Toggle({
 
 export function PassengerProfileSection() {
   const [profile, setProfile] = useState<PassengerProfile | null>(null);
-  const [allRoutes, setAllRoutes] = useState<RouteRead[]>([]);
+  const [allStops, setAllStops] = useState<GlobalStopRead[]>([]);
   const [phone, setPhone] = useState('');
-  const [selectedRoutes, setSelectedRoutes] = useState<string[]>([]);
   const [selectedStops, setSelectedStops] = useState<string[]>([]);
   const [notifyArrival, setNotifyArrival] = useState(true);
   const [notifyDelay, setNotifyDelay] = useState(true);
@@ -52,21 +51,13 @@ export function PassengerProfileSection() {
     passengerService.getMyProfile().then((p) => {
       setProfile(p);
       setPhone(p.phone ?? '');
-      setSelectedRoutes(p.preferredRoutes.map((r) => r.id));
       setSelectedStops(p.preferredStops.map((s) => s.id));
       setNotifyArrival(p.notifyOnArrival);
       setNotifyDelay(p.notifyOnDelay);
     }).catch(() => {});
 
-    listRoutes({ isActive: true, pageSize: 100 }).then((r) => setAllRoutes(r.items)).catch(() => {});
+    getPublicStops().then(setAllStops).catch(() => {});
   }, []);
-
-  const allStops = allRoutes.flatMap((r) =>
-    r.stops.map((s) => ({ ...s, routeName: r.name }))
-  ).filter((s, i, arr) => arr.findIndex((x) => x.id === s.id) === i);
-
-  const toggleRoute = (id: string) =>
-    setSelectedRoutes((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   const toggleStop = (id: string) =>
     setSelectedStops((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -76,7 +67,6 @@ export function PassengerProfileSection() {
     try {
       const updated = await passengerService.updateMyProfile({
         phone: phone.trim() || null,
-        preferredRoutes: selectedRoutes,
         preferredStops: selectedStops,
         notifyOnArrival: notifyArrival,
         notifyOnDelay: notifyDelay,
@@ -123,39 +113,6 @@ export function PassengerProfileSection() {
               />
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Favourite routes */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Route className="size-4 text-blue-600" />
-            Favourite Routes
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {allRoutes.length === 0 ? (
-            <p className="text-sm text-slate-500">No routes available</p>
-          ) : (
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-              {allRoutes.map((r) => (
-                <label key={r.id} className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectedRoutes.includes(r.id)}
-                    onChange={() => toggleRoute(r.id)}
-                    className="rounded"
-                  />
-                  <span
-                    className="inline-block size-3 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: r.color }}
-                  />
-                  <span className="text-sm">{r.name} <span className="text-slate-400">#{r.number}</span></span>
-                </label>
-              ))}
-            </div>
-          )}
         </CardContent>
       </Card>
 
