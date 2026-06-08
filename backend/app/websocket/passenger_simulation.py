@@ -140,11 +140,14 @@ async def simulate_passengers_at_stop(
                 }
             )
 
-    # Assign real passenger IDs to a random subset of the new boarders
+    # Assign real passenger IDs to a random subset of the new boarders.
+    # Exclude both currently on-board passengers AND those who just alighted at this
+    # stop — same-stop alight + reboard is not meaningful tracking data.
     on_board_ids = {
         p["passenger_id"] for p in remaining_passengers if p.get("passenger_id")
     }
-    tracked_board_ids = _assign_passenger_ids(new_entries, pool, on_board_ids)
+    excluded_ids = on_board_ids | set(tracked_alighted_ids)
+    tracked_board_ids = _assign_passenger_ids(new_entries, pool, excluded_ids)
 
     remaining_passengers.extend(new_entries)
     state["passengers"] = remaining_passengers
