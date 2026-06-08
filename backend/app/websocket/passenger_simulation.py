@@ -69,12 +69,18 @@ async def simulate_passengers_at_stop(
         n_through = min(randint(3, 6), len(passengers))  # nosec B311
         for i, p in enumerate(passengers):
             if i < n_through:
+                pid = p.get("passenger_id")
+                if pid:
+                    # Close the board→alight pair at the route boundary so the
+                    # passenger's trip history stays consistent, then carry them
+                    # forward as anonymous for the next leg.
+                    tracked_alighted_ids.append(pid)
                 remaining_passengers.append(
                     {
                         "origin_index": 0,
                         "dest_index": randint(1, len(stops) - 1),  # nosec B311
                         "distance_km": 1.0,
-                        "passenger_id": p.get("passenger_id"),
+                        "passenger_id": None,
                     }
                 )
             elif p["dest_index"] == current_stop_index:
