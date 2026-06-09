@@ -25,6 +25,7 @@ async def record_stop_events(
     now: datetime,
     passenger_id: str | None = None,
     stop_name: str = "",
+    route_id: str | None = None,
 ) -> None:
     """Persist one boarding row and one alighting row for a stop visit."""
     if alighting_count > 0:
@@ -32,6 +33,7 @@ async def record_stop_events(
         db.add(
             BoardingRecord(
                 stop_id=stop_id,
+                route_id=route_id,
                 passenger_id=passenger_id,
                 event_type="alighted",
                 count=alighting_count,
@@ -45,6 +47,7 @@ async def record_stop_events(
         db.add(
             BoardingRecord(
                 stop_id=stop_id,
+                route_id=route_id,
                 passenger_id=passenger_id,
                 event_type="boarded",
                 count=boarding_count,
@@ -77,11 +80,13 @@ async def record_single_boarding(
     tenant_id: str,
     occupancy_after: int,
     now: datetime,
+    route_id: str | None = None,
 ) -> None:
     """Persist one boarding or alighting row for a single identified passenger."""
     db.add(
         BoardingRecord(
             trip_id=trip_id,
+            route_id=route_id,
             stop_id=stop_id,
             passenger_id=passenger_id,
             event_type=event_type,

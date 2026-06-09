@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.boarding_record import BoardingRecord
 from app.models.route import Route, Stop
-from app.models.trip import Trip
 from app.models.user import User
 from app.schemas.analytics import (
     BoardingTimelineEntry,
@@ -50,20 +49,18 @@ async def get_passenger_usage_report(
     stmt = (
         select(
             BoardingRecord.recorded_at,
+            BoardingRecord.event_type,
             Stop.name.label("stop_name"),
             Route.name.label("route_name"),
-            Trip.status.label("trip_status"),
         )
         .outerjoin(Stop, BoardingRecord.stop_id == Stop.id)
-        .outerjoin(Trip, BoardingRecord.trip_id == Trip.id)
-        .outerjoin(Route, Trip.route_id == Route.id)
+        .outerjoin(Route, BoardingRecord.route_id == Route.id)
         .where(
             BoardingRecord.passenger_id == passenger_id,
-            BoardingRecord.event_type == "boarded",
             BoardingRecord.recorded_at >= start_dt,
             BoardingRecord.recorded_at < end_dt,
         )
-        .order_by(BoardingRecord.recorded_at.asc())
+        .order_by(BoardingRecord.recorded_at.desc())
     )
 
     rows = (await db.execute(stmt)).all()
@@ -77,6 +74,7 @@ async def get_passenger_usage_report(
             date_to=date_to.isoformat(),
             generated_at=datetime.now(timezone.utc).isoformat(),
             total_boardings=0,
+            total_alightings=0,
             most_used_routes=[],
             most_used_stops=[],
             timeline=[],
@@ -88,20 +86,27 @@ async def get_passenger_usage_report(
     route_counts: dict[str, int] = {}
     stop_counts: dict[str, int] = {}
     timeline: list[BoardingTimelineEntry] = []
+    total_boardings = 0
+    total_alightings = 0
 
     for row in rows:
-        route_name = row.route_name or "Unknown Route"
+        route_name = row.route_name or "Route not recorded"
         stop_name = row.stop_name or "Unknown Stop"
-        trip_status = row.trip_status or "unknown"
+        event_type = row.event_type
 
-        route_counts[route_name] = route_counts.get(route_name, 0) + 1
-        stop_counts[stop_name] = stop_counts.get(stop_name, 0) + 1
+        if event_type == "boarded":
+            total_boardings += 1
+            route_counts[route_name] = route_counts.get(route_name, 0) + 1
+            stop_counts[stop_name] = stop_counts.get(stop_name, 0) + 1
+        else:
+            total_alightings += 1
+
         timeline.append(
             BoardingTimelineEntry(
-                boarded_at=row.recorded_at.isoformat(),
+                recorded_at=row.recorded_at.isoformat(),
                 route_name=route_name,
                 stop_name=stop_name,
-                trip_status=trip_status,
+                event_type=event_type,
             )
         )
 
@@ -123,7 +128,8 @@ async def get_passenger_usage_report(
         date_from=date_from.isoformat(),
         date_to=date_to.isoformat(),
         generated_at=datetime.now(timezone.utc).isoformat(),
-        total_boardings=len(rows),
+        total_boardings=total_boardings,
+        total_alightings=total_alightings,
         most_used_routes=most_used_routes,
         most_used_stops=most_used_stops,
         timeline=timeline,

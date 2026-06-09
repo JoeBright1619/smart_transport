@@ -186,6 +186,7 @@ async def simulate_passengers_at_stop(
     # 5. Persist boarding records — individual for tracked passengers, aggregate for the rest
     stop_id = stops[current_stop_index].id
     trip_id: str | None = state.get("current_trip_id")
+    route_id: str | None = vehicle.route_id
 
     for pid in tracked_board_ids:
         await boarding_service.record_single_boarding(
@@ -197,6 +198,7 @@ async def simulate_passengers_at_stop(
             tenant_id=vehicle.tenant_id,
             occupancy_after=occupancy_after,
             now=now,
+            route_id=route_id,
         )
 
     for pid in tracked_alighted_ids:
@@ -209,6 +211,7 @@ async def simulate_passengers_at_stop(
             tenant_id=vehicle.tenant_id,
             occupancy_after=occupancy_after,
             now=now,
+            route_id=route_id,
         )
 
     anon_boarded = boarded_count - len(tracked_board_ids)
@@ -223,6 +226,7 @@ async def simulate_passengers_at_stop(
             occupancy_after,
             now,
             stop_name=stops[current_stop_index].name,
+            route_id=route_id,
         )
 
     # 6. Add to live daily revenue

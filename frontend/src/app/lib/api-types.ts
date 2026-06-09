@@ -518,10 +518,10 @@ export interface StopUsageCount {
 }
 
 export interface BoardingTimelineEntry {
-  boardedAt: string;
+  recordedAt: string;
   routeName: string;
   stopName: string;
-  tripStatus: string;
+  eventType: string;
 }
 
 export interface PassengerUsageReport {
@@ -532,6 +532,7 @@ export interface PassengerUsageReport {
   dateTo: string;
   generatedAt: string;
   totalBoardings: number;
+  totalAlightings: number;
   mostUsedRoutes: RouteUsageCount[];
   mostUsedStops: StopUsageCount[];
   timeline: BoardingTimelineEntry[];

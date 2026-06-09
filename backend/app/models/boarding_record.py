@@ -20,6 +20,9 @@ class BoardingRecord(Base):
     trip_id: Mapped[str | None] = mapped_column(
         String, ForeignKey("trips.id"), nullable=True
     )
+    route_id: Mapped[str | None] = mapped_column(
+        String, ForeignKey("routes.id"), nullable=True
+    )
     stop_id: Mapped[str] = mapped_column(String, ForeignKey("stops.id"), nullable=False)
     passenger_id: Mapped[str | None] = mapped_column(
         String, ForeignKey("users.id"), nullable=True
@@ -41,6 +44,7 @@ class BoardingRecord(Base):
         Index("idx_boarding_tenant", "tenant_id"),
         Index("idx_boarding_stop", "stop_id"),
         Index("idx_boarding_trip", "trip_id"),
+        Index("idx_boarding_route", "route_id"),
         Index("idx_boarding_passenger", "passenger_id"),
         Index("idx_boarding_recorded_at", "recorded_at"),
     )

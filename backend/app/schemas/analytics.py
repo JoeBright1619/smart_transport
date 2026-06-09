@@ -123,10 +123,10 @@ class StopUsageCount(APIModel):
 
 
 class BoardingTimelineEntry(APIModel):
-    boarded_at: str
+    recorded_at: str
     route_name: str
     stop_name: str
-    trip_status: str
+    event_type: str
 
 
 class PassengerUsageReport(APIModel):
@@ -137,6 +137,7 @@ class PassengerUsageReport(APIModel):
     date_to: str
     generated_at: str
     total_boardings: int
+    total_alightings: int
     most_used_routes: List[RouteUsageCount]
     most_used_stops: List[StopUsageCount]
     timeline: List[BoardingTimelineEntry]
