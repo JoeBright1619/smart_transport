@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MapPin, Navigation } from 'lucide-react';
+import { Bus, MapPin, Navigation } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Badge } from '../../ui/badge';
 import { getMyBoardings, type PassengerTripRecord } from '../../../services/boarding.service';
@@ -50,6 +50,13 @@ export function PassengerTrips() {
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-slate-500 space-y-1">
+            {rec.vehicleRegistration && (
+              <p className="flex items-center gap-1.5">
+                <Bus className="size-3.5 shrink-0" />
+                {rec.vehicleRegistration}
+                {rec.vehicleModel && <span className="text-slate-400">· {rec.vehicleModel}</span>}
+              </p>
+            )}
             <p>{new Date(rec.recordedAt).toLocaleString()}</p>
             <p>Occupancy after: {rec.occupancyAfter} passengers</p>
           </CardContent>

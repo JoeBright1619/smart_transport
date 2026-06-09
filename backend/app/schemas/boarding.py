@@ -25,3 +25,5 @@ class PassengerTripRead(APIModel):
     trip_id: str | None
     recorded_at: datetime
     occupancy_after: int
+    vehicle_registration: str | None = None
+    vehicle_model: str | None = None

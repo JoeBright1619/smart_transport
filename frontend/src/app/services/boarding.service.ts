@@ -10,6 +10,8 @@ export interface PassengerTripRecord {
   tripId: string | null;
   recordedAt: string;
   occupancyAfter: number;
+  vehicleRegistration: string | null;
+  vehicleModel: string | null;
 }
 
 export async function getMyBoardings(page = 1, pageSize = 20): Promise<PaginatedResponse<PassengerTripRecord>> {

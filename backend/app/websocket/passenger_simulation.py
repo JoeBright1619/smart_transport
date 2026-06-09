@@ -17,6 +17,11 @@ from app.services import boarding_service
 from app.websocket.manager import manager
 
 
+# Global set of passenger IDs currently on board any vehicle.
+# Prevents the same real passenger from being assigned to two buses simultaneously.
+_globally_on_board: set[str] = set()
+
+
 async def load_passenger_pool(db: AsyncSession, state: dict[str, Any]) -> list[str]:
     """Load real passenger IDs once into vehicle state; no-op on repeat calls."""
     if "passenger_pool" not in state:
@@ -30,10 +35,10 @@ async def load_passenger_pool(db: AsyncSession, state: dict[str, Any]) -> list[s
 def _assign_passenger_ids(
     new_entries: list[dict[str, Any]],
     pool: list[str],
-    on_board_ids: set[str],
+    excluded_ids: set[str],
 ) -> list[str]:
     """Randomly assign real IDs to a subset of new boarders; mutates entries in-place."""
-    available = [pid for pid in pool if pid not in on_board_ids]
+    available = [pid for pid in pool if pid not in excluded_ids]
     n = min(len(new_entries), len(available))
     if not n:
         return []
@@ -147,13 +152,15 @@ async def simulate_passengers_at_stop(
             )
 
     # Assign real passenger IDs to a random subset of the new boarders.
-    # Exclude both currently on-board passengers AND those who just alighted at this
-    # stop — same-stop alight + reboard is not meaningful tracking data.
+    # Exclude: passengers on this vehicle, those who just alighted here (no same-stop
+    # reboard), and any ID already riding another vehicle (_globally_on_board).
     on_board_ids = {
         p["passenger_id"] for p in remaining_passengers if p.get("passenger_id")
     }
-    excluded_ids = on_board_ids | set(tracked_alighted_ids)
+    excluded_ids = on_board_ids | set(tracked_alighted_ids) | _globally_on_board
     tracked_board_ids = _assign_passenger_ids(new_entries, pool, excluded_ids)
+    _globally_on_board.update(tracked_board_ids)
+    _globally_on_board.difference_update(tracked_alighted_ids)
 
     remaining_passengers.extend(new_entries)
     state["passengers"] = remaining_passengers

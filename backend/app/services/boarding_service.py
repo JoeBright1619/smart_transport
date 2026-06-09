@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.boarding_record import BoardingRecord
 from app.models.passenger_profile import PassengerProfile
 from app.models.route import Stop
+from app.models.trip import Trip
 from app.models.vehicle import Vehicle
 from app.schemas.boarding import BoardingRecordRead, PassengerTripRead
 
@@ -184,8 +185,15 @@ async def list_my_boardings(
 
     rows = (
         await db.execute(
-            select(BoardingRecord, Stop.name.label("stop_name"))
+            select(
+                BoardingRecord,
+                Stop.name.label("stop_name"),
+                Vehicle.registration_number.label("vehicle_registration"),
+                Vehicle.model.label("vehicle_model"),
+            )
             .outerjoin(Stop, Stop.id == BoardingRecord.stop_id)
+            .outerjoin(Trip, Trip.id == BoardingRecord.trip_id)
+            .outerjoin(Vehicle, Vehicle.id == Trip.vehicle_id)
             .where(*filters)
             .order_by(BoardingRecord.recorded_at.desc())
             .offset((page - 1) * page_size)
@@ -203,6 +211,8 @@ async def list_my_boardings(
             trip_id=r.BoardingRecord.trip_id,
             recorded_at=r.BoardingRecord.recorded_at,
             occupancy_after=r.BoardingRecord.occupancy_after,
+            vehicle_registration=r.vehicle_registration,
+            vehicle_model=r.vehicle_model,
         )
         for r in rows
     ]

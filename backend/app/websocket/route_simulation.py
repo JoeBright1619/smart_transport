@@ -12,7 +12,7 @@ from app.core.geo_math import bearing, haversine_distance, move_along_bearing
 from app.models.route import RouteStop, Stop
 from app.models.vehicle import Vehicle
 from app.websocket.passenger_simulation import simulate_passengers_at_stop
-from app.websocket.route_trip_records import create_completed_trip
+from app.websocket.route_trip_records import complete_trip, start_trip
 
 TICK_SECONDS = 5
 OPEN_ROAD_SPEED = 35
@@ -119,14 +119,16 @@ async def advance_vehicle(
         state["dwell_remaining"] = DWELL_TICKS
         state["at_stop_name"] = stops[current_stop_index].name
 
+        if current_stop_index == 0:
+            await start_trip(db, vehicle, state, now)
+
         await simulate_passengers_at_stop(
             db, vehicle, stops, current_stop_index, state, now
         )
 
         if state["next_stop_index"] == 0:
             state["loop_count"] = int(state.get("loop_count", 0)) + 1
-            await _create_completed_trip(db, vehicle, state, now)
-            state["trip_started_at"] = now
+            await complete_trip(db, vehicle, state, now)
     else:
         brg = bearing(vehicle.lat, vehicle.lng, target.lat, target.lng)
         lat, lng = move_along_bearing(vehicle.lat, vehicle.lng, brg, advance_m)
@@ -154,13 +156,6 @@ async def advance_vehicle(
         "fuel": round(new_fuel),
         "fuel_drop": fuel_drop,
     }
-
-
-async def _create_completed_trip(
-    db: AsyncSession, vehicle: Vehicle, state: dict[str, Any], now: datetime
-) -> None:
-    """Create a completed trip for a vehicle that has finished its route loop."""
-    await create_completed_trip(db, vehicle, state, now)
 
 
 def get_or_init_state(vehicle_id: str, stop_count: int) -> dict[str, Any]:
