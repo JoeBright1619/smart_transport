@@ -15,7 +15,6 @@ import { getFleetStats } from './fleet-helpers';
 export type FleetFormState = {
   registrationNumber: string;
   model: string;
-  capacity: string;
   seatingCapacity: string;
   status: VehicleCreate['status'];
 };
@@ -23,7 +22,6 @@ export type FleetFormState = {
 export const initialFleetFormState: FleetFormState = {
   registrationNumber: '',
   model: '',
-  capacity: '',
   seatingCapacity: '45',
   status: 'idle',
 };
@@ -89,7 +87,6 @@ export function useFleetManagement() {
       await vehiclesService.createVehicle({
         registrationNumber: form.registrationNumber.trim(),
         model: form.model.trim(),
-        capacity: Number(form.capacity),
         seatingCapacity: Number(form.seatingCapacity) || 45,
         status: form.status,
       });

@@ -18,7 +18,6 @@ from tests.conftest import auth_headers
 _VEHICLE_BASE = {
     "registration_number": "CAP 001 A",
     "model": "Capacity Test Bus",
-    "capacity": 60,
 }
 
 

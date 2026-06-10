@@ -159,7 +159,6 @@ def make_vehicle(db: AsyncSession):
             tenant_id=tenant_id,
             registration_number=f"TST {uuid.uuid4().hex[:4].upper()}",
             model="Test Bus",
-            capacity=40,
             status=status,
             route_id=route_id,
             driver_id=driver_id,

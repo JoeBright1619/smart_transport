@@ -22,7 +22,6 @@ class VehicleCreate(APIModel):
     model: str = Field(
         min_length=1, max_length=100, json_schema_extra={"example": "Yutong ZK6120"}
     )
-    capacity: int = Field(gt=0, json_schema_extra={"example": 60})
     seating_capacity: int = Field(default=45, gt=0, json_schema_extra={"example": 45})
     status: VehicleStatus = Field(default="idle", json_schema_extra={"example": "idle"})
 
@@ -49,7 +48,6 @@ class VehicleRead(APIModel):
     id: str = Field(json_schema_extra={"example": "veh-uuid"})
     registration_number: str = Field(json_schema_extra={"example": "RAD 001 A"})
     model: str = Field(json_schema_extra={"example": "Yutong ZK6120"})
-    capacity: int = Field(json_schema_extra={"example": 60})
     seating_capacity: int = Field(default=45, json_schema_extra={"example": 45})
     current_occupancy: int = Field(default=0, json_schema_extra={"example": 18})
     status: VehicleStatus = Field(json_schema_extra={"example": "active"})

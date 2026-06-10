@@ -47,7 +47,6 @@ export function VehicleTableRow({
     <TableRow>
       <TableCell className="font-medium">{vehicle.registrationNumber}</TableCell>
       <TableCell>{vehicle.model}</TableCell>
-      <TableCell>{vehicle.capacity}</TableCell>
       <TableCell>
         <Input
           type="number"

@@ -92,7 +92,6 @@ async def create_vehicle(
         tenant_id=tenant_id,
         registration_number=data.registration_number,
         model=data.model,
-        capacity=data.capacity,
         seating_capacity=data.seating_capacity,
         status=data.status,
     )

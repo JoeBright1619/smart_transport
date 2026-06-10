@@ -71,19 +71,6 @@ export function AddVehicleDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="capacity">Capacity</Label>
-              <Input
-                id="capacity"
-                type="number"
-                min="1"
-                value={form.capacity}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, capacity: event.target.value }))
-                }
-                required
-              />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="seatingCapacity">Seating Capacity</Label>
               <Input
                 id="seatingCapacity"

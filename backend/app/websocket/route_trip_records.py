@@ -57,7 +57,7 @@ async def complete_trip(
     actual_duration = (now - started_at).total_seconds() / 60
     scheduled_duration_min = 35
     delay = max(0, int(actual_duration - scheduled_duration_min))
-    passenger_upper_bound = max(20, vehicle.capacity)
+    passenger_upper_bound = max(20, vehicle.seating_capacity)
 
     trip.actual_end = now
     trip.status = "completed"

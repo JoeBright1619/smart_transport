@@ -240,7 +240,7 @@ async def get_filtered_report(
                     rs["duration_count"] += 1
                 rs["passengers"] += t.passengers
                 if t.vehicle:
-                    rs["capacity"] += t.vehicle.capacity
+                    rs["capacity"] += t.vehicle.seating_capacity
 
         result = []
         for r_id, rs in route_stats.items():
@@ -362,7 +362,7 @@ async def get_filtered_report(
             if t.vehicle_id in veh_stats:
                 vs = veh_stats[t.vehicle_id]
                 vs["passengers"] += t.passengers
-                vs["capacity"] += vs["veh"].capacity
+                vs["capacity"] += vs["veh"].seating_capacity
                 if t.route and t.status == "completed":
                     vs["km"] += t.route.distance
 

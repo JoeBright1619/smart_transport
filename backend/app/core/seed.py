@@ -490,7 +490,7 @@ async def _seed_vehicles(db: AsyncSession) -> None:
     # All vehicles start idle with no GPS — live trips will activate the relevant ones.
     # veh-004 is in maintenance (broken down, not available for dispatch).
     vehicles_data = [
-        # id, reg, model, cap, fuel, engine_status, status
+        # id, reg, model, seating_capacity, fuel, engine_status, status
         ("veh-001", "RAD 001 A", "Yutong ZK6120", 60, 78, "good", "idle"),
         ("veh-002", "RAD 002 B", "King Long XMQ", 45, 100, "good", "idle"),
         ("veh-003", "RAD 003 C", "Yutong ZK6120", 60, 63, "good", "idle"),
@@ -508,7 +508,7 @@ async def _seed_vehicles(db: AsyncSession) -> None:
             tenant_id=_TENANT_ID,
             registration_number=reg,
             model=model,
-            capacity=cap,
+            seating_capacity=cap,
             status=status,
             route_id=None,
             driver_id=None,

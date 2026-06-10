@@ -38,7 +38,6 @@ class Vehicle(Base):
 
     registration_number: Mapped[str] = mapped_column(String, nullable=False)
     model: Mapped[str] = mapped_column(String, nullable=False)
-    capacity: Mapped[int] = mapped_column(Integer, nullable=False)
     seating_capacity: Mapped[int] = mapped_column(
         Integer, nullable=False, default=45, server_default="45"
     )

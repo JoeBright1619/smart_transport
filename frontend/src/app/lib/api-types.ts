@@ -105,7 +105,6 @@ export interface VehicleRead {
   id: string;
   registrationNumber: string;
   model: string;
-  capacity: number;
   seatingCapacity: number;
   currentOccupancy: number;
   remainingSeats: number;
@@ -123,7 +122,6 @@ export interface VehicleRead {
 export interface VehicleCreate {
   registrationNumber: string;
   model: string;
-  capacity: number;
   seatingCapacity?: number;
   status?: VehicleStatus;
 }

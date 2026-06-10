@@ -22,7 +22,7 @@ export function getFleetStats(vehicles: VehicleRead[]): FleetStats {
     idleVehicles: vehicles.filter((vehicle) => vehicle.status === 'idle').length,
     maintenanceVehicles: vehicles.filter((vehicle) => vehicle.status === 'maintenance').length,
     avgFuel: totalVehicles > 0 ? Math.round(totalFuel / totalVehicles) : 0,
-    totalCapacity: vehicles.reduce((sum, vehicle) => sum + vehicle.capacity, 0),
+    totalCapacity: vehicles.reduce((sum, vehicle) => sum + vehicle.seatingCapacity, 0),
   };
 }
 

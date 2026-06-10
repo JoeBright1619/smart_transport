@@ -4,7 +4,7 @@ import { Search } from 'lucide-react';
 import type { DriverRead, RouteRead, VehicleRead, VehicleUpdate } from '../../../lib/api-types';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Input } from '../../ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
+import { Table, TableBody, TableHead, TableHeader, TableRow } from '../../ui/table';
 import { TablePagination } from '../../ui/table-pagination';
 import { AddVehicleDialog } from './AddVehicleDialog';
 import type { FleetFormState } from './useFleetManagement';
@@ -88,7 +88,6 @@ export function VehicleFleetTable({
                 <TableRow>
                   <TableHead>Registration</TableHead>
                   <TableHead>Model</TableHead>
-                  <TableHead>Capacity</TableHead>
                   <TableHead>Seats</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Driver</TableHead>
