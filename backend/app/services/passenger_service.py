@@ -317,6 +317,25 @@ async def get_passenger_notifications(
     return result
 
 
+async def list_operators(db: AsyncSession) -> list[dict[str, Any]]:
+    from app.models.tenant import Tenant
+
+    rows = await db.execute(
+        select(Tenant).where(Tenant.is_active.is_(True)).order_by(Tenant.name)
+    )
+    return [
+        {
+            "id": t.id,
+            "name": t.name,
+            "contact_email": t.contact_email,
+            "phone": t.phone,
+            "address": t.address,
+            "logo_path": t.logo_path,
+        }
+        for t in rows.scalars()
+    ]
+
+
 async def list_passengers(
     db: AsyncSession, page: int, page_size: int
 ) -> tuple[list[dict[str, Any]], int]:

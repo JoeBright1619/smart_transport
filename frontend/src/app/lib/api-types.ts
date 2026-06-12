@@ -446,6 +446,16 @@ export interface PassengerNotification {
   arrivals: ArrivalEstimate[];
 }
 
+// Public operator directory (accessible to all authenticated users)
+export interface TenantContactRead {
+  id: string;
+  name: string;
+  contactEmail: string;
+  phone: string | null;
+  address: string | null;
+  logoPath: string | null;
+}
+
 // Superadmin
 export interface TenantRead {
   id: string;

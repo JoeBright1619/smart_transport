@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { BarChart2, Bus, Clock, History, Phone, User } from 'lucide-react';
+import { Link } from 'react-router';
 import { useAuth } from '../../lib/auth-context';
 import { PassengerTracking } from './passenger-app/PassengerTracking';
 import { PassengerProfileSection } from './passenger-app/PassengerProfileSection';
@@ -41,7 +42,12 @@ export function PassengerApp() {
               ) : (
                 <>
                   <Bus className="size-3.5 flex-shrink-0" />
-                  <span>Contact your transport operator</span>
+                  <Link
+                    to="/operators"
+                    className="underline underline-offset-2 hover:text-white transition-colors"
+                  >
+                    View all transport operators
+                  </Link>
                 </>
               )}
             </div>

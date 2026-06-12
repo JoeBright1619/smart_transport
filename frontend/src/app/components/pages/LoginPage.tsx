@@ -85,25 +85,26 @@ export function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 flex items-center justify-center text-sm text-slate-600">
-            <span>New here?</span>
-            <Link to="/register" className="ml-2 font-medium text-emerald-700 hover:underline">
-              Create an account
-            </Link>
-          </div>
-
-          <div className="mt-6 rounded-lg bg-slate-50 p-4">
-            <p className="text-xs font-medium text-slate-700 mb-2">Demo Accounts:</p>
-            <div className="space-y-1 text-xs text-slate-600">
-              <p><strong>Superadmin:</strong> superadmin@platform.local</p>
-              <p><strong>Admin:</strong> admin@ecofleet.rw</p>
-              <p><strong>Operator:</strong> operator@ecofleet.rw</p>
-              <p><strong>Dispatcher:</strong> dispatcher@ecofleet.rw</p>
-              <p className="mt-2 text-slate-500">
-                Superadmin password: Admin@123456 · Others: Password123!
-              </p>
+          <div className="mt-6 space-y-3 text-center text-sm text-slate-600">
+            <div className="flex items-center justify-center">
+              <span>New here?</span>
+              <Link to="/register" className="ml-2 font-medium text-emerald-700 hover:underline">
+                Create a passenger account
+              </Link>
+            </div>
+            <div className="flex items-center gap-2 text-slate-300">
+              <div className="flex-1 border-t" />
+              <span className="text-xs text-slate-400">or</span>
+              <div className="flex-1 border-t" />
+            </div>
+            <div className="flex items-center justify-center">
+              <span>Transport operator?</span>
+              <Link to="/register/company" className="ml-2 font-medium text-emerald-700 hover:underline">
+                Register your company
+              </Link>
             </div>
           </div>
+
         </CardContent>
       </Card>
     </div>

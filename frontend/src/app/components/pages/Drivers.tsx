@@ -1,4 +1,3 @@
-import React from 'react';
 import { AddDriverDialog } from './drivers/AddDriverDialog';
 import { DriverErrorState, DriverLoadingState } from './drivers/DriverPageStates';
 import { DriverStatsCards } from './drivers/DriverStatsCards';
@@ -38,6 +37,7 @@ export function Drivers() {
         vehiclesById={driversManagement.vehiclesById}
         updatingDriverId={driversManagement.updatingDriverId}
         onUpdateStatus={driversManagement.updateDriverStatus}
+        onEditDriver={driversManagement.updateDriver}
         onDeleteDriver={driversManagement.deleteDriver}
       />
     </div>

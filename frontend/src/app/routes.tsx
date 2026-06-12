@@ -1,5 +1,4 @@
 import { createBrowserRouter, Navigate } from 'react-router';
-import React from 'react';
 import { MainLayout } from './components/layout/MainLayout';
 import { LoginPage } from './components/pages/LoginPage';
 import { RegisterPage } from './components/pages/RegisterPage';
@@ -21,6 +20,8 @@ import { Alerts } from './components/pages/Alerts';
 import { PassengerNotificationsPage } from './components/pages/PassengerNotificationsPage';
 import { Administration } from './components/pages/Administration';
 import { Security } from './components/pages/Security';
+import { ProfilePage } from './components/pages/ProfilePage';
+import { OperatorsPage } from './components/pages/OperatorsPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 export const router = createBrowserRouter([
@@ -74,6 +75,8 @@ export const router = createBrowserRouter([
       { path: 'passenger-notifications', Component: PassengerNotificationsPage },
       { path: 'admin', Component: Administration },
       { path: 'security', Component: Security },
+      { path: 'profile', Component: ProfilePage },
+      { path: 'operators', Component: OperatorsPage },
     ],
   },
   {

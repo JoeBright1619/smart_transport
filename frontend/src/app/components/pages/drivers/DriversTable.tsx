@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Star, Trash2 } from 'lucide-react';
-import type { DriverRead, DriverStatus, VehicleRead } from '../../../lib/api-types';
+import { Pencil, Star, Trash2 } from 'lucide-react';
+import type { DriverRead, DriverStatus, DriverUpdate, VehicleRead } from '../../../lib/api-types';
+import { EditDriverDialog } from './EditDriverDialog';
 import { Avatar, AvatarFallback } from '../../ui/avatar';
 import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
@@ -23,6 +24,7 @@ type DriversTableProps = {
   vehiclesById: Map<string, VehicleRead>;
   updatingDriverId: string | null;
   onUpdateStatus: (driverId: string, status: DriverStatus) => void;
+  onEditDriver: (driverId: string, patch: DriverUpdate) => Promise<void>;
   onDeleteDriver: (driver: DriverRead) => void;
 };
 
@@ -31,9 +33,11 @@ export function DriversTable({
   vehiclesById,
   updatingDriverId,
   onUpdateStatus,
+  onEditDriver,
   onDeleteDriver,
 }: DriversTableProps) {
   const [page, setPage] = useState(1);
+  const [editingDriver, setEditingDriver] = useState<DriverRead | null>(null);
   const paginatedDrivers = drivers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
@@ -70,6 +74,7 @@ export function DriversTable({
                     vehicle={driver.vehicleId ? vehiclesById.get(driver.vehicleId) : undefined}
                     disabled={updatingDriverId === driver.id}
                     onUpdateStatus={onUpdateStatus}
+                    onOpenEdit={setEditingDriver}
                     onDeleteDriver={onDeleteDriver}
                   />
                 ))}
@@ -84,6 +89,15 @@ export function DriversTable({
           </>
         )}
       </CardContent>
+
+      {editingDriver && (
+        <EditDriverDialog
+          driver={editingDriver}
+          open={editingDriver !== null}
+          onOpenChange={(open) => { if (!open) setEditingDriver(null); }}
+          onSave={onEditDriver}
+        />
+      )}
     </Card>
   );
 }
@@ -93,12 +107,14 @@ function DriverTableRow({
   vehicle,
   disabled,
   onUpdateStatus,
+  onOpenEdit,
   onDeleteDriver,
 }: {
   driver: DriverRead;
   vehicle?: VehicleRead;
   disabled: boolean;
   onUpdateStatus: (driverId: string, status: DriverStatus) => void;
+  onOpenEdit: (driver: DriverRead) => void;
   onDeleteDriver: (driver: DriverRead) => void;
 }) {
   return (
@@ -149,9 +165,14 @@ function DriverTableRow({
         {new Date(driver.certificationExpiry).toLocaleDateString()}
       </TableCell>
       <TableCell>
-        <Button variant="ghost" size="icon" disabled={disabled} onClick={() => onDeleteDriver(driver)}>
-          <Trash2 className="size-4 text-red-500" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" disabled={disabled} onClick={() => onOpenEdit(driver)}>
+            <Pencil className="size-4 text-slate-500" />
+          </Button>
+          <Button variant="ghost" size="icon" disabled={disabled} onClick={() => onDeleteDriver(driver)}>
+            <Trash2 className="size-4 text-red-500" />
+          </Button>
+        </div>
       </TableCell>
     </TableRow>
   );

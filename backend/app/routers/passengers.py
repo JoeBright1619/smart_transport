@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import require_role
+from app.core.dependencies import get_current_user, require_role
 from app.models.user import User
 from app.schemas.common import APIResponse, Meta, PaginatedResponse
 from app.schemas.passenger import (
@@ -11,6 +11,7 @@ from app.schemas.passenger import (
     PassengerProfileRead,
     PassengerProfileUpdate,
     PassengerStatsRead,
+    TenantContactRead,
 )
 from app.services import passenger_service, passenger_stats_service
 
@@ -76,6 +77,20 @@ async def get_my_notifications(
         db, current_user
     )
     return APIResponse(data=notifications)
+
+
+@router.get(
+    "/operators",
+    response_model=APIResponse[list[TenantContactRead]],
+    summary="List active transport operators",
+    description="Returns contact details for all active operators. Accessible to any authenticated user.",
+)
+async def list_operators(
+    _: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> APIResponse[list[TenantContactRead]]:
+    operators = await passenger_service.list_operators(db)
+    return APIResponse(data=[TenantContactRead.model_validate(o) for o in operators])
 
 
 @router.get(

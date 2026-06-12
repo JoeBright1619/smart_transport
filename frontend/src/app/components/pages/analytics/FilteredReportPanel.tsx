@@ -126,6 +126,7 @@ export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredRepor
       tenantAddress: user?.tenantAddress ?? undefined,
       tenantPhone: user?.tenantPhone ?? undefined,
       tenantLogoPath: user?.tenantLogoPath ?? undefined,
+      generatedByName: user?.fullName ?? undefined,
     });
   }
 

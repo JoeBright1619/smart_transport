@@ -76,3 +76,12 @@ class PassengerStatsRead(APIModel):
 class PassengerNotification(APIModel):
     stop_name: str
     arrivals: list[PublicArrivalRead]
+
+
+class TenantContactRead(APIModel):
+    id: str
+    name: str
+    contact_email: str
+    phone: str | None = None
+    address: str | None = None
+    logo_path: str | None = None

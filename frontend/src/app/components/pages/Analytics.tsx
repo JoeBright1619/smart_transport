@@ -52,6 +52,7 @@ export function Analytics() {
                 tenantAddress: user?.tenantAddress,
                 tenantPhone: user?.tenantPhone,
                 tenantLogoPath: user?.tenantLogoPath,
+                generatedByName: user?.fullName,
               })
             }
           >

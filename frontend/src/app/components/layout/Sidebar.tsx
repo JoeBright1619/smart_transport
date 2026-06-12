@@ -16,11 +16,11 @@ import {
   LogOut,
   Building2,
   Activity,
+  PhoneCall,
 } from 'lucide-react';
 import { cn } from '../ui/utils';
 import { useAuth } from '../../lib/auth-context';
 import { Button } from '../ui/button';
-import React from 'react';
 
 const navigation = [
   {
@@ -41,6 +41,7 @@ const navigation = [
   { name: 'Route Management', href: '/routes', icon: Route, roles: ['admin', 'operator'] },
   { name: 'Arrival Times', href: '/arrivals', icon: Clock, roles: ['admin', 'operator', 'dispatcher'] },
   { name: 'Passenger App', href: '/passenger', icon: Smartphone, roles: ['admin', 'passenger'] },
+  { name: 'Operators', href: '/operators', icon: PhoneCall, roles: ['passenger'] },
   { name: 'Dispatch', href: '/dispatch', icon: UserCog, roles: ['admin', 'dispatcher'] },
   { name: 'Drivers', href: '/drivers', icon: Users, roles: ['admin', 'operator'] },
   { name: 'Maintenance', href: '/maintenance', icon: Wrench, roles: ['admin', 'operator'] },
@@ -64,18 +65,18 @@ export function Sidebar() {
 
   return (
     <div className="flex h-screen w-64 flex-col bg-slate-900 text-white">
-      <div className="flex h-16 items-center gap-2 border-b border-slate-800 px-6">
+      <div className="flex h-16 items-center gap-2.5 border-b border-slate-800 px-4">
         {user?.tenantLogoPath ? (
           <img
             src={user.tenantLogoPath}
             alt=""
-            className="size-8 rounded-md object-cover"
+            className="size-7 shrink-0 rounded-md object-cover"
           />
         ) : (
-          <Bus className="size-8 text-blue-400" />
+          <Bus className="size-7 shrink-0 text-blue-400" />
         )}
-        <div>
-          <h1 className="font-bold">{tenantLabel}</h1>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold leading-tight">{tenantLabel}</p>
           <p className="text-xs text-slate-400">{roleLabel}</p>
         </div>
       </div>

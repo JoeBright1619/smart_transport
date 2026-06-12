@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { ApiError } from '../../../lib/api-client';
-import type { DriverCreate, DriverRead, DriverStatus, VehicleRead } from '../../../lib/api-types';
+import type { DriverCreate, DriverRead, DriverStatus, DriverUpdate, VehicleRead } from '../../../lib/api-types';
 import * as driversService from '../../../services/drivers.service';
 import * as vehiclesService from '../../../services/vehicles.service';
 import { calculateDriverStats } from './driver-helpers';
@@ -64,6 +64,22 @@ export function useDriversManagement() {
     }
   };
 
+  const updateDriver = async (driverId: string, patch: DriverUpdate) => {
+    setUpdatingDriverId(driverId);
+    try {
+      const updatedDriver = await driversService.updateDriver(driverId, patch);
+      setDrivers((current) =>
+        current.map((driver) => (driver.id === updatedDriver.id ? updatedDriver : driver)),
+      );
+      toast.success('Driver updated');
+    } catch (updateError) {
+      toast.error(updateError instanceof Error ? updateError.message : 'Unable to update driver');
+      throw updateError;
+    } finally {
+      setUpdatingDriverId(null);
+    }
+  };
+
   const deleteDriver = async (driver: DriverRead) => {
     const confirmed = window.confirm(`Delete driver ${driver.name}?`);
     if (!confirmed) return;
@@ -93,6 +109,7 @@ export function useDriversManagement() {
     updatingDriverId,
     stats,
     createDriver,
+    updateDriver,
     updateDriverStatus,
     deleteDriver,
     retry: loadDrivers,

@@ -38,6 +38,7 @@ interface AuthContextType {
     password: string;
   }) => Promise<{ ok: true } | { ok: false; reason: 'email_taken' }>;
   logout: () => Promise<void>;
+  updateProfile: (patch: { fullName: string; phone?: string }) => void;
   isAuthenticated: boolean;
   isInitializing: boolean;
 }
@@ -200,6 +201,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateProfile = (patch: { fullName: string; phone?: string }): void => {
+    setUser((current) => (current ? { ...current, ...patch } : null));
+  };
+
   const logout = async (): Promise<void> => {
     try {
       await authService.logout();
@@ -216,6 +221,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loginFromToken,
       register,
       logout,
+      updateProfile,
       isAuthenticated: !!user,
       isInitializing,
     }),

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Bell, MapPin } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { Bell, MapPin, UserCircle } from 'lucide-react';
+import { Link, useNavigate } from 'react-router';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import {
@@ -222,6 +222,12 @@ export function Header() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <Link to="/profile">
+        <Button variant="ghost" size="icon" title="My Profile">
+          <UserCircle className="size-5" />
+        </Button>
+      </Link>
 
       <div className="text-sm text-right">
         <p className="font-medium">
