@@ -21,39 +21,41 @@ import {
 import { cn } from '../ui/utils';
 import { useAuth } from '../../lib/auth-context';
 import { Button } from '../ui/button';
+import { useTranslation } from 'react-i18next';
 
 const navigation = [
   {
-    name: 'Analytics',
+    labelKey: 'nav.analyticsPlatform',
     href: '/superadmin/analytics',
     icon: Activity,
     roles: ['superadmin'],
   },
   {
-    name: 'Tenants',
+    labelKey: 'nav.tenants',
     href: '/superadmin/tenants',
     icon: Building2,
     roles: ['superadmin'],
   },
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'operator', 'dispatcher'] },
-  { name: 'Vehicle Tracking', href: '/tracking', icon: MapPin, roles: ['admin', 'operator', 'dispatcher'] },
-  { name: 'Fleet Management', href: '/fleet', icon: Bus, roles: ['admin', 'operator'] },
-  { name: 'Route Management', href: '/routes', icon: Route, roles: ['admin', 'operator'] },
-  { name: 'Arrival Times', href: '/arrivals', icon: Clock, roles: ['admin', 'operator', 'dispatcher'] },
-  { name: 'Passenger App', href: '/passenger', icon: Smartphone, roles: ['admin', 'passenger'] },
-  { name: 'Operators', href: '/operators', icon: PhoneCall, roles: ['passenger'] },
-  { name: 'Dispatch', href: '/dispatch', icon: UserCog, roles: ['admin', 'dispatcher'] },
-  { name: 'Drivers', href: '/drivers', icon: Users, roles: ['admin', 'operator'] },
-  { name: 'Maintenance', href: '/maintenance', icon: Wrench, roles: ['admin', 'operator'] },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['admin', 'operator'] },
-  { name: 'Alerts', href: '/alerts', icon: Bell, roles: ['admin', 'operator', 'dispatcher'] },
-  { name: 'Administration', href: '/admin', icon: Settings, roles: ['admin'] },
-  { name: 'Security & Audit', href: '/security', icon: Shield, roles: ['admin'] },
+  { labelKey: 'nav.dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'operator', 'dispatcher'] },
+  { labelKey: 'nav.tracking', href: '/tracking', icon: MapPin, roles: ['admin', 'operator', 'dispatcher'] },
+  { labelKey: 'nav.fleet', href: '/fleet', icon: Bus, roles: ['admin', 'operator'] },
+  { labelKey: 'nav.routes', href: '/routes', icon: Route, roles: ['admin', 'operator'] },
+  { labelKey: 'nav.arrivals', href: '/arrivals', icon: Clock, roles: ['admin', 'operator', 'dispatcher'] },
+  { labelKey: 'nav.passengerApp', href: '/passenger', icon: Smartphone, roles: ['admin', 'passenger'] },
+  { labelKey: 'nav.operators', href: '/operators', icon: PhoneCall, roles: ['passenger'] },
+  { labelKey: 'nav.dispatch', href: '/dispatch', icon: UserCog, roles: ['admin', 'dispatcher'] },
+  { labelKey: 'nav.drivers', href: '/drivers', icon: Users, roles: ['admin', 'operator'] },
+  { labelKey: 'nav.maintenance', href: '/maintenance', icon: Wrench, roles: ['admin', 'operator'] },
+  { labelKey: 'nav.analytics', href: '/analytics', icon: BarChart3, roles: ['admin', 'operator'] },
+  { labelKey: 'nav.alerts', href: '/alerts', icon: Bell, roles: ['admin', 'operator', 'dispatcher'] },
+  { labelKey: 'nav.administration', href: '/admin', icon: Settings, roles: ['admin'] },
+  { labelKey: 'nav.security', href: '/security', icon: Shield, roles: ['admin'] },
 ];
 
 export function Sidebar() {
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
 
   const filteredNavigation = navigation.filter(item =>
     user && item.roles.includes(user.role)
@@ -89,7 +91,7 @@ export function Sidebar() {
             location.pathname.startsWith(item.href + '/');
             return (
               <Link
-                key={item.name}
+                key={item.href}
                 to={item.href}
                 className={cn(
                   'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
@@ -99,7 +101,7 @@ export function Sidebar() {
                 )}
               >
                 <item.icon className="size-5" />
-                {item.name}
+                {t(item.labelKey)}
               </Link>
             );
           })}
@@ -122,7 +124,7 @@ export function Sidebar() {
             onClick={logout}
           >
             <LogOut className="mr-2 size-4" />
-            Logout
+            {t('nav.logout')}
           </Button>
         </div>
       )}

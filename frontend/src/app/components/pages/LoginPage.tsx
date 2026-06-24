@@ -8,8 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { useAuth } from '../../lib/auth-context';
 import { toast } from 'sonner';
 import { validateEmail } from '../../lib/validation';
+import { useTranslation } from 'react-i18next';
 
 export function LoginPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,7 +23,7 @@ export function LoginPage() {
     const next: { email?: string; password?: string } = {};
     const emailErr = validateEmail(email);
     if (emailErr) next.email = emailErr;
-    if (!password) next.password = 'Password is required';
+    if (!password) next.password = t('login.passwordRequired');
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -34,13 +36,13 @@ export function LoginPage() {
     try {
       const success = await login(email, password);
       if (success) {
-        toast.success('Login successful');
+        toast.success(t('login.loginSuccess'));
         navigate('/');
       } else {
-        toast.error('Invalid credentials');
+        toast.error(t('login.invalidCredentials'));
       }
     } catch (error) {
-      toast.error('An error occurred');
+      toast.error(t('login.errorOccurred'));
     } finally {
       setLoading(false);
     }
@@ -53,21 +55,21 @@ export function LoginPage() {
           <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-emerald-50">
             <Bus className="size-8 text-emerald-700" />
           </div>
-          <CardTitle className="text-2xl">Rwanda Transport System</CardTitle>
+          <CardTitle className="text-2xl">{t('login.title')}</CardTitle>
           <CardDescription>
-            Smart Public Transport Tracking & Fleet Management
+            {t('login.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('login.email')}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   id="email"
                   type="email"
-                  placeholder="your.email@transport.rw"
+                  placeholder={t('login.emailPlaceholder')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onBlur={() => setErrors((prev) => ({ ...prev, email: validateEmail(email) ?? undefined }))}
@@ -80,13 +82,13 @@ export function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('login.password')}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Enter your password"
+                  placeholder={t('login.passwordPlaceholder')}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   aria-invalid={!!errors.password}
@@ -98,26 +100,26 @@ export function LoginPage() {
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? t('login.signingIn') : t('login.signIn')}
             </Button>
           </form>
 
           <div className="mt-6 space-y-3 text-center text-sm text-slate-600">
             <div className="flex items-center justify-center">
-              <span>New here?</span>
+              <span>{t('login.newHere')}</span>
               <Link to="/register" className="ml-2 font-medium text-emerald-700 hover:underline">
-                Create a passenger account
+                {t('login.createPassengerAccount')}
               </Link>
             </div>
             <div className="flex items-center gap-2 text-slate-300">
               <div className="flex-1 border-t" />
-              <span className="text-xs text-slate-400">or</span>
+              <span className="text-xs text-slate-400">{t('login.or')}</span>
               <div className="flex-1 border-t" />
             </div>
             <div className="flex items-center justify-center">
-              <span>Transport operator?</span>
+              <span>{t('login.transportOperator')}</span>
               <Link to="/register/company" className="ml-2 font-medium text-emerald-700 hover:underline">
-                Register your company
+                {t('login.registerCompany')}
               </Link>
             </div>
           </div>

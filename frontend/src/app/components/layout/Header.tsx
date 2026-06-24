@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Bell, MapPin, UserCircle } from 'lucide-react';
+import { Bell, MapPin, UserCircle, Languages } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import {
@@ -37,6 +38,7 @@ const STAFF_ROLES = new Set(['admin', 'operator', 'dispatcher']);
 
 export function Header() {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const isStaff = user?.role ? STAFF_ROLES.has(user.role) : false;
   const isPassenger = user?.role === 'passenger';
@@ -113,8 +115,32 @@ export function Header() {
   const badgeCount = isPassenger ? passengerNotifs.length : unacknowledgedCount;
   const viewAllPath = isPassenger ? '/passenger-notifications' : '/alerts';
 
+  const activeLang = i18n.resolvedLanguage;
+
   return (
     <header className="flex h-16 items-center justify-end border-b bg-white px-6 gap-4">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" title={t('common.language')}>
+            <Languages className="size-5" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onClick={() => i18n.changeLanguage('en')}
+            className={activeLang === 'en' ? 'font-semibold' : ''}
+          >
+            {t('common.english')}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => i18n.changeLanguage('rw')}
+            className={activeLang === 'rw' ? 'font-semibold' : ''}
+          >
+            {t('common.kinyarwanda')}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" className="relative">
@@ -128,9 +154,11 @@ export function Header() {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-80">
           <DropdownMenuLabel className="flex items-center justify-between">
-            <span>Notifications</span>
+            <span>{t('header.notifications')}</span>
             {badgeCount > 0 && (
-              <span className="text-xs font-normal text-slate-500">{badgeCount} active</span>
+              <span className="text-xs font-normal text-slate-500">
+                {t('header.active', { count: badgeCount })}
+              </span>
             )}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
@@ -138,7 +166,7 @@ export function Header() {
           {isPassenger ? (
             passengerNotifs.length === 0 ? (
               <div className="px-3 py-4 text-sm text-slate-500 text-center">
-                No buses approaching your favourite stops
+                {t('header.noApproaching')}
               </div>
             ) : (
               <>
@@ -148,7 +176,7 @@ export function Header() {
                     onClick={clearPassengerNotifs}
                     className="text-xs text-slate-500 hover:text-slate-700 underline"
                   >
-                    Clear all
+                    {t('header.clearAll')}
                   </button>
                 </div>
                 {passengerNotifs.slice(0, 5).map((n) => {
@@ -182,7 +210,7 @@ export function Header() {
             )
           ) : isStaff ? (
             alerts.length === 0 ? (
-              <div className="px-3 py-4 text-sm text-slate-500 text-center">No new alerts</div>
+              <div className="px-3 py-4 text-sm text-slate-500 text-center">{t('header.noNewAlerts')}</div>
             ) : (
               alerts.map(alert => (
                 <DropdownMenuItem
@@ -202,7 +230,7 @@ export function Header() {
                       className="shrink-0 ml-2 hover:text-slate-600 underline"
                       onClick={(e) => handleAcknowledge(alert.id, e)}
                     >
-                      Dismiss
+                      {t('header.dismiss')}
                     </button>
                   </div>
                   <span className="text-xs text-slate-300">{relativeTime(alert.createdAt)}</span>
@@ -210,7 +238,7 @@ export function Header() {
               ))
             )
           ) : (
-            <div className="px-3 py-4 text-sm text-slate-500 text-center">No notifications</div>
+            <div className="px-3 py-4 text-sm text-slate-500 text-center">{t('header.noNotifications')}</div>
           )}
 
           <DropdownMenuSeparator />
@@ -218,13 +246,13 @@ export function Header() {
             className="justify-center text-sm text-blue-600 font-medium cursor-pointer"
             onClick={() => { navigate(viewAllPath); setOpen(false); }}
           >
-            View all alerts
+            {t('header.viewAll')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       <Link to="/profile">
-        <Button variant="ghost" size="icon" title="My Profile">
+        <Button variant="ghost" size="icon" title={t('header.myProfile')}>
           <UserCircle className="size-5" />
         </Button>
       </Link>

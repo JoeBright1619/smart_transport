@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 5.1 — i18n Foundation: Provider, Language Toggle & Persistence
+**Next task:** Task 5.2 — Translate Server-Sourced Messages by Error Code
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -138,7 +138,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `feat: i18n foundation with english/kinyarwanda toggle and persistence`
 
-- [ ] Task 5.1 complete
+- [x] Task 5.1 complete
 
 ---
 
