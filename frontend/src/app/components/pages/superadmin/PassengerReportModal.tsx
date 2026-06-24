@@ -16,6 +16,7 @@ import {
   DialogDescription,
 } from '../../ui/dialog';
 import { toast } from 'sonner';
+import { pageHeader, sectionTitle, stampFooters, TABLE_STYLES, CONTENT_Y } from '../analytics/analytics-pdf';
 
 interface Props {
   passenger: UserRead;
@@ -30,94 +31,86 @@ function defaultDateRange() {
   return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
 }
 
+const RWANDA = { name: 'Rwanda Transport System' };
+
 function downloadPdf(report: PassengerUsageReport): void {
-  const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
-  let y = 14;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const REPORT_TITLE = `Passenger Usage Report — ${report.passengerName}`;
 
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Smart Transport — Passenger Usage Report', pageWidth / 2, y, { align: 'center' });
-  y += 10;
+  pageHeader(doc, REPORT_TITLE, report.dateFrom, report.dateTo, RWANDA);
 
-  doc.setFontSize(10);
+  let y = CONTENT_Y;
+  let sec = 1;
+
+  // ── 1. Passenger Summary ──────────────────────────────────────────────────
+  y = sectionTitle(doc, 'Passenger Summary', y, sec++);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Passenger: ${report.passengerName}  |  Email: ${report.email}`, 14, y);
-  y += 6;
+  doc.setFontSize(9);
+  doc.setTextColor('#0F172A');
+  doc.text(`Name: ${report.passengerName}   |   Email: ${report.email}`, 14, y);
+  y += 5.5;
   doc.text(
-    `Period: ${report.dateFrom} to ${report.dateTo}  |  Generated: ${new Date(report.generatedAt).toLocaleString()}`,
+    `Total Boardings: ${report.totalBoardings}   |   Total Alightings: ${report.totalAlightings}`,
     14, y,
   );
   y += 10;
 
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Summary', 14, y);
-  y += 6;
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Boardings: ${report.totalBoardings}   Alightings: ${report.totalAlightings}`, 14, y);
-  y += 6;
-
   if (report.totalBoardings === 0 && report.totalAlightings === 0) {
+    doc.setFontSize(9);
+    doc.setTextColor('#64748B');
     doc.text(report.message ?? 'No journey data recorded for this period.', 14, y);
+    stampFooters(doc, RWANDA, 'Rwanda Transport System');
     doc.save(`passenger-report-${report.passengerId}-${report.dateFrom}-to-${report.dateTo}.pdf`);
     return;
   }
 
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Top Routes', 14, y);
-  y += 4;
-  autoTable(doc, {
-    startY: y,
-    head: [['Route', 'Boardings']],
-    body: report.mostUsedRoutes.slice(0, 3).map((r) => [r.routeName, String(r.count)]),
-    theme: 'striped',
-    styles: { fontSize: 9 },
-    headStyles: { fillColor: [37, 99, 235] },
-    margin: { left: 14, right: 14 },
-  });
-  y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8;
+  // ── 2. Top Routes ─────────────────────────────────────────────────────────
+  if (report.mostUsedRoutes.length > 0) {
+    y = sectionTitle(doc, 'Top Routes', y, sec++);
+    autoTable(doc, {
+      startY: y,
+      head: [['#', 'Route', 'Boardings']],
+      body: report.mostUsedRoutes.slice(0, 3).map((r, i) => [i + 1, r.routeName, r.count]),
+      columnStyles: { 0: { cellWidth: 'wrap' } },
+      ...TABLE_STYLES,
+    });
+    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+  }
 
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Top Stops', 14, y);
-  y += 4;
-  autoTable(doc, {
-    startY: y,
-    head: [['Stop', 'Boardings']],
-    body: report.mostUsedStops.slice(0, 3).map((s) => [s.stopName, String(s.count)]),
-    theme: 'striped',
-    styles: { fontSize: 9 },
-    headStyles: { fillColor: [37, 99, 235] },
-    margin: { left: 14, right: 14 },
-  });
-  y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8;
+  // ── 3. Top Stops ──────────────────────────────────────────────────────────
+  if (report.mostUsedStops.length > 0) {
+    y = sectionTitle(doc, 'Top Stops', y, sec++);
+    autoTable(doc, {
+      startY: y,
+      head: [['#', 'Stop', 'Boardings']],
+      body: report.mostUsedStops.slice(0, 3).map((s, i) => [i + 1, s.stopName, s.count]),
+      columnStyles: { 0: { cellWidth: 'wrap' } },
+      ...TABLE_STYLES,
+    });
+    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+  }
 
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Trip Timeline', 14, y);
-  y += 4;
+  // ── 4. Trip Timeline ──────────────────────────────────────────────────────
+  y = sectionTitle(doc, 'Trip Timeline', y, sec++);
   autoTable(doc, {
     startY: y,
-    head: [['Date', 'Time', 'Event', 'Route', 'Stop']],
-    body: report.timeline.map((t) => {
+    head: [['#', 'Date', 'Time', 'Event', 'Route', 'Stop']],
+    body: report.timeline.map((t, i) => {
       const dt = new Date(t.recordedAt);
       return [
-        dt.toLocaleDateString(),
+        i + 1,
+        dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
         dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         t.eventType === 'boarded' ? 'Boarded' : 'Alighted',
         t.routeName,
         t.stopName,
       ];
     }),
-    theme: 'striped',
-    styles: { fontSize: 8 },
-    headStyles: { fillColor: [37, 99, 235] },
-    margin: { left: 14, right: 14 },
+    columnStyles: { 0: { cellWidth: 'wrap' } },
+    ...TABLE_STYLES,
   });
 
+  stampFooters(doc, RWANDA, 'Rwanda Transport System');
   doc.save(`passenger-report-${report.passengerId}-${report.dateFrom}-to-${report.dateTo}.pdf`);
 }
 

@@ -172,7 +172,9 @@ export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredRepor
             <TabsTrigger value="daily" id="report-tab-daily">Daily</TabsTrigger>
             <TabsTrigger value="fleet" id="report-tab-fleet">Fleet</TabsTrigger>
             <TabsTrigger value="driver" id="report-tab-driver">Driver</TabsTrigger>
-            <TabsTrigger value="passenger" id="report-tab-passenger">Passenger</TabsTrigger>
+            {user?.role === 'superadmin' && (
+              <TabsTrigger value="passenger" id="report-tab-passenger">Passenger</TabsTrigger>
+            )}
           </TabsList>
 
           {/* ── Common date range ── */}
@@ -281,9 +283,11 @@ export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredRepor
             )}
           </TabsContent>
 
-          <TabsContent value="passenger">
-            <PassengerReportTab dateFrom={dateFrom} dateTo={dateTo} />
-          </TabsContent>
+          {user?.role === 'superadmin' && (
+            <TabsContent value="passenger">
+              <PassengerReportTab dateFrom={dateFrom} dateTo={dateTo} />
+            </TabsContent>
+          )}
         </Tabs>
 
         {/* Generated-at footer */}

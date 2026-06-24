@@ -8,7 +8,6 @@ import type {
   FleetReportData,
   RouteReportData,
 } from '../../../lib/api-types';
-import { formatRevenue } from './analytics-helpers';
 import type { FleetStatusDatum, RoutePerformanceDatum } from './analytics-helpers';
 
 type ReportInput = {
@@ -35,16 +34,28 @@ type TenantReportBranding = {
 
 const BRAND = '#1E3A5F';
 const LIGHT = '#F1F5F9';
+const TEXT_MUTED = '#64748B';
+const TEXT_DARK = '#0F172A';
 
-// Shared tight table styles applied to every autoTable call
-const TABLE_STYLES = {
-  headStyles: { fillColor: BRAND, textColor: '#FFFFFF', fontStyle: 'bold' as const, fontSize: 8 },
-  bodyStyles: { fontSize: 8 },
+// Header ends at this y position; content starts at CONTENT_Y
+const HEADER_H = 35;
+export const CONTENT_Y = 41;
+
+export const TABLE_STYLES = {
+  headStyles: {
+    fillColor: BRAND,
+    textColor: '#FFFFFF',
+    fontStyle: 'bold' as const,
+    fontSize: 8.5,
+    cellPadding: 3,
+    halign: 'left' as const,
+  },
+  bodyStyles: { fontSize: 8.5, textColor: TEXT_DARK, halign: 'left' as const },
   alternateRowStyles: { fillColor: LIGHT },
-  styles: { cellPadding: 2, fontSize: 8 },
-  margin: { left: 14, right: 14 },
-  tableLineColor: '#E2E8F0',
-  tableLineWidth: 0.1,
+  styles: { cellPadding: 2.8, fontSize: 8.5, lineColor: '#94A3B8' as const, lineWidth: 0.2 },
+  margin: { left: 8, right: 8 },
+  tableLineColor: '#94A3B8',
+  tableLineWidth: 0.3,
 };
 
 async function loadLogoDataUrl(src: string): Promise<string> {
@@ -59,113 +70,119 @@ async function loadLogoDataUrl(src: string): Promise<string> {
   });
 }
 
-function pageHeader(
+// ─── Header ──────────────────────────────────────────────────────────────────
+// White background; logo left, company name + subtitle centered, period right.
+export function pageHeader(
   doc: jsPDF,
   title: string,
-  dateRange: string,
+  dateFrom: string,
+  dateTo: string,
   tenant: TenantReportBranding,
   logoDataUrl?: string,
 ) {
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const LOGO_W = 24;
-  const LOGO_H = 16;
-  const LOGO_X = 14;
-  const LOGO_Y = 8;
-  const textX = logoDataUrl ? LOGO_X + LOGO_W + 4 : 14;
+  const W = doc.internal.pageSize.getWidth();
 
-  doc.setFillColor(BRAND);
-  doc.rect(0, 0, pageWidth, 32, 'F');
-
+  // Logo — top-left, sized to sit flush with the text block
   if (logoDataUrl) {
-    doc.addImage(logoDataUrl, 'PNG', LOGO_X, LOGO_Y, LOGO_W, LOGO_H);
+    doc.addImage(logoDataUrl, 'PNG', 12, 14, 22, 13);
   }
 
-  doc.setTextColor('#FFFFFF');
-  doc.setFontSize(14);
+  // Company name — centered, bold, brand colour
   doc.setFont('helvetica', 'bold');
-  doc.text(tenant.name, textX, 12);
-
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-  let leftY = 19;
-  [tenant.address, tenant.email, tenant.phone].filter(Boolean).forEach((line) => {
-    doc.text(String(line), textX, leftY);
-    leftY += 5;
-  });
-
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text(title, pageWidth - 14, 10, { align: 'right' });
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Generated: ${new Date().toLocaleDateString('en-GB')}`, pageWidth - 14, 18, { align: 'right' });
-  doc.text(`Period: ${dateRange}`, pageWidth - 14, 25, { align: 'right' });
-
-  doc.setTextColor('#000000');
-}
-
-function sectionTitle(doc: jsPDF, text: string, y: number): number {
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(15);
   doc.setTextColor(BRAND);
-  doc.text(text, 14, y);
+  doc.text(tenant.name.toUpperCase(), W / 2, 22, { align: 'center' });
+
+  // Report subtitle — centered, smaller
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10.5);
+  doc.setTextColor('#334155');
+  doc.text(title, W / 2, 29, { align: 'center' });
+
+  // Optional contact line — centered, muted
+  const contact = [tenant.address, tenant.phone].filter(Boolean).join('  |  ');
+  if (contact) {
+    doc.setFontSize(7);
+    doc.setTextColor(TEXT_MUTED);
+    doc.text(contact, W / 2, 32, { align: 'center' });
+  }
+
+  // REPORT PERIOD block — top-right, aligned to match center content
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6.5);
+  doc.setTextColor(TEXT_MUTED);
+  doc.text('REPORT PERIOD', W - 14, 17, { align: 'right' });
+
+  doc.setFontSize(8.5);
+  doc.setTextColor(TEXT_DARK);
+  doc.text(dateFrom, W - 14, 21, { align: 'right' });
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(TEXT_MUTED);
+  doc.text('—', W - 14, 26, { align: 'right' });
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(TEXT_DARK);
+  doc.text(dateTo, W - 14, 31, { align: 'right' });
+
+  // Divider
   doc.setDrawColor(BRAND);
-  doc.setLineWidth(0.4);
-  doc.line(14, y + 1.5, doc.internal.pageSize.getWidth() - 14, y + 1.5);
+  doc.setLineWidth(0.7);
+  doc.line(12, HEADER_H, W - 12, HEADER_H);
+
   doc.setTextColor('#000000');
-  return y + 8;
 }
 
-function summaryBox(doc: jsPDF, summary: AnalyticsData['summary'], y: number): number {
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const colW = (pageWidth - 28) / 3;
+// ─── Section title ────────────────────────────────────────────────────────────
+// num adds a "1." prefix; text is rendered uppercase with a light rule below.
+export function sectionTitle(doc: jsPDF, text: string, y: number, num?: number): number {
+  const W = doc.internal.pageSize.getWidth();
+  const label = num === undefined ? text.toUpperCase() : `${num}. ${text.toUpperCase()}`;
 
-  const items = [
-    ['Total Trips', summary.totalTrips.toLocaleString()],
-    ['On-Time Performance', `${summary.onTimePercentage}%`],
-    ['Average Delay', `${summary.avgDelay} min`],
-    ['Total Passengers', summary.totalPassengers.toLocaleString()],
-    ['Total Revenue', formatRevenue(summary.totalRevenue)],
-    ['Fuel Consumption', `${Math.round(summary.totalFuelConsumption).toLocaleString()} L`],
-  ];
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(TEXT_DARK);
+  doc.text(label, 14, y);
 
-  items.forEach(([label, value], i) => {
-    const col = i % 3;
-    const row = Math.floor(i / 3);
-    const x = 14 + col * colW;
-    const boxY = y + row * 18;
+  doc.setDrawColor('#CBD5E1');
+  doc.setLineWidth(0.25);
+  doc.line(14, y + 2, W - 14, y + 2);
 
-    doc.setFillColor(LIGHT);
-    doc.roundedRect(x, boxY, colW - 4, 15, 2, 2, 'F');
+  doc.setTextColor('#000000');
+  return y + 9;
+}
 
-    doc.setFontSize(7.5);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor('#64748B');
-    doc.text(label, x + 4, boxY + 5);
 
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor('#0F172A');
-    doc.text(value, x + 4, boxY + 12);
+// ─── Page footer loop ─────────────────────────────────────────────────────────
+export function stampFooters(doc: jsPDF, tenant: TenantReportBranding, generatedByName: string) {
+  const W = doc.internal.pageSize.getWidth();
+  const totalPages = doc.getNumberOfPages();
+  const year = new Date().getFullYear();
+  const now = new Date().toLocaleString('en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   });
 
-  doc.setTextColor('#000000');
-  return y + Math.ceil(items.length / 3) * 18 + 4;
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    const footerY = doc.internal.pageSize.getHeight() - 6;
+
+    // Light rule above footer
+    doc.setDrawColor('#E2E8F0');
+    doc.setLineWidth(0.2);
+    doc.line(14, footerY - 4, W - 14, footerY - 4);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor('#94A3B8');
+
+    doc.text(`Generated on: ${now}  |  Generated by: ${generatedByName}  |  © ${year} ${tenant.name}. Confidential.`, W / 2, footerY, { align: 'center' });
+    doc.text(`Page ${p} / ${totalPages}`, W - 14, footerY, { align: 'right' });
+  }
 }
 
-function generatedByLine(doc: jsPDF, y: number, generatedByName: string): void {
-  doc.setFontSize(7.5);
-  doc.setFont('helvetica', 'italic');
-  doc.setTextColor('#64748B');
-  doc.text(
-    `Generated by: ${generatedByName}  ·  ${new Date().toLocaleDateString('en-GB')}`,
-    doc.internal.pageSize.getWidth() - 14,
-    y,
-    { align: 'right' },
-  );
-  doc.setTextColor('#000000');
-}
-
+// ─── Analytics PDF export ─────────────────────────────────────────────────────
 export async function exportAnalyticsPDF({
   data,
   routePerformance,
@@ -179,7 +196,7 @@ export async function exportAnalyticsPDF({
   tenantLogoPath,
   generatedByName,
 }: ReportInput): Promise<void> {
-  const tenant = {
+  const tenant: TenantReportBranding = {
     name: tenantName?.trim() || 'Smart Transport',
     email: tenantEmail?.trim() || undefined,
     address: tenantAddress?.trim() || undefined,
@@ -189,28 +206,24 @@ export async function exportAnalyticsPDF({
 
   let logoDataUrl: string | undefined;
   if (tenant.logoPath) {
-    try {
-      logoDataUrl = await loadLogoDataUrl(tenant.logoPath);
-    } catch {
-      // logo unavailable — proceed with text-only header
-    }
+    try { logoDataUrl = await loadLogoDataUrl(tenant.logoPath); } catch { /* proceed without logo */ }
   }
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const dateRange = `${from} - ${to}`;
+  const REPORT_TITLE = 'Analytics & Performance Report';
 
-  pageHeader(doc, 'Analytics & Performance Report', dateRange, tenant, logoDataUrl);
+  pageHeader(doc, REPORT_TITLE, from, to, tenant, logoDataUrl);
 
-  let y = 40;
-  y = sectionTitle(doc, 'Summary Metrics', y);
-  y = summaryBox(doc, data.summary, y);
+  let y = CONTENT_Y;
+  let sec = 1;
 
-  y = sectionTitle(doc, 'Daily Performance', y);
+  y = sectionTitle(doc, 'Daily Performance', y, sec++);
 
   autoTable(doc, {
     startY: y,
-    head: [['Date', 'Trips', 'On-Time %', 'Avg Delay (min)', 'Passengers', 'Fuel (L)', 'Revenue (RWF)']],
-    body: data.daily.map((d) => [
+    head: [['#', 'Date', 'Trips', 'On-Time %', 'Avg Delay (min)', 'Passengers', 'Fuel (L)', 'Revenue (RWF)']],
+    body: data.daily.map((d, i) => [
+      i + 1,
       new Date(d.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       d.totalTrips,
       `${d.onTimePercentage}%`,
@@ -219,114 +232,76 @@ export async function exportAnalyticsPDF({
       Math.round(d.fuelConsumption).toLocaleString(),
       Math.round(d.revenue).toLocaleString(),
     ]),
-    columnStyles: {
-      0: { cellWidth: 26 },
-      1: { cellWidth: 16, halign: 'right' },
-      2: { cellWidth: 20, halign: 'right' },
-      3: { cellWidth: 26, halign: 'right' },
-      4: { cellWidth: 24, halign: 'right' },
-      5: { cellWidth: 20, halign: 'right' },
-      6: { cellWidth: 50, halign: 'right' },
-    },
+    columnStyles: { 0: { cellWidth: 'wrap' } },
     ...TABLE_STYLES,
   });
 
-  const afterDailyTable: number = (doc as any).lastAutoTable.finalY + 10;
-  const spaceLeft = doc.internal.pageSize.getHeight() - afterDailyTable;
-
-  if (spaceLeft < 60) {
+  const afterDaily: number = (doc as any).lastAutoTable.finalY + 10;
+  if (doc.internal.pageSize.getHeight() - afterDaily < 60) {
     doc.addPage();
-    pageHeader(doc, 'Analytics & Performance Report', dateRange, tenant, logoDataUrl);
-    y = 40;
+    pageHeader(doc, REPORT_TITLE, from, to, tenant, logoDataUrl);
+    y = CONTENT_Y;
   } else {
-    y = afterDailyTable;
+    y = afterDaily;
   }
 
-  y = sectionTitle(doc, 'Route Performance', y);
+  y = sectionTitle(doc, 'Route Performance', y, sec++);
 
   autoTable(doc, {
     startY: y,
-    head: [['Route No.', 'Route Name', 'Total Trips', 'Total Passengers', 'Avg Passengers / Trip']],
-    body: routePerformance.map((r) => [
+    head: [['#', 'Route No.', 'Route Name', 'Total Trips', 'Total Passengers', 'Avg Passengers / Trip']],
+    body: routePerformance.map((r, i) => [
+      i + 1,
       r.number,
       r.name,
       r.trips,
       r.passengers.toLocaleString(),
       r.avgPassengers,
     ]),
-    columnStyles: {
-      0: { cellWidth: 20 },
-      1: { cellWidth: 'auto' },
-      2: { cellWidth: 22, halign: 'right' },
-      3: { cellWidth: 28, halign: 'right' },
-      4: { cellWidth: 32, halign: 'right' },
-    },
+    columnStyles: { 0: { cellWidth: 'wrap' } },
     ...TABLE_STYLES,
   });
 
-  const afterRouteTable: number = (doc as any).lastAutoTable.finalY + 10;
-  const spaceLeft2 = doc.internal.pageSize.getHeight() - afterRouteTable;
-
-  if (spaceLeft2 < 50) {
+  const afterRoute: number = (doc as any).lastAutoTable.finalY + 10;
+  if (doc.internal.pageSize.getHeight() - afterRoute < 50) {
     doc.addPage();
-    pageHeader(doc, 'Analytics & Performance Report', dateRange, tenant, logoDataUrl);
-    y = 40;
+    pageHeader(doc, REPORT_TITLE, from, to, tenant, logoDataUrl);
+    y = CONTENT_Y;
   } else {
-    y = afterRouteTable;
+    y = afterRoute;
   }
 
-  y = sectionTitle(doc, 'Fleet Status', y);
+  y = sectionTitle(doc, 'Fleet Status', y, sec++);
 
   const totalVehicles = fleetStatus.reduce((sum, s) => sum + s.value, 0);
 
   autoTable(doc, {
     startY: y,
-    head: [['Status', 'Count', 'Percentage']],
-    body: fleetStatus.map((s) => [
+    head: [['#', 'Status', 'Count', 'Percentage']],
+    body: fleetStatus.map((s, i) => [
+      i + 1,
       s.name,
       s.value,
       totalVehicles > 0 ? `${((s.value / totalVehicles) * 100).toFixed(1)}%` : '0%',
     ]),
-    foot: [['Total', totalVehicles, '100%']],
-    footStyles: { fillColor: '#E2E8F0', fontStyle: 'bold', fontSize: 8 },
-    columnStyles: {
-      0: { cellWidth: 'auto' },
-      1: { cellWidth: 22, halign: 'right' },
-      2: { cellWidth: 28, halign: 'right' },
-    },
+    foot: [['', 'Total', totalVehicles, '100%']],
+    footStyles: { fillColor: '#E2E8F0', fontStyle: 'bold', fontSize: 8.5, textColor: TEXT_DARK },
+    columnStyles: { 0: { cellWidth: 'wrap' } },
     ...TABLE_STYLES,
   });
 
-  generatedByLine(doc, (doc as any).lastAutoTable.finalY + 6, generatedByName ?? tenant.name);
-
-  const totalPages = doc.getNumberOfPages();
-  for (let p = 1; p <= totalPages; p++) {
-    doc.setPage(p);
-    doc.setFontSize(7);
-    doc.setTextColor('#94A3B8');
-    doc.text(
-      `Page ${p} of ${totalPages} - ${tenant.name} Analytics Report`,
-      doc.internal.pageSize.getWidth() / 2,
-      doc.internal.pageSize.getHeight() - 6,
-      { align: 'center' },
-    );
-  }
-
-  doc.save(`${slugify(tenant.name)}-report-${from}-to-${to}.pdf`);
+  stampFooters(doc, tenant, generatedByName ?? tenant.name);
+  doc.save(`${slugify(tenant.name)}-analytics-report-${from}-to-${to}.pdf`);
 }
 
 function slugify(value: string): string {
   return (
-    value
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '') || 'smart-transport'
+    value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') ||
+    'smart-transport'
   );
 }
 
 // ─── Filtered-report PDF export ───────────────────────────────────────────────
-
 type FilteredReportInput = {
   result: FilteredReportResponse;
   dateFrom: string;
@@ -350,7 +325,7 @@ export async function exportFilteredReportPDF({
   tenantLogoPath,
   generatedByName,
 }: FilteredReportInput): Promise<void> {
-  const tenant = {
+  const tenant: TenantReportBranding = {
     name: tenantName?.trim() || 'Smart Transport',
     email: tenantEmail?.trim() || undefined,
     address: tenantAddress?.trim() || undefined,
@@ -364,7 +339,7 @@ export async function exportFilteredReportPDF({
   }
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const dateRange = `${dateFrom} - ${dateTo}`;
+
   const titleMap: Record<string, string> = {
     route: 'Route Performance Report',
     daily: 'Daily Operations Report',
@@ -373,111 +348,86 @@ export async function exportFilteredReportPDF({
   };
   const title = titleMap[result.reportType] ?? 'Filtered Analytics Report';
 
-  pageHeader(doc, title, dateRange, tenant, logoDataUrl);
+  pageHeader(doc, title, dateFrom, dateTo, tenant, logoDataUrl);
 
-  let y = 40;
-  y = sectionTitle(doc, title, y);
+  let y = CONTENT_Y;
+  y = sectionTitle(doc, title, y, 1);
 
   if (result.reportType === 'route') {
     const rows = result.data as RouteReportData[];
     autoTable(doc, {
       startY: y,
-      head: [['Route Name', 'On-Time %', 'Avg Duration (min)', 'Passengers', 'Utilisation %']],
-      body: rows.map((r) => [
+      head: [['#', 'Route Name', 'On-Time %', 'Avg Duration (min)', 'Passengers', 'Utilisation %']],
+      body: rows.map((r, i) => [
+        i + 1,
         r.routeName,
         `${(r.onTimeRate ?? 0).toFixed(1)}%`,
-        (r.avgTripDurationMinutes ?? 0),
+        r.avgTripDurationMinutes ?? 0,
         (r.totalPassengers ?? 0).toLocaleString(),
         `${(r.utilisationPercentage ?? 0).toFixed(1)}%`,
       ]),
-      columnStyles: {
-        0: { cellWidth: 'auto' },
-        1: { cellWidth: 22, halign: 'right' },
-        2: { cellWidth: 28, halign: 'right' },
-        3: { cellWidth: 24, halign: 'right' },
-        4: { cellWidth: 24, halign: 'right' },
-      },
+      columnStyles: { 0: { cellWidth: 'wrap' } },
       ...TABLE_STYLES,
     });
   } else if (result.reportType === 'daily') {
     const rows = result.data as DailyReportData[];
     autoTable(doc, {
       startY: y,
-      head: [['Date', 'Total Trips', 'Completed', 'Cancelled', 'Passengers']],
-      body: rows.map((r) => [
+      head: [['#', 'Date', 'Total Trips', 'Completed', 'Cancelled', 'Passengers']],
+      body: rows.map((r, i) => [
+        i + 1,
         r.date,
         r.totalTrips,
         r.completedTrips,
         r.cancelledTrips,
         (r.totalPassengers ?? 0).toLocaleString(),
       ]),
-      columnStyles: {
-        0: { cellWidth: 28 },
-        1: { cellWidth: 22, halign: 'right' },
-        2: { cellWidth: 22, halign: 'right' },
-        3: { cellWidth: 22, halign: 'right' },
-        4: { cellWidth: 'auto', halign: 'right' },
-      },
+      columnStyles: { 0: { cellWidth: 'wrap' } },
       ...TABLE_STYLES,
     });
   } else if (result.reportType === 'fleet') {
     const rows = result.data as FleetReportData[];
     autoTable(doc, {
       startY: y,
-      head: [['Registration', 'Utilisation %', 'Maintenance Events', 'Total km', 'Status']],
-      body: rows.map((r) => [
+      head: [['#', 'Registration', 'Utilisation %', 'Maintenance Events', 'Total km', 'Status']],
+      body: rows.map((r, i) => [
+        i + 1,
         r.registrationNumber,
         `${(r.utilisationPercentage ?? 0).toFixed(1)}%`,
-        (r.maintenanceEvents ?? 0),
+        r.maintenanceEvents ?? 0,
         (r.totalKm ?? 0).toLocaleString(),
         r.status,
       ]),
-      columnStyles: {
-        0: { cellWidth: 32 },
-        1: { cellWidth: 24, halign: 'right' },
-        2: { cellWidth: 30, halign: 'right' },
-        3: { cellWidth: 22, halign: 'right' },
-        4: { cellWidth: 'auto' },
-      },
+      columnStyles: { 0: { cellWidth: 'wrap' } },
       ...TABLE_STYLES,
     });
   } else {
     const rows = result.data as DriverReportData[];
     autoTable(doc, {
       startY: y,
-      head: [['Driver', 'Trips Completed', 'On-Time %', 'Avg Duration (min)', 'Passengers']],
-      body: rows.map((r) => [
+      head: [['#', 'Driver', 'Trips Completed', 'On-Time %', 'Avg Duration (min)', 'Passengers']],
+      body: rows.map((r, i) => [
+        i + 1,
         r.driverName,
-        (r.tripsCompleted ?? 0),
+        r.tripsCompleted ?? 0,
         `${(r.onTimeRate ?? 0).toFixed(1)}%`,
-        (r.avgTripDurationMinutes ?? 0),
+        r.avgTripDurationMinutes ?? 0,
         (r.totalPassengers ?? 0).toLocaleString(),
       ]),
-      columnStyles: {
-        0: { cellWidth: 'auto' },
-        1: { cellWidth: 28, halign: 'right' },
-        2: { cellWidth: 22, halign: 'right' },
-        3: { cellWidth: 28, halign: 'right' },
-        4: { cellWidth: 24, halign: 'right' },
-      },
+      columnStyles: { 0: { cellWidth: 'wrap' } },
       ...TABLE_STYLES,
     });
   }
 
-  generatedByLine(doc, (doc as any).lastAutoTable.finalY + 6, generatedByName ?? tenant.name);
+  // Row count summary line
+  const rowCount = (result.data as unknown[]).length;
+  const afterTable: number = (doc as any).lastAutoTable.finalY;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(BRAND);
+  doc.text(`Total records in period: ${rowCount}`, 14, afterTable + 8);
+  doc.setTextColor('#000000');
 
-  const totalPages = doc.getNumberOfPages();
-  for (let p = 1; p <= totalPages; p++) {
-    doc.setPage(p);
-    doc.setFontSize(7);
-    doc.setTextColor('#94A3B8');
-    doc.text(
-      `Page ${p} of ${totalPages} — ${tenant.name} ${title}`,
-      doc.internal.pageSize.getWidth() / 2,
-      doc.internal.pageSize.getHeight() - 6,
-      { align: 'center' },
-    );
-  }
-
+  stampFooters(doc, tenant, generatedByName ?? tenant.name);
   doc.save(`${slugify(tenant.name)}-${result.reportType}-report-${dateFrom}-to-${dateTo}.pdf`);
 }
