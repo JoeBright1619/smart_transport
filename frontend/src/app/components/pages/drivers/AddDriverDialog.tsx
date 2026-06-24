@@ -15,6 +15,7 @@ import {
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
 import { buildDriverCreatePayload, initialDriverFormState, type DriverFormState } from './driver-helpers';
+import { validateName, validatePhone } from '../../../lib/validation';
 import React from 'react';
 
 type AddDriverDialogProps = {
@@ -25,9 +26,22 @@ export function AddDriverDialog({ onCreateDriver }: AddDriverDialogProps) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<DriverFormState>(initialDriverFormState);
   const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ name?: string; phone?: string }>({});
+
+  const validate = (): boolean => {
+    const next: { name?: string; phone?: string } = {};
+    const nameErr = validateName(form.name);
+    if (nameErr) next.name = nameErr;
+    // Phone is required for drivers — an empty value is an error here.
+    const phoneErr = !form.phone.trim() ? 'Phone is required' : validatePhone(form.phone);
+    if (phoneErr) next.phone = phoneErr;
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!validate()) return;
     setSubmitting(true);
 
     try {
@@ -61,7 +75,14 @@ export function AddDriverDialog({ onCreateDriver }: AddDriverDialogProps) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="driverName">Name</Label>
-            <Input id="driverName" value={form.name} onChange={updateField(setForm, 'name')} required />
+            <Input
+              id="driverName"
+              value={form.name}
+              onChange={updateField(setForm, 'name')}
+              aria-invalid={!!errors.name}
+              required
+            />
+            {errors.name && <p className="text-xs text-red-600">{errors.name}</p>}
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
@@ -75,7 +96,14 @@ export function AddDriverDialog({ onCreateDriver }: AddDriverDialogProps) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="driverPhone">Phone</Label>
-              <Input id="driverPhone" value={form.phone} onChange={updateField(setForm, 'phone')} required />
+              <Input
+                id="driverPhone"
+                value={form.phone}
+                onChange={updateField(setForm, 'phone')}
+                aria-invalid={!!errors.phone}
+                required
+              />
+              {errors.phone && <p className="text-xs text-red-600">{errors.phone}</p>}
             </div>
           </div>
           <div className="space-y-2">

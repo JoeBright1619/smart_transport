@@ -44,6 +44,20 @@ async def test_register_short_password_returns_422(client):
     assert r.status_code == 422
 
 
+async def test_register_invalid_admin_email_returns_422(client):
+    r = await client.post(
+        "/auth/register", json={**_REGISTER_PAYLOAD, "admin_email": "not-an-email"}
+    )
+    assert r.status_code == 422
+
+
+async def test_register_password_without_digit_returns_422(client):
+    r = await client.post(
+        "/auth/register", json={**_REGISTER_PAYLOAD, "password": "NoDigitsHere"}
+    )
+    assert r.status_code == 422
+
+
 # ---------------------------------------------------------------------------
 # Login
 # ---------------------------------------------------------------------------

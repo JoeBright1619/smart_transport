@@ -7,16 +7,28 @@ import { Label } from '../ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { useAuth } from '../../lib/auth-context';
 import { toast } from 'sonner';
+import { validateEmail } from '../../lib/validation';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const validate = (): boolean => {
+    const next: { email?: string; password?: string } = {};
+    const emailErr = validateEmail(email);
+    if (emailErr) next.email = emailErr;
+    if (!password) next.password = 'Password is required';
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
     setLoading(true);
 
     try {
@@ -58,10 +70,13 @@ export function LoginPage() {
                   placeholder="your.email@transport.rw"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onBlur={() => setErrors((prev) => ({ ...prev, email: validateEmail(email) ?? undefined }))}
+                  aria-invalid={!!errors.email}
                   className="pl-10"
                   required
                 />
               </div>
+              {errors.email && <p className="text-xs text-red-600">{errors.email}</p>}
             </div>
 
             <div className="space-y-2">
@@ -74,10 +89,12 @@ export function LoginPage() {
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  aria-invalid={!!errors.password}
                   className="pl-10"
                   required
                 />
               </div>
+              {errors.password && <p className="text-xs text-red-600">{errors.password}</p>}
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>

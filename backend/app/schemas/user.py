@@ -4,24 +4,30 @@ from typing import Literal
 from pydantic import Field
 
 from app.schemas.base import APIModel
+from app.schemas.validators import (
+    Email,
+    OptionalPassword,
+    OptionalPersonName,
+    OptionalPhone,
+    Password,
+    PersonName,
+)
 
 UserRole = Literal["superadmin", "admin", "operator", "dispatcher", "passenger"]
 TenantUserRole = Literal["admin", "operator", "dispatcher", "passenger"]
 
 
 class UserBase(APIModel):
-    full_name: str = Field(
-        min_length=1,
+    full_name: PersonName = Field(
         max_length=255,
         json_schema_extra={"example": "Paul Nkunda"},
     )
-    email: str = Field(
-        min_length=3,
+    email: Email = Field(
         max_length=255,
         json_schema_extra={"example": "paul@ecofleet.rw"},
     )
     role: TenantUserRole = Field(json_schema_extra={"example": "dispatcher"})
-    phone: str | None = Field(
+    phone: OptionalPhone = Field(
         default=None,
         max_length=50,
         json_schema_extra={"example": "+250788345678"},
@@ -31,7 +37,7 @@ class UserBase(APIModel):
 class UserCreate(UserBase):
     # Optional — omit when inviting staff (the invite email provides a link to set it).
     # Provide when seeding or creating accounts that bypass the invitation flow.
-    password: str | None = Field(
+    password: OptionalPassword = Field(
         default=None,
         min_length=8,
         max_length=128,
@@ -40,13 +46,12 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(APIModel):
-    full_name: str | None = Field(
+    full_name: OptionalPersonName = Field(
         default=None,
-        min_length=1,
         max_length=255,
         json_schema_extra={"example": "Paul Nkunda Jr."},
     )
-    phone: str | None = Field(
+    phone: OptionalPhone = Field(
         default=None,
         max_length=50,
         json_schema_extra={"example": "+250788345679"},
@@ -75,7 +80,7 @@ class UserRead(APIModel):
 
 class UserInviteAccept(APIModel):
     token: str = Field(json_schema_extra={"example": "<invite-jwt>"})
-    new_password: str = Field(
+    new_password: Password = Field(
         min_length=8,
         max_length=128,
         json_schema_extra={"example": "NewSecurePass123!"},

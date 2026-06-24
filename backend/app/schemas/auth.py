@@ -2,6 +2,7 @@ from pydantic import Field
 
 from app.schemas.base import APIModel
 from app.schemas.user import UserRole
+from app.schemas.validators import Email, OptionalPhone, Password, PersonName
 
 
 class RegisterRequest(APIModel):
@@ -10,27 +11,24 @@ class RegisterRequest(APIModel):
         max_length=255,
         json_schema_extra={"example": "EcoFleet Ltd"},
     )
-    contact_email: str = Field(
-        min_length=3,
+    contact_email: Email = Field(
         max_length=255,
         json_schema_extra={"example": "admin@ecofleet.rw"},
     )
-    admin_full_name: str = Field(
-        min_length=1,
+    admin_full_name: PersonName = Field(
         max_length=255,
         json_schema_extra={"example": "Jean Claude Mugabo"},
     )
-    admin_email: str = Field(
-        min_length=3,
+    admin_email: Email = Field(
         max_length=255,
         json_schema_extra={"example": "jean@ecofleet.rw"},
     )
-    admin_phone: str | None = Field(
+    admin_phone: OptionalPhone = Field(
         default=None,
         max_length=50,
         json_schema_extra={"example": "+250788123456"},
     )
-    password: str = Field(
+    password: Password = Field(
         min_length=8,
         max_length=128,
         json_schema_extra={"example": "SecurePass123!"},
@@ -111,23 +109,23 @@ class RefreshTokenResponse(APIModel):
 
 
 class PassengerRegisterRequest(APIModel):
-    full_name: str = Field(
-        min_length=1, max_length=255, json_schema_extra={"example": "Alice Mutoni"}
+    full_name: PersonName = Field(
+        max_length=255, json_schema_extra={"example": "Alice Mutoni"}
     )
-    email: str = Field(
-        min_length=3, max_length=255, json_schema_extra={"example": "alice@example.rw"}
+    email: Email = Field(
+        max_length=255, json_schema_extra={"example": "alice@example.rw"}
     )
-    phone: str | None = Field(
+    phone: OptionalPhone = Field(
         default=None, max_length=50, json_schema_extra={"example": "+250788000001"}
     )
-    password: str = Field(
+    password: Password = Field(
         min_length=8, max_length=128, json_schema_extra={"example": "MyPass123!"}
     )
 
 
 class VerifyEmailRequest(APIModel):
-    email: str = Field(
-        min_length=3, max_length=255, json_schema_extra={"example": "alice@example.rw"}
+    email: Email = Field(
+        max_length=255, json_schema_extra={"example": "alice@example.rw"}
     )
     otp: str = Field(
         min_length=6, max_length=6, json_schema_extra={"example": "482951"}
@@ -135,6 +133,6 @@ class VerifyEmailRequest(APIModel):
 
 
 class ResendOtpRequest(APIModel):
-    email: str = Field(
-        min_length=3, max_length=255, json_schema_extra={"example": "alice@example.rw"}
+    email: Email = Field(
+        max_length=255, json_schema_extra={"example": "alice@example.rw"}
     )

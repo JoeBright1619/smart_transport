@@ -184,7 +184,7 @@ async def test_stats_increments_profile_on_boarding(
         tenant_id=tenant.id,
         registration_number="ST 0001",
         model="Bus",
-        capacity=40,
+        seating_capacity=40,
         status="active",
         engine_status="good",
         is_deleted=False,

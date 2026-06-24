@@ -108,6 +108,59 @@ async def test_register_passenger_with_optional_phone(client):
     assert r.status_code == 201
 
 
+@pytest.mark.parametrize(
+    "bad_email",
+    ["notanemail", "missing@domain", "missing@.com", "@nolocal.com", "spaces in@x.com"],
+)
+async def test_register_passenger_invalid_email_returns_422(client, bad_email):
+    r = await client.post(
+        "/auth/register/passenger",
+        json={"full_name": "Grace", "email": bad_email, "password": "SecurePass1!"},
+    )
+    assert r.status_code == 422
+
+
+@pytest.mark.parametrize(
+    "bad_password",
+    ["allletters", "12345678", "Short1"],
+)
+async def test_register_passenger_weak_password_returns_422(client, bad_password):
+    r = await client.post(
+        "/auth/register/passenger",
+        json={
+            "full_name": "Heidi",
+            "email": "heidi@test.local",
+            "password": bad_password,
+        },
+    )
+    assert r.status_code == 422
+
+
+async def test_register_passenger_blank_name_returns_422(client):
+    r = await client.post(
+        "/auth/register/passenger",
+        json={
+            "full_name": "  ",
+            "email": "ivan@test.local",
+            "password": "SecurePass1!",
+        },
+    )
+    assert r.status_code == 422
+
+
+async def test_register_passenger_invalid_phone_returns_422(client):
+    r = await client.post(
+        "/auth/register/passenger",
+        json={
+            "full_name": "Judy",
+            "email": "judy@test.local",
+            "phone": "not-a-phone",
+            "password": "SecurePass1!",
+        },
+    )
+    assert r.status_code == 422
+
+
 # ---------------------------------------------------------------------------
 # POST /auth/verify-email
 # ---------------------------------------------------------------------------

@@ -4,6 +4,7 @@ from pydantic import Field
 
 from app.schemas.arrival import PublicArrivalRead
 from app.schemas.base import APIModel
+from app.schemas.validators import OptionalPhone
 
 
 class ResolvedRoute(APIModel):
@@ -33,7 +34,7 @@ class PassengerProfileRead(APIModel):
 
 
 class PassengerProfileUpdate(APIModel):
-    phone: str | None = Field(default=None, max_length=50)
+    phone: OptionalPhone = Field(default=None, max_length=50)
     preferred_routes: list[str] | None = None
     preferred_stops: list[str] | None = None
     notify_on_arrival: bool | None = None

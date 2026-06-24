@@ -4,33 +4,30 @@ from typing import Literal
 from pydantic import Field
 
 from app.schemas.base import APIModel
+from app.schemas.validators import OptionalPersonName, OptionalPhone, PersonName, Phone
 
 DriverStatus = Literal["available", "on-trip", "off-duty"]
 
 
 class DriverCreate(APIModel):
-    name: str = Field(
-        min_length=1, max_length=255, json_schema_extra={"example": "Eric Nsabimana"}
+    name: PersonName = Field(
+        max_length=255, json_schema_extra={"example": "Eric Nsabimana"}
     )
     license_number: str = Field(
         min_length=1, max_length=50, json_schema_extra={"example": "DL-RW-0003"}
     )
-    phone: str = Field(
-        min_length=1, max_length=50, json_schema_extra={"example": "+250788345678"}
-    )
+    phone: Phone = Field(max_length=50, json_schema_extra={"example": "+250788345678"})
     certification_expiry: date = Field(json_schema_extra={"example": "2027-12-31"})
 
 
 class DriverUpdate(APIModel):
-    name: str | None = Field(
+    name: OptionalPersonName = Field(
         default=None,
-        min_length=1,
         max_length=255,
         json_schema_extra={"example": "Eric Nsabimana"},
     )
-    phone: str | None = Field(
+    phone: OptionalPhone = Field(
         default=None,
-        min_length=1,
         max_length=50,
         json_schema_extra={"example": "+250788999000"},
     )

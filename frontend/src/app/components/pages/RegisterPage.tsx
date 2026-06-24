@@ -10,6 +10,12 @@ import { useAuth } from '../../lib/auth-context';
 import * as authService from '../../services/auth.service';
 import { toast } from 'sonner';
 import { ApiError } from '../../lib/api-client';
+import {
+  validateEmail,
+  validateName,
+  validatePassword,
+  validatePhone,
+} from '../../lib/validation';
 
 type Step = 1 | 2;
 
@@ -77,10 +83,45 @@ export function RegisterPage() {
   const [step, setStep] = useState<Step>(1);
   const [loading, setLoading] = useState(false);
 
+  // Per-field validation errors, shown once a field has been touched/submitted.
+  type FieldKey = 'fullName' | 'email' | 'phone' | 'password' | 'confirmPassword';
+  const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({});
+
   const passwordsMatch = useMemo(() => {
     if (!password || !confirmPassword) return true;
     return password === confirmPassword;
   }, [password, confirmPassword]);
+
+  const fieldErrorFor = (key: FieldKey): string | undefined => {
+    switch (key) {
+      case 'fullName':
+        return validateName(fullName) ?? undefined;
+      case 'email':
+        return validateEmail(email) ?? undefined;
+      case 'phone':
+        return validatePhone(phone) ?? undefined;
+      case 'password':
+        return validatePassword(password) ?? undefined;
+      case 'confirmPassword':
+        return password !== confirmPassword ? 'Passwords do not match' : undefined;
+    }
+  };
+
+  const handleBlur = (key: FieldKey) => {
+    setErrors((prev) => ({ ...prev, [key]: fieldErrorFor(key) }));
+  };
+
+  const validateStep1 = (): boolean => {
+    const next: Partial<Record<FieldKey, string>> = {};
+    (['fullName', 'email', 'phone', 'password', 'confirmPassword'] as FieldKey[]).forEach(
+      (key) => {
+        const err = fieldErrorFor(key);
+        if (err) next[key] = err;
+      },
+    );
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
 
   useEffect(() => {
     if (countdown <= 0) return;
@@ -90,8 +131,10 @@ export function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (password.length < 8) { toast.error('Password must be at least 8 characters'); return; }
-    if (password !== confirmPassword) { toast.error('Passwords do not match'); return; }
+    if (!validateStep1()) {
+      toast.error('Please fix the highlighted fields');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -168,10 +211,13 @@ export function RegisterPage() {
                     placeholder="e.g. Alice Mutoni"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
+                    onBlur={() => handleBlur('fullName')}
+                    aria-invalid={!!errors.fullName}
                     className="pl-10"
                     required
                   />
                 </div>
+                {errors.fullName && <p className="text-xs text-red-600">{errors.fullName}</p>}
               </div>
 
               <div className="space-y-2">
@@ -184,10 +230,13 @@ export function RegisterPage() {
                     placeholder="alice@example.rw"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    onBlur={() => handleBlur('email')}
+                    aria-invalid={!!errors.email}
                     className="pl-10"
                     required
                   />
                 </div>
+                {errors.email && <p className="text-xs text-red-600">{errors.email}</p>}
               </div>
 
               <div className="space-y-2">
@@ -199,9 +248,12 @@ export function RegisterPage() {
                     placeholder="+250 7xx xxx xxx"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
+                    onBlur={() => handleBlur('phone')}
+                    aria-invalid={!!errors.phone}
                     className="pl-10"
                   />
                 </div>
+                {errors.phone && <p className="text-xs text-red-600">{errors.phone}</p>}
               </div>
 
               <div className="space-y-2">
@@ -214,11 +266,14 @@ export function RegisterPage() {
                     placeholder="Create a password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    onBlur={() => handleBlur('password')}
+                    aria-invalid={!!errors.password}
                     className="pl-10"
                     required
                   />
                 </div>
                 <PasswordStrengthMeter password={password} />
+                {errors.password && <p className="text-xs text-red-600">{errors.password}</p>}
               </div>
 
               <div className="space-y-2">

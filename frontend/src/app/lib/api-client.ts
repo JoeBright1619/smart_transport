@@ -130,9 +130,12 @@ apiClient.interceptors.response.use(
   async (error: AxiosError<ErrorEnvelope>) => {
     const originalRequest = error.config as RetryableRequestConfig | undefined;
     const isUnauthorized = error.response?.status === 401;
-    const isRefreshRequest = originalRequest?.url?.includes('/auth/refresh');
+    // A 401 from an /auth endpoint (login, register, verify, refresh) is a
+    // credential/auth failure, not an expired access token — refreshing and
+    // showing "session expired" would be wrong (and double up on the toast).
+    const isAuthRequest = originalRequest?.url?.includes('/auth/');
 
-    if (isUnauthorized && originalRequest && !originalRequest._retry && !isRefreshRequest) {
+    if (isUnauthorized && originalRequest && !originalRequest._retry && !isAuthRequest) {
       originalRequest._retry = true;
 
       try {

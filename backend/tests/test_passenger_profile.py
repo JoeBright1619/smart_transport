@@ -92,6 +92,15 @@ async def test_patch_profile_updates_phone(client, passenger, db: AsyncSession):
     assert profile.phone == "+250788000001"
 
 
+async def test_patch_profile_invalid_phone_returns_422(client, passenger):
+    r = await client.patch(
+        "/api/v1/passengers/me",
+        json={"phone": "not-a-phone"},
+        headers=auth_headers(passenger),
+    )
+    assert r.status_code == 422
+
+
 async def test_patch_profile_updates_notifications(client, passenger):
     r = await client.patch(
         "/api/v1/passengers/me",

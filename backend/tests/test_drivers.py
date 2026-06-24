@@ -95,6 +95,24 @@ async def test_create_returns_422_missing_expiry(client, admin):
     assert r.status_code == 422
 
 
+async def test_create_returns_422_invalid_phone(client, admin):
+    r = await client.post(
+        "/api/v1/drivers",
+        json={**_CREATE, "phone": "not-a-phone"},
+        headers=auth_headers(admin),
+    )
+    assert r.status_code == 422
+
+
+async def test_create_returns_422_blank_name(client, admin):
+    r = await client.post(
+        "/api/v1/drivers",
+        json={**_CREATE, "name": " "},
+        headers=auth_headers(admin),
+    )
+    assert r.status_code == 422
+
+
 # ---------------------------------------------------------------------------
 # GET /drivers/{id}
 # ---------------------------------------------------------------------------

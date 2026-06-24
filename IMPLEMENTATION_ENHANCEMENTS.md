@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** — (Phase 4 complete)
+**Next task:** Task 5.1 — i18n Foundation: Provider, Language Toggle & Persistence
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -110,8 +110,104 @@ Fix steps:
 
 ---
 
+## Phase 5 — Internationalisation: English ↔ Kinyarwanda
+
+> Goal: let any user toggle the UI between **English** and **Kinyarwanda (rw)**, with the
+> choice persisted across sessions. Built on `react-i18next`. Tasks are ordered: 5.1 lays the
+> plumbing, 5.2 makes server-sourced messages translatable, 5.3 extracts the screens, 5.4
+> handles formatting and exports. Do not start string extraction (5.3) before 5.1–5.2 land.
+
+---
+
+### Task 5.1 — i18n Foundation: Provider, Language Toggle & Persistence
+
+**Files:** `frontend/package.json`, `frontend/src/app/lib/i18n.ts` (new), `frontend/src/main.tsx`, `frontend/src/app/components/layout/Header.tsx`, `frontend/src/app/locales/en/common.json` (new), `frontend/src/app/locales/rw/common.json` (new)
+
+**Description:**
+The app has no internationalisation layer — all ~400+ UI strings are hardcoded English in JSX. This task installs `react-i18next`, creates the i18n config, wires it into the app, adds a language toggle to the header, and persists the choice to `localStorage` (mirroring the existing `st-access-token` pattern in `api-client.ts`). It seeds the translation files with only the shared/nav/auth strings so there is a working vertical slice to verify against; full screen-by-screen extraction happens in Task 5.3.
+
+Fix steps:
+1. Install dependencies: `npm i i18next react-i18next i18next-browser-languagedetector`.
+2. Create `frontend/src/app/lib/i18n.ts`: initialise i18next with `react-i18next`, register `en` and `rw` resources (the two `common.json` files), set `fallbackLng: 'en'`, and configure the language detector to read/write a `localStorage` key `st-lang` (define and export `LANG_KEY = 'st-lang'`, default `'en'`). Keep this file under the 250–300 line limit; if resources grow, split into namespaces (see step 6).
+3. Import `./app/lib/i18n` once in `frontend/src/main.tsx` (side-effect import, before `<App />` renders) so the instance is initialised app-wide. Do not wrap with a provider unless lazy-loading is added later — `react-i18next` reads the default instance.
+4. Seed both `common.json` files with a first batch of keys: app/brand name, the login page strings, register/verify strings, and the sidebar/header navigation labels. Use dot-namespaced keys (e.g. `login.signIn`, `nav.dashboard`, `common.cancel`). The `rw` file must contain the same key set — use placeholder Kinyarwanda where a verified translation is not yet available and flag those with a trailing ` [TODO]` so they are searchable.
+5. Add a **language toggle** to `Header.tsx`: a compact dropdown or two-state switch (EN / RW) that calls `i18n.changeLanguage(next)` and lets the detector persist `st-lang`. Show the active language. Place it near the existing header actions (alert bell / user menu).
+6. Refactor the login page (`LoginPage.tsx`) and the header/sidebar nav to consume `const { t } = useTranslation()` and render `t('...')` for the seeded keys only — this is the verification slice. Leave all other screens untouched for Task 5.3.
+7. No backend changes. Verify in the browser: toggling to RW updates the login page and nav labels immediately, a full reload preserves the choice (reads `st-lang`), and switching back to EN restores English.
+
+**Branch:** `master`
+**Commit:** `feat: i18n foundation with english/kinyarwanda toggle and persistence`
+
+- [ ] Task 5.1 complete
+
+---
+
+### Task 5.2 — Translate Server-Sourced Messages by Error Code
+
+**Files:** `frontend/src/app/lib/api-client.ts` (read only — do not change error flow), `frontend/src/app/lib/error-messages.ts` (new), `frontend/src/app/locales/en/errors.json` (new), `frontend/src/app/locales/rw/errors.json` (new), call sites that surface `ApiError.message` in toasts
+
+**Description:**
+Many user-facing messages originate from the **backend**, not the frontend — `ApiError.message` (e.g. "Invalid email or password"), OTP errors (`INVALID_OTP`, `OTP_EXPIRED`), conflict messages, and the field-validation messages in `backend/app/schemas/validators.py`. `react-i18next` cannot translate these because they arrive as English strings from the API. Rather than localise the backend (larger change, would need `Accept-Language` plumbing), translate on the frontend keyed by the stable `ApiError.code` already returned in the error envelope.
+
+Fix steps:
+1. Add an `errors` namespace: `en/errors.json` and `rw/errors.json` mapping each backend error **code** to a translated message — e.g. `UNAUTHORIZED`, `INVALID_OTP`, `OTP_EXPIRED`, `ALREADY_VERIFIED`, `CONFLICT`, `TOO_MANY_REQUESTS`, `EMAIL_NOT_VERIFIED`, plus a `DEFAULT` fallback. Enumerate codes by grepping the backend for `_error_detail(` / `_raise_error(` and the `code` values in `app/routers/auth.py` and the services.
+2. Create `frontend/src/app/lib/error-messages.ts` exporting `messageForError(error: unknown): string` — if it is an `ApiError` with a known `code`, return `t('errors:<code>')`; otherwise return `t('errors:DEFAULT')`. Use the i18next instance directly (`i18n.t`) so it works outside React components.
+3. Update the toast call sites that currently do `err instanceof ApiError ? err.message : '...'` (in `LoginPage.tsx`, `RegisterPage.tsx`, `TenantRegisterPage.tsx`, `Administration.tsx`, and the auth context) to use `messageForError(err)`. Do not change the error-handling control flow in `api-client.ts` — only how the message string is chosen at display time.
+4. Frontend field-validation messages added in `lib/validation.ts` should also be moved to the `errors` (or a `validation`) namespace so they translate alongside.
+5. Write one frontend-style verification (or a small unit test if a test runner is configured): `messageForError(new ApiError('x','INVALID_OTP'))` resolves to the RW string when language is `rw`. If no JS test runner exists, document the manual check instead (no backend test).
+
+**Branch:** `master`
+**Commit:** `feat: translate server error messages by code for english/kinyarwanda`
+
+- [ ] Task 5.2 complete
+
+---
+
+### Task 5.3 — Extract UI Strings Across Screens
+
+**Files:** All `frontend/src/app/components/**/*.tsx` with hardcoded copy; `frontend/src/app/locales/{en,rw}/*.json` (split by namespace)
+
+**Description:**
+Replace the remaining ~400 hardcoded JSX strings with `t('...')` calls, screen by screen. This is mechanical but large and must not block earlier tasks. Work in vertical slices so each slice is independently reviewable and the app always builds.
+
+Fix steps:
+1. Split translation resources into per-area namespaces to respect the file-size rule: `common`, `auth`, `passenger`, `fleet`, `analytics`, `admin`, `superadmin`. Update `i18n.ts` to register them.
+2. Extract one area at a time in this order (passenger-facing first, since that audience most needs Kinyarwanda): **passenger app → auth (finish) → fleet/dispatch → analytics → admin/superadmin.** For each component: add `useTranslation('<namespace>')`, move each literal into the namespace JSON (EN + RW), replace with `t(key)`, and use interpolation (`t('key', { name })`) instead of string concatenation.
+3. Keep keys descriptive and grouped by component/feature. Reuse `common.*` for shared words (Save, Cancel, Delete, Loading…).
+4. After each slice, run `npm run build` and confirm zero new TypeScript/build errors, and spot-check the slice in RW.
+5. Mark RW strings awaiting a verified human translation with a trailing ` [TODO]`; do not block extraction on perfect translations. Track remaining `[TODO]`s as the handoff to a native speaker.
+6. No backend tests (pure frontend). Verify the whole app renders without missing-key warnings in both languages.
+
+**Branch:** `master`
+**Commit:** `feat: extract ui strings to i18n namespaces (english/kinyarwanda)`
+
+- [ ] Task 5.3 complete
+
+---
+
+### Task 5.4 — Locale-Aware Formatting & Report Language
+
+**Files:** Components using `toLocaleDateString`/`toLocaleString` (e.g. `frontend/src/app/components/pages/analytics/analytics-pdf.ts`, passenger/report modals), `frontend/src/app/lib/i18n.ts`
+
+**Description:**
+Dates, times, and numbers are currently formatted with a hardcoded `'en-GB'` locale in several places (notably the PDF/report generators). With language toggling these should follow the active locale. This task also decides and implements whether generated PDF reports follow the UI language.
+
+Fix steps:
+1. Add a small helper (e.g. `formatDate`/`formatNumber` in `i18n.ts` or a `lib/format.ts`) that reads the active language and maps `en → 'en-GB'`, `rw → 'rw-RW'` (fall back to `'en-GB'` if the runtime lacks `rw-RW` data), then formats via `Intl`.
+2. Replace hardcoded `'en-GB'` calls in the report/PDF generators and modals with the helper.
+3. Decide report language: either (a) reports always render in English (simplest, defensible for official documents) or (b) reports follow the UI language — if (b), route the jsPDF hardcoded labels in `analytics-pdf.ts` through `i18n.t`. Document the decision in the commit body.
+4. No backend tests. Verify a report generated in RW mode formats dates/numbers per the chosen decision and renders without layout breakage.
+
+**Branch:** `master`
+**Commit:** `feat: locale-aware date/number formatting and report language handling`
+
+- [ ] Task 5.4 complete
+
+---
+
 ## Implementation Summary
 
 | Phase | Title | Tasks | Status |
 |-------|-------|-------|--------|
 | 4 | Passenger Data Integrity & Experience Fixes | 4.1, 4.2, 4.3 | Not started |
+| 5 | Internationalisation: English ↔ Kinyarwanda | 5.1, 5.2, 5.3, 5.4 | Not started |

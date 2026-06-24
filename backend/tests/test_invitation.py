@@ -136,6 +136,15 @@ async def test_invite_missing_email_returns_422(client, admin):
     assert r.status_code == 422
 
 
+async def test_invite_invalid_email_returns_422(client, admin):
+    r = await client.post(
+        "/api/v1/users",
+        json={"full_name": "New Staff", "email": "not-an-email", "role": "dispatcher"},
+        headers=auth_headers(admin),
+    )
+    assert r.status_code == 422
+
+
 async def test_invite_duplicate_active_email_returns_409(
     client, admin, make_user, tenant
 ):

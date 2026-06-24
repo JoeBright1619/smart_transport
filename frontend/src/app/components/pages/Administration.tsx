@@ -11,6 +11,7 @@ import { useAuth } from '../../lib/auth-context';
 import { listUsers, createUser, updateUser, deleteUser } from '../../services/users.service';
 import type { UserRead, TenantUserRole } from '../../lib/api-types';
 import { toast } from 'sonner';
+import { validateEmail, validateName, validatePhone } from '../../lib/validation';
 
 const STATUS_STYLES: Record<string, string> = {
   active: 'bg-emerald-100 text-emerald-700',
@@ -50,6 +51,12 @@ export function Administration() {
     role: 'dispatcher' as TenantUserRole,
   });
 
+  const [inviteErrors, setInviteErrors] = useState<{
+    fullName?: string;
+    email?: string;
+    phone?: string;
+  }>({});
+
   const loadUsers = async () => {
     setLoading(true);
     try {
@@ -64,12 +71,26 @@ export function Administration() {
 
   useEffect(() => { loadUsers(); }, []);
 
+  const validateInvite = (): boolean => {
+    const next: { fullName?: string; email?: string; phone?: string } = {};
+    const nameErr = validateName(formData.fullName);
+    if (nameErr) next.fullName = nameErr;
+    const emailErr = validateEmail(formData.email);
+    if (emailErr) next.email = emailErr;
+    const phoneErr = validatePhone(formData.phone); // optional — empty is valid
+    if (phoneErr) next.phone = phoneErr;
+    setInviteErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateInvite()) return;
     try {
       await createUser(formData);
       setIsAddOpen(false);
       setFormData({ fullName: '', email: '', role: 'dispatcher', phone: '' });
+      setInviteErrors({});
       toast.success('Invitation sent! The user will receive an email to set their password.');
       loadUsers();
     } catch (err: unknown) {
@@ -130,24 +151,42 @@ export function Administration() {
                 their password.
               </p>
               <form onSubmit={handleAddUser} className="space-y-4 pt-1">
-                <Input
-                  placeholder="Full Name"
-                  required
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                />
-                <Input
-                  type="email"
-                  placeholder="Work Email"
-                  required
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
-                <Input
-                  placeholder="Phone (optional)"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                />
+                <div className="space-y-1">
+                  <Input
+                    placeholder="Full Name"
+                    required
+                    value={formData.fullName}
+                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                    aria-invalid={!!inviteErrors.fullName}
+                  />
+                  {inviteErrors.fullName && (
+                    <p className="text-xs text-red-600">{inviteErrors.fullName}</p>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <Input
+                    type="email"
+                    placeholder="Work Email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    aria-invalid={!!inviteErrors.email}
+                  />
+                  {inviteErrors.email && (
+                    <p className="text-xs text-red-600">{inviteErrors.email}</p>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <Input
+                    placeholder="Phone (optional)"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    aria-invalid={!!inviteErrors.phone}
+                  />
+                  {inviteErrors.phone && (
+                    <p className="text-xs text-red-600">{inviteErrors.phone}</p>
+                  )}
+                </div>
                 <Select
                   value={formData.role}
                   onValueChange={(val) => setFormData({ ...formData, role: val as TenantUserRole })}

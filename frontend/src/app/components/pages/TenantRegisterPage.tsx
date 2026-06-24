@@ -7,6 +7,12 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { useAuth } from '../../lib/auth-context';
 import { toast } from 'sonner';
+import {
+  validateEmail,
+  validateName,
+  validatePassword,
+  validatePhone,
+} from '../../lib/validation';
 
 export function TenantRegisterPage() {
   const navigate = useNavigate();
@@ -21,21 +27,68 @@ export function TenantRegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  type FieldKey =
+    | 'companyName'
+    | 'contactEmail'
+    | 'adminFullName'
+    | 'adminEmail'
+    | 'adminPhone'
+    | 'password'
+    | 'confirmPassword';
+  const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({});
+
   const passwordsMatch = useMemo(() => {
     if (!password || !confirmPassword) return true;
     return password === confirmPassword;
   }, [password, confirmPassword]);
 
+  const fieldErrorFor = (key: FieldKey): string | undefined => {
+    switch (key) {
+      case 'companyName':
+        return validateName(companyName) ?? undefined;
+      case 'contactEmail':
+        return validateEmail(contactEmail) ?? undefined;
+      case 'adminFullName':
+        return validateName(adminFullName) ?? undefined;
+      case 'adminEmail':
+        return validateEmail(adminEmail) ?? undefined;
+      case 'adminPhone':
+        return validatePhone(adminPhone) ?? undefined;
+      case 'password':
+        return validatePassword(password) ?? undefined;
+      case 'confirmPassword':
+        return password !== confirmPassword ? 'Passwords do not match' : undefined;
+    }
+  };
+
+  const handleBlur = (key: FieldKey) => {
+    setErrors((prev) => ({ ...prev, [key]: fieldErrorFor(key) }));
+  };
+
+  const validateAll = (): boolean => {
+    const keys: FieldKey[] = [
+      'companyName',
+      'contactEmail',
+      'adminFullName',
+      'adminEmail',
+      'adminPhone',
+      'password',
+      'confirmPassword',
+    ];
+    const next: Partial<Record<FieldKey, string>> = {};
+    keys.forEach((key) => {
+      const err = fieldErrorFor(key);
+      if (err) next[key] = err;
+    });
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (password.length < 8) {
-      toast.error('Password must be at least 8 characters');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
+    if (!validateAll()) {
+      toast.error('Please fix the highlighted fields');
       return;
     }
 
@@ -94,10 +147,15 @@ export function TenantRegisterPage() {
                       placeholder="e.g. EcoFleet Ltd"
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
+                      onBlur={() => handleBlur('companyName')}
+                      aria-invalid={!!errors.companyName}
                       className="pl-10"
                       required
                     />
                   </div>
+                  {errors.companyName && (
+                    <p className="text-xs text-red-600">{errors.companyName}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -110,10 +168,15 @@ export function TenantRegisterPage() {
                       placeholder="admin@company.rw"
                       value={contactEmail}
                       onChange={(e) => setContactEmail(e.target.value)}
+                      onBlur={() => handleBlur('contactEmail')}
+                      aria-invalid={!!errors.contactEmail}
                       className="pl-10"
                       required
                     />
                   </div>
+                  {errors.contactEmail && (
+                    <p className="text-xs text-red-600">{errors.contactEmail}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -130,10 +193,15 @@ export function TenantRegisterPage() {
                       placeholder="e.g. Jean Claude Mugabo"
                       value={adminFullName}
                       onChange={(e) => setAdminFullName(e.target.value)}
+                      onBlur={() => handleBlur('adminFullName')}
+                      aria-invalid={!!errors.adminFullName}
                       className="pl-10"
                       required
                     />
                   </div>
+                  {errors.adminFullName && (
+                    <p className="text-xs text-red-600">{errors.adminFullName}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -146,10 +214,15 @@ export function TenantRegisterPage() {
                       placeholder="jean@company.rw"
                       value={adminEmail}
                       onChange={(e) => setAdminEmail(e.target.value)}
+                      onBlur={() => handleBlur('adminEmail')}
+                      aria-invalid={!!errors.adminEmail}
                       className="pl-10"
                       required
                     />
                   </div>
+                  {errors.adminEmail && (
+                    <p className="text-xs text-red-600">{errors.adminEmail}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -161,9 +234,14 @@ export function TenantRegisterPage() {
                       placeholder="+250 7xx xxx xxx"
                       value={adminPhone}
                       onChange={(e) => setAdminPhone(e.target.value)}
+                      onBlur={() => handleBlur('adminPhone')}
+                      aria-invalid={!!errors.adminPhone}
                       className="pl-10"
                     />
                   </div>
+                  {errors.adminPhone && (
+                    <p className="text-xs text-red-600">{errors.adminPhone}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -179,11 +257,19 @@ export function TenantRegisterPage() {
                     placeholder="Create a password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    onBlur={() => handleBlur('password')}
+                    aria-invalid={!!errors.password}
                     className="pl-10"
                     required
                   />
                 </div>
-                <p className="text-xs text-slate-500">Minimum 8 characters</p>
+                {errors.password ? (
+                  <p className="text-xs text-red-600">{errors.password}</p>
+                ) : (
+                  <p className="text-xs text-slate-500">
+                    At least 8 characters, with a letter and a number
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -196,6 +282,8 @@ export function TenantRegisterPage() {
                     placeholder="Re-enter your password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
+                    onBlur={() => handleBlur('confirmPassword')}
+                    aria-invalid={!passwordsMatch}
                     className="pl-10"
                     required
                   />
