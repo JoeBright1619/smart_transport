@@ -4,6 +4,8 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 
 import enCommon from '../locales/en/common.json';
 import rwCommon from '../locales/rw/common.json';
+import enErrors from '../locales/en/errors.json';
+import rwErrors from '../locales/rw/errors.json';
 
 // localStorage key the chosen language is persisted under — mirrors the
 // `st-access-token` convention in api-client.ts.
@@ -17,13 +19,13 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      en: { common: enCommon },
-      rw: { common: rwCommon },
+      en: { common: enCommon, errors: enErrors },
+      rw: { common: rwCommon, errors: rwErrors },
     },
     fallbackLng: 'en',
     supportedLngs: SUPPORTED_LANGUAGES,
     defaultNS: 'common',
-    ns: ['common'],
+    ns: ['common', 'errors'],
     detection: {
       order: ['localStorage', 'navigator'],
       lookupLocalStorage: LANG_KEY,

@@ -9,7 +9,7 @@ import { PasswordStrengthMeter } from '../ui/PasswordStrengthMeter';
 import { useAuth } from '../../lib/auth-context';
 import * as authService from '../../services/auth.service';
 import { toast } from 'sonner';
-import { ApiError } from '../../lib/api-client';
+import { messageForError } from '../../lib/error-messages';
 import {
   validateEmail,
   validateName,
@@ -148,7 +148,7 @@ export function RegisterPage() {
       setCountdown(60);
       toast.success('Check your email for the verification code');
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Registration failed');
+      toast.error(messageForError(err));
     } finally {
       setLoading(false);
     }
@@ -162,7 +162,7 @@ export function RegisterPage() {
       loginFromToken(response.accessToken, response.user);
       navigate('/');
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Verification failed');
+      toast.error(messageForError(err));
     } finally {
       setLoading(false);
     }
@@ -175,7 +175,7 @@ export function RegisterPage() {
       setCountdown(60);
       toast.success('New verification code sent');
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Could not resend code');
+      toast.error(messageForError(err));
     } finally {
       setLoading(false);
     }

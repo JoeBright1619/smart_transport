@@ -1,0 +1,21 @@
+{
+  "UNAUTHORIZED": "Invalid email or password",
+  "EMAIL_NOT_VERIFIED": "Please verify your email before logging in",
+  "INVALID_OTP": "Verification code is incorrect",
+  "OTP_EXPIRED": "Verification code has expired — request a new one",
+  "ALREADY_VERIFIED": "This email is already verified",
+  "TOO_MANY_REQUESTS": "Too many attempts — please wait a moment and try again",
+  "TENANT_INACTIVE": "This organisation account is inactive",
+  "INVALID_TOKEN": "This link is invalid or has expired",
+  "DEFAULT": "Something went wrong. Please try again",
+  "validation": {
+    "emailRequired": "Email is required",
+    "emailInvalid": "Enter a valid email address (e.g. name@example.com)",
+    "nameRequired": "Full name is required",
+    "nameTooShort": "Name must be at least 2 characters",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "passwordNeedsLetter": "Password must contain at least one letter",
+    "passwordNeedsNumber": "Password must contain at least one number",
+    "phoneInvalid": "Enter a valid phone number"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "UNAUTHORIZED": "Imeyili cyangwa ijambobanga ntabwo ari byo [TODO]",
+  "EMAIL_NOT_VERIFIED": "Nyamuneka emeza imeyili yawe mbere yo kwinjira [TODO]",
+  "INVALID_OTP": "Kode yo kwemeza ntabwo ari yo",
+  "OTP_EXPIRED": "Kode yo kwemeza yarangiye — saba indi nshya [TODO]",
+  "ALREADY_VERIFIED": "Iyi meyili yamaze kwemezwa",
+  "TOO_MANY_REQUESTS": "Wagerageje kenshi cyane — tegereza akanya hanyuma wongere [TODO]",
+  "TENANT_INACTIVE": "Iyi konti y'ikigo ntikora [TODO]",
+  "INVALID_TOKEN": "Iyi link ntabwo ari yo cyangwa yararangiye [TODO]",
+  "DEFAULT": "Habaye ikibazo. Nyamuneka ongera ugerageze",
+  "validation": {
+    "emailRequired": "Imeyili irakenewe",
+    "emailInvalid": "Andika imeyili yemewe (urugero: name@example.com)",
+    "nameRequired": "Amazina yombi arakenewe",
+    "nameTooShort": "Izina rigomba kuba nibura inyuguti 2",
+    "passwordTooShort": "Ijambobanga rigomba kuba nibura inyuguti 8",
+    "passwordNeedsLetter": "Ijambobanga rigomba kuba ririmo nibura inyuguti imwe",
+    "passwordNeedsNumber": "Ijambobanga rigomba kuba ririmo nibura umubare umwe",
+    "phoneInvalid": "Andika numero ya telefoni yemewe"
+  }
+}

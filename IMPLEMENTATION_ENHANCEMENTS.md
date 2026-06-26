@@ -12,7 +12,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 5.2 — Translate Server-Sourced Messages by Error Code
+**Next task:** Task 5.3 — Extract UI Strings Across Screens
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -159,7 +159,7 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `feat: translate server error messages by code for english/kinyarwanda`
 
-- [ ] Task 5.2 complete
+- [x] Task 5.2 complete
 
 ---
 

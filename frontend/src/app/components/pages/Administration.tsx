@@ -12,6 +12,7 @@ import { listUsers, createUser, updateUser, deleteUser } from '../../services/us
 import type { UserRead, TenantUserRole } from '../../lib/api-types';
 import { toast } from 'sonner';
 import { validateEmail, validateName, validatePhone } from '../../lib/validation';
+import { messageForError } from '../../lib/error-messages';
 
 const STATUS_STYLES: Record<string, string> = {
   active: 'bg-emerald-100 text-emerald-700',
@@ -94,8 +95,7 @@ export function Administration() {
       toast.success('Invitation sent! The user will receive an email to set their password.');
       loadUsers();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to send invitation';
-      toast.error(msg);
+      toast.error(messageForError(err));
     }
   };
 
