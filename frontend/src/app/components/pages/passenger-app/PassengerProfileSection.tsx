@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
 import { toast } from 'sonner';
-import { ApiError } from '../../../lib/api-client';
+import { useTranslation } from 'react-i18next';
+import { messageForError } from '../../../lib/error-messages';
 import type { GlobalStopRead } from '../../../lib/api-types';
 import { getPublicStops } from '../../../services/arrivals.service';
 import * as passengerService from '../../../services/passenger.service';
@@ -39,6 +40,7 @@ function Toggle({
 }
 
 export function PassengerProfileSection() {
+  const { t } = useTranslation('passenger');
   const [profile, setProfile] = useState<PassengerProfile | null>(null);
   const [allStops, setAllStops] = useState<GlobalStopRead[]>([]);
   const [phone, setPhone] = useState('');
@@ -72,16 +74,16 @@ export function PassengerProfileSection() {
         notificationThresholdMinutes: notifyThreshold,
       });
       setProfile(updated);
-      toast.success('Profile saved');
+      toast.success(t('profile.profileSaved'));
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Failed to save profile');
+      toast.error(messageForError(err));
     } finally {
       setSaving(false);
     }
   };
 
   if (!profile) {
-    return <div className="text-center py-12 text-slate-500 text-sm">Loading profile…</div>;
+    return <div className="text-center py-12 text-slate-500 text-sm">{t('profile.loading')}</div>;
   }
 
   return (
@@ -89,26 +91,26 @@ export function PassengerProfileSection() {
       {/* Basic info */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">My Details</CardTitle>
+          <CardTitle className="text-base">{t('profile.myDetails')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <p className="text-xs text-slate-500 mb-1">Name</p>
+            <p className="text-xs text-slate-500 mb-1">{t('profile.name')}</p>
             <p className="font-medium">{profile.fullName}</p>
           </div>
           <div>
-            <p className="text-xs text-slate-500 mb-1">Email</p>
+            <p className="text-xs text-slate-500 mb-1">{t('profile.email')}</p>
             <p className="font-medium">{profile.email}</p>
           </div>
           <div className="space-y-1">
-            <Label htmlFor="phone" className="text-xs text-slate-500">Phone</Label>
+            <Label htmlFor="phone" className="text-xs text-slate-500">{t('profile.phone')}</Label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
               <Input
                 id="phone"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="+250 7xx xxx xxx"
+                placeholder={t('profile.phonePlaceholder')}
                 className="pl-10"
               />
             </div>
@@ -121,12 +123,12 @@ export function PassengerProfileSection() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Heart className="size-4 text-red-500" />
-            Favourite Stops
+            {t('profile.favouriteStops')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {allStops.length === 0 ? (
-            <p className="text-sm text-slate-500">No stops available</p>
+            <p className="text-sm text-slate-500">{t('profile.noStops')}</p>
           ) : (
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
               {allStops.map((s) => (
@@ -151,23 +153,23 @@ export function PassengerProfileSection() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Bell className="size-4 text-amber-500" />
-            Notifications
+            {t('profile.notifications')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm">Bus arriving at my stops</p>
-            <Toggle checked={notifyArrival} onChange={setNotifyArrival} label="Arrival notifications" />
+            <p className="text-sm">{t('profile.busArriving')}</p>
+            <Toggle checked={notifyArrival} onChange={setNotifyArrival} label={t('profile.arrivalNotifications')} />
           </div>
           <div className="flex items-center justify-between">
-            <p className="text-sm">Notify me when bus is within</p>
+            <p className="text-sm">{t('profile.notifyWithin')}</p>
             <select
               value={notifyThreshold}
               onChange={(e) => setNotifyThreshold(Number(e.target.value))}
               className="rounded-md border border-slate-200 bg-white px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {[5, 10, 15, 20, 30].map((m) => (
-                <option key={m} value={m}>{m} min</option>
+                <option key={m} value={m}>{t('profile.minutesOption', { count: m })}</option>
               ))}
             </select>
           </div>
@@ -176,7 +178,7 @@ export function PassengerProfileSection() {
 
       <Button onClick={handleSave} disabled={saving} className="w-full">
         <Save className="mr-2 size-4" />
-        {saving ? 'Saving…' : 'Save Changes'}
+        {saving ? t('profile.saving') : t('profile.saveChanges')}
       </Button>
     </div>
   );

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BarChart2, Bus, Clock, History, Phone, User } from 'lucide-react';
 import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../lib/auth-context';
 import { PassengerTracking } from './passenger-app/PassengerTracking';
 import { PassengerProfileSection } from './passenger-app/PassengerProfileSection';
@@ -10,11 +11,12 @@ import { PassengerTrips } from './passenger-app/PassengerTrips';
 type Tab = 'tracking' | 'trips' | 'stats' | 'profile';
 
 export function PassengerApp() {
+  const { t } = useTranslation('passenger');
   const { user } = useAuth();
   const [tab, setTab] = useState<Tab>('tracking');
 
   const isPassenger = user?.role === 'passenger';
-  const tenantName = user?.tenantName ?? 'Transport System';
+  const tenantName = user?.tenantName ?? t('app.defaultTenant');
   const tenantContact = user?.tenantPhone ?? user?.tenantEmail;
 
   return (
@@ -24,14 +26,14 @@ export function PassengerApp() {
         <div className="flex items-start justify-between mb-4">
           <div>
             <h1 className="text-xl font-bold">{tenantName}</h1>
-            <p className="text-sm text-blue-100">Passenger service updates</p>
+            <p className="text-sm text-blue-100">{t('app.subtitle')}</p>
           </div>
 
           {/* Service info — top right */}
           <div className="text-right text-xs text-blue-100 space-y-1.5">
             <div className="flex items-center gap-1.5 justify-end">
               <Clock className="size-3.5 flex-shrink-0" />
-              <span>Mon – Sun: 5:00 AM – 11:00 PM</span>
+              <span>{t('app.serviceHours')}</span>
             </div>
             <div className="flex items-center gap-1.5 justify-end">
               {tenantContact ? (
@@ -46,7 +48,7 @@ export function PassengerApp() {
                     to="/operators"
                     className="underline underline-offset-2 hover:text-white transition-colors"
                   >
-                    View all transport operators
+                    {t('app.viewOperators')}
                   </Link>
                 </>
               )}
@@ -62,7 +64,7 @@ export function PassengerApp() {
               tab === 'tracking' ? 'bg-white text-blue-700' : 'bg-white/15 text-white hover:bg-white/25'
             }`}
           >
-            Live Tracking
+            {t('app.liveTracking')}
           </button>
           {isPassenger && (
             <button
@@ -72,7 +74,7 @@ export function PassengerApp() {
               }`}
             >
               <History className="size-3.5" />
-              My Trips
+              {t('app.myTrips')}
             </button>
           )}
           {isPassenger && (
@@ -83,7 +85,7 @@ export function PassengerApp() {
               }`}
             >
               <BarChart2 className="size-3.5" />
-              My Stats
+              {t('app.myStats')}
             </button>
           )}
           {isPassenger && (
@@ -94,7 +96,7 @@ export function PassengerApp() {
               }`}
             >
               <User className="size-3.5" />
-              My Profile
+              {t('app.myProfile')}
             </button>
           )}
         </div>

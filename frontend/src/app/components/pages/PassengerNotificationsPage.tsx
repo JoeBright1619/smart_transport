@@ -6,10 +6,12 @@ import { Button } from '../ui/button';
 import type { PassengerNotification } from '../../lib/api-types';
 import { getMyNotifications } from '../../services/passenger.service';
 import { MapPin, Building2, ChevronLeft, ChevronRight, Bell } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const PAGE_SIZE = 5;
 
 export function PassengerNotificationsPage() {
+  const { t } = useTranslation('passenger');
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<PassengerNotification[]>([]);
   const [page, setPage] = useState(1);
@@ -34,8 +36,8 @@ export function PassengerNotificationsPage() {
           <ChevronLeft className="size-5 text-slate-600" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold">My Notifications</h1>
-          <p className="text-slate-500 text-sm">Buses approaching your favourite stops</p>
+          <h1 className="text-2xl font-bold">{t('notifications.title')}</h1>
+          <p className="text-slate-500 text-sm">{t('notifications.subtitle')}</p>
         </div>
       </div>
 
@@ -43,8 +45,8 @@ export function PassengerNotificationsPage() {
         <Card>
           <CardContent className="py-16 text-center space-y-2">
             <Bell className="size-10 text-slate-300 mx-auto" />
-            <p className="text-slate-600 font-medium">No buses approaching your favourite stops right now.</p>
-            <p className="text-slate-400 text-sm">Add favourite stops in your profile to receive notifications here.</p>
+            <p className="text-slate-600 font-medium">{t('notifications.emptyTitle')}</p>
+            <p className="text-slate-400 text-sm">{t('notifications.emptyBody')}</p>
           </CardContent>
         </Card>
       ) : (
@@ -67,7 +69,7 @@ export function PassengerNotificationsPage() {
                             <p className="font-semibold text-sm">{a.registrationNumber}</p>
                             <p className="text-xs text-slate-500">{a.routeName}</p>
                             <div className="flex items-center gap-1.5 mt-1.5">
-                              <Badge variant="secondary" className="text-xs">Route {a.routeNumber}</Badge>
+                              <Badge variant="secondary" className="text-xs">{t('tracking.route', { number: a.routeNumber })}</Badge>
                               <span className="flex items-center gap-1 text-xs text-slate-400">
                                 <Building2 className="size-3" />{a.tenantName}
                               </span>
@@ -75,27 +77,27 @@ export function PassengerNotificationsPage() {
                           </div>
                           <div className="text-right">
                             {a.etaMinutes !== null && a.etaMinutes < 2 ? (
-                              <span className="text-green-600 font-bold text-sm">Arriving now</span>
+                              <span className="text-green-600 font-bold text-sm">{t('tracking.arrivingNow')}</span>
                             ) : a.etaMinutes !== null ? (
-                              <span className="font-bold text-sm">{a.etaMinutes} min</span>
+                              <span className="font-bold text-sm">{t('tracking.minutes', { count: a.etaMinutes })}</span>
                             ) : (
-                              <span className="text-slate-400 text-sm">Stopped</span>
+                              <span className="text-slate-400 text-sm">{t('tracking.stopped')}</span>
                             )}
                             {a.distanceToStopKm != null && (
-                              <p className="text-xs text-slate-500 mt-0.5">{a.distanceToStopKm.toFixed(1)} km away</p>
+                              <p className="text-xs text-slate-500 mt-0.5">{t('tracking.kmAway', { km: a.distanceToStopKm.toFixed(1) })}</p>
                             )}
                           </div>
                         </div>
                         {a.seatingCapacity > 0 && (
                           <div className="mt-2 pt-2 border-t">
                             <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-                              <span>{a.currentOccupancy} / {a.seatingCapacity} seats taken</span>
+                              <span>{t('tracking.seatsTaken', { current: a.currentOccupancy, total: a.seatingCapacity })}</span>
                               {a.remainingSeats === 0 ? (
-                                <span className="font-semibold text-red-600">Bus is full</span>
+                                <span className="font-semibold text-red-600">{t('tracking.busFull')}</span>
                               ) : a.remainingSeats < 10 ? (
-                                <span className="font-semibold text-amber-600">Nearly full</span>
+                                <span className="font-semibold text-amber-600">{t('tracking.nearlyFullShort')}</span>
                               ) : (
-                                <span className="font-semibold text-green-700">{a.remainingSeats} seats free</span>
+                                <span className="font-semibold text-green-700">{t('tracking.seatsFree', { count: a.remainingSeats })}</span>
                               )}
                             </div>
                             <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
@@ -127,7 +129,7 @@ export function PassengerNotificationsPage() {
                 <ChevronLeft className="size-4" />
               </Button>
               <span className="text-sm text-slate-600">
-                Page {page} of {totalPages}
+                {t('notifications.page', { page, total: totalPages })}
               </span>
               <Button
                 variant="outline"

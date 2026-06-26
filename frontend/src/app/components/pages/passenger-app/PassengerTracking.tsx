@@ -8,8 +8,10 @@ import { getPublicStops, getCrossTenantArrivals } from '../../../services/arriva
 import { getMyProfile, updateMyProfile } from '../../../services/passenger.service';
 import { useAuth } from '../../../lib/auth-context';
 import { MapPin, Clock, Navigation, Heart, Search, Building2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export function PassengerTracking() {
+  const { t } = useTranslation('passenger');
   const { user } = useAuth();
   const isPassenger = user?.role === 'passenger';
   const [preferredStopIds, setPreferredStopIds] = useState<string[]>([]);
@@ -79,7 +81,7 @@ export function PassengerTracking() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-blue-300" />
         <Input
-          placeholder="Search for bus stops..."
+          placeholder={t('tracking.searchPlaceholder')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10 bg-white/10 border-white/20 text-black placeholder:text-blue-800"
@@ -92,7 +94,7 @@ export function PassengerTracking() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <Heart className="size-5 text-red-500" /> Favorite Stops
+                  <Heart className="size-5 text-red-500" /> {t('tracking.favoriteStops')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -112,7 +114,7 @@ export function PassengerTracking() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Navigation className="size-5 text-blue-600" />
-                {searchTerm ? 'Search Results' : 'Nearby Stops'}
+                {searchTerm ? t('tracking.searchResults') : t('tracking.nearbyStops')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -153,7 +155,7 @@ export function PassengerTracking() {
                       <p className="text-xs font-medium text-slate-700">{tenant}</p>
                       <div className="flex flex-wrap gap-1 mt-0.5">
                         {[...routes].map((r) => (
-                          <Badge key={r} variant="secondary" className="text-xs">Route {r}</Badge>
+                          <Badge key={r} variant="secondary" className="text-xs">{t('tracking.route', { number: r })}</Badge>
                         ))}
                       </div>
                     </div>
@@ -167,7 +169,7 @@ export function PassengerTracking() {
             <Card className="border-blue-200 bg-blue-50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <Clock className="size-5 text-blue-600" />Next Arrivals at {selectedStopData?.name}
+                  <Clock className="size-5 text-blue-600" />{t('tracking.nextArrivals', { stop: selectedStopData?.name })}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -179,7 +181,7 @@ export function PassengerTracking() {
                           <p className="font-semibold text-sm">{a.registrationNumber}</p>
                           <p className="text-xs text-slate-500">{a.routeName}</p>
                           <div className="flex items-center gap-1.5 mt-1.5">
-                            <Badge variant="secondary" className="text-xs">Route {a.routeNumber}</Badge>
+                            <Badge variant="secondary" className="text-xs">{t('tracking.route', { number: a.routeNumber })}</Badge>
                             <span className="flex items-center gap-1 text-xs text-slate-400">
                               <Building2 className="size-3" />{a.tenantName}
                             </span>
@@ -187,30 +189,30 @@ export function PassengerTracking() {
                         </div>
                         <div className="text-right">
                           {a.etaMinutes !== null && a.etaMinutes < 2
-                            ? <span className="text-green-600 font-bold text-sm">Arriving now</span>
+                            ? <span className="text-green-600 font-bold text-sm">{t('tracking.arrivingNow')}</span>
                             : a.etaMinutes !== null
-                            ? <span className="font-bold text-sm">{a.etaMinutes} min</span>
-                            : <span className="text-slate-400 text-sm">Stopped</span>}
+                            ? <span className="font-bold text-sm">{t('tracking.minutes', { count: a.etaMinutes })}</span>
+                            : <span className="text-slate-400 text-sm">{t('tracking.stopped')}</span>}
                           {a.distanceToStopKm != null && (
-                            <p className="text-xs text-slate-500">{a.distanceToStopKm.toFixed(1)} km away</p>
+                            <p className="text-xs text-slate-500">{t('tracking.kmAway', { km: a.distanceToStopKm.toFixed(1) })}</p>
                           )}
                         </div>
                       </div>
                       {a.seatingCapacity > 0 && (
                         <div className="mt-3 pt-3 border-t space-y-2">
                           <div className="flex items-center justify-between text-xs text-slate-500">
-                            <span>{a.currentOccupancy} / {a.seatingCapacity} seats taken</span>
+                            <span>{t('tracking.seatsTaken', { current: a.currentOccupancy, total: a.seatingCapacity })}</span>
                             {a.remainingSeats === 0 ? (
                               <span className="font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
-                                Bus is full
+                                {t('tracking.busFull')}
                               </span>
                             ) : a.remainingSeats < 10 ? (
                               <span className="font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-                                Nearly full ({a.remainingSeats} left)
+                                {t('tracking.nearlyFull', { count: a.remainingSeats })}
                               </span>
                             ) : (
                               <span className="font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
-                                {a.remainingSeats} seats free
+                                {t('tracking.seatsFree', { count: a.remainingSeats })}
                               </span>
                             )}
                           </div>
@@ -234,10 +236,9 @@ export function PassengerTracking() {
           {selectedStop && arrivals.length === 0 && (
             <Card className="border-blue-200 bg-blue-50">
               <CardContent className="pt-6 pb-5 text-center space-y-1">
-                <p className="text-sm text-slate-600">No buses currently approaching this stop.</p>
+                <p className="text-sm text-slate-600">{t('tracking.noBuses')}</p>
                 <p className="text-xs text-slate-400">
-                  Auto-refreshes every 10 seconds · next refresh in{' '}
-                  <span className="font-semibold text-blue-600">{countdown}s</span>
+                  {t('tracking.autoRefresh', { count: countdown })}
                 </p>
               </CardContent>
             </Card>

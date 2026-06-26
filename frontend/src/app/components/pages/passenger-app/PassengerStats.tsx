@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import {
   getMyStats,
@@ -17,6 +18,7 @@ import {
 } from '../../../services/passenger.service';
 
 export function PassengerStats() {
+  const { t } = useTranslation('passenger');
   const [stats, setStats] = useState<PassengerStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -30,7 +32,7 @@ export function PassengerStats() {
   if (loading) {
     return (
       <div className="text-center py-12 text-slate-500 text-sm">
-        Loading statistics…
+        {t('stats.loading')}
       </div>
     );
   }
@@ -40,9 +42,9 @@ export function PassengerStats() {
       <Card>
         <CardContent className="py-12 text-center space-y-2">
           <BarChart2 className="size-10 text-slate-300 mx-auto" />
-          <p className="font-medium text-slate-600">No statistics yet</p>
+          <p className="font-medium text-slate-600">{t('stats.noStatsTitle')}</p>
           <p className="text-sm text-slate-400">
-            Your travel statistics will appear here once you&apos;ve taken a few trips.
+            {t('stats.noStatsBody')}
           </p>
         </CardContent>
       </Card>
@@ -57,23 +59,23 @@ export function PassengerStats() {
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-3">
         <StatCard
-          label="Total Trips"
+          label={t('stats.totalTrips')}
           value={String(stats.totalTrips)}
           icon={<TrendingUp className="size-4" />}
         />
         <StatCard
-          label="On-Time Rate"
-          value={stats.onTimeRate > 0 ? `${stats.onTimeRate}%` : 'N/A'}
+          label={t('stats.onTimeRate')}
+          value={stats.onTimeRate > 0 ? `${stats.onTimeRate}%` : t('stats.notAvailable')}
           icon={<Clock className="size-4" />}
         />
         <StatCard
-          label="Favourite Route"
-          value={topRoute?.routeName ?? 'None yet'}
+          label={t('stats.favouriteRoute')}
+          value={topRoute?.routeName ?? t('stats.noneYet')}
           icon={<MapPin className="size-4" />}
         />
         <StatCard
-          label="Avg Wait"
-          value={stats.avgWaitMinutes > 0 ? `${stats.avgWaitMinutes} min` : 'N/A'}
+          label={t('stats.avgWait')}
+          value={stats.avgWaitMinutes > 0 ? t('stats.minutes', { count: stats.avgWaitMinutes }) : t('stats.notAvailable')}
           icon={<Clock className="size-4" />}
         />
       </div>
@@ -82,15 +84,14 @@ export function PassengerStats() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center justify-between">
-            Trips per week (last 4 weeks)
+            {t('stats.tripsPerWeek')}
             {weekTrend !== 0 && (
               <span
                 className={`text-xs font-normal ${
                   weekTrend > 0 ? 'text-green-600' : 'text-orange-500'
                 }`}
               >
-                {weekTrend > 0 ? '+' : ''}
-                {weekTrend} vs last week
+                {t('stats.vsLastWeek', { trend: `${weekTrend > 0 ? '+' : ''}${weekTrend}` })}
               </span>
             )}
           </CardTitle>
@@ -123,7 +124,7 @@ export function PassengerStats() {
       {stats.routesUsed.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Routes Used</CardTitle>
+            <CardTitle className="text-sm">{t('stats.routesUsed')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {stats.routesUsed.map((r: RouteUsage) => (
@@ -133,7 +134,7 @@ export function PassengerStats() {
               >
                 <span className="text-slate-700">{r.routeName}</span>
                 <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-medium">
-                  {r.tripCount} trip{r.tripCount !== 1 ? 's' : ''}
+                  {t('stats.tripCount', { count: r.tripCount })}
                 </span>
               </div>
             ))}
@@ -143,7 +144,7 @@ export function PassengerStats() {
 
       {stats.favouriteStop && (
         <p className="text-xs text-slate-500 text-center">
-          Most visited stop:{' '}
+          {t('stats.mostVisited')}{' '}
           <span className="font-medium text-slate-700">{stats.favouriteStop}</span>
         </p>
       )}

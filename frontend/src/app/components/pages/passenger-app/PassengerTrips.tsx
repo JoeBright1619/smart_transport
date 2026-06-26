@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Bus, MapPin, Navigation } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Badge } from '../../ui/badge';
 import { getMyBoardings, type PassengerTripRecord } from '../../../services/boarding.service';
 
 export function PassengerTrips() {
+  const { t } = useTranslation('passenger');
   const [records, setRecords] = useState<PassengerTripRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -16,7 +18,7 @@ export function PassengerTrips() {
   }, []);
 
   if (loading) {
-    return <div className="text-center py-12 text-slate-500 text-sm">Loading trips…</div>;
+    return <div className="text-center py-12 text-slate-500 text-sm">{t('trips.loading')}</div>;
   }
 
   if (records.length === 0) {
@@ -24,9 +26,9 @@ export function PassengerTrips() {
       <Card>
         <CardContent className="py-12 text-center space-y-2">
           <Navigation className="size-10 text-slate-300 mx-auto" />
-          <p className="font-medium text-slate-600">No trips recorded yet</p>
+          <p className="font-medium text-slate-600">{t('trips.noTripsTitle')}</p>
           <p className="text-sm text-slate-400">
-            Your travel history will appear here once you've been recorded on a route.
+            {t('trips.noTripsBody')}
           </p>
         </CardContent>
       </Card>
@@ -35,17 +37,19 @@ export function PassengerTrips() {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-slate-500">{records.length} recorded event{records.length !== 1 ? 's' : ''}</p>
+      <p className="text-sm text-slate-500">{t('trips.recordedEvents', { count: records.length })}</p>
       {records.map((rec) => (
         <Card key={rec.boardingId}>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center justify-between text-sm">
               <span className="flex items-center gap-2">
                 <MapPin className="size-4 text-slate-400" />
-                {rec.stopName || 'Unknown stop'}
+                {rec.stopName || t('trips.unknownStop')}
               </span>
               <Badge variant={rec.eventType === 'boarded' ? 'default' : 'secondary'}>
-                {rec.eventType === 'boarded' ? `+${rec.count} boarded` : `−${rec.count} alighted`}
+                {rec.eventType === 'boarded'
+                  ? t('trips.boarded', { count: rec.count })
+                  : t('trips.alighted', { count: rec.count })}
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -58,7 +62,7 @@ export function PassengerTrips() {
               </p>
             )}
             <p>{new Date(rec.recordedAt).toLocaleString()}</p>
-            <p>Occupancy after: {rec.occupancyAfter} passengers</p>
+            <p>{t('trips.occupancyAfter', { count: rec.occupancyAfter })}</p>
           </CardContent>
         </Card>
       ))}
