@@ -9,6 +9,7 @@ import { PasswordStrengthMeter } from '../ui/PasswordStrengthMeter';
 import { useAuth } from '../../lib/auth-context';
 import * as authService from '../../services/auth.service';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { messageForError } from '../../lib/error-messages';
 import {
   validateEmail,
@@ -20,11 +21,12 @@ import {
 type Step = 1 | 2;
 
 const STEPS = [
-  { label: 'Account details' },
-  { label: 'Verify email' },
+  { labelKey: 'register.accountDetails' },
+  { labelKey: 'register.verifyEmailStep' },
 ] as const;
 
 function StepIndicator({ current }: { current: Step }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center justify-center gap-2 mb-2">
       {STEPS.map((s, i) => {
@@ -32,7 +34,7 @@ function StepIndicator({ current }: { current: Step }) {
         const done = current > num;
         const active = current === num;
         return (
-          <React.Fragment key={s.label}>
+          <React.Fragment key={s.labelKey}>
             {i > 0 && (
               <div
                 className={`h-px w-10 transition-colors duration-300 ${done ? 'bg-emerald-500' : 'bg-slate-200'}`}
@@ -55,7 +57,7 @@ function StepIndicator({ current }: { current: Step }) {
                   active ? 'text-slate-700' : done ? 'text-emerald-600' : 'text-slate-400'
                 }`}
               >
-                {s.label}
+                {t(s.labelKey)}
               </span>
             </div>
           </React.Fragment>
@@ -66,6 +68,7 @@ function StepIndicator({ current }: { current: Step }) {
 }
 
 export function RegisterPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { loginFromToken } = useAuth();
 
@@ -103,7 +106,7 @@ export function RegisterPage() {
       case 'password':
         return validatePassword(password) ?? undefined;
       case 'confirmPassword':
-        return password !== confirmPassword ? 'Passwords do not match' : undefined;
+        return password !== confirmPassword ? t('register.passwordsDoNotMatch') : undefined;
     }
   };
 
@@ -132,7 +135,7 @@ export function RegisterPage() {
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validateStep1()) {
-      toast.error('Please fix the highlighted fields');
+      toast.error(t('register.fixHighlighted'));
       return;
     }
 
@@ -146,7 +149,7 @@ export function RegisterPage() {
       });
       setStep(2);
       setCountdown(60);
-      toast.success('Check your email for the verification code');
+      toast.success(t('register.checkEmail'));
     } catch (err) {
       toast.error(messageForError(err));
     } finally {
@@ -173,7 +176,7 @@ export function RegisterPage() {
     try {
       await authService.resendOtp(email);
       setCountdown(60);
-      toast.success('New verification code sent');
+      toast.success(t('register.codeSent'));
     } catch (err) {
       toast.error(messageForError(err));
     } finally {
@@ -190,12 +193,12 @@ export function RegisterPage() {
           </div>
           <StepIndicator current={step} />
           <CardTitle className="text-2xl mt-2">
-            {step === 1 ? 'Create your account' : 'Verify your email'}
+            {step === 1 ? t('register.createAccount') : t('register.verifyEmailTitle')}
           </CardTitle>
           <CardDescription>
             {step === 1
-              ? 'Sign up as a passenger to track your journeys'
-              : `Enter the 6-digit code we sent to ${email}`}
+              ? t('register.passengerSignupHint')
+              : t('register.codeSentTo', { email })}
           </CardDescription>
         </CardHeader>
 
@@ -203,12 +206,12 @@ export function RegisterPage() {
           {step === 1 ? (
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="fullName">{t('register.fullName')}</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                   <Input
                     id="fullName"
-                    placeholder="e.g. Alice Mutoni"
+                    placeholder={t('register.fullNamePlaceholder')}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     onBlur={() => handleBlur('fullName')}
@@ -221,7 +224,7 @@ export function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('register.email')}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                   <Input
@@ -240,7 +243,7 @@ export function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone (optional)</Label>
+                <Label htmlFor="phone">{t('register.phoneOptional')}</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                   <Input
@@ -257,13 +260,13 @@ export function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('register.password')}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Create a password"
+                    placeholder={t('register.passwordPlaceholder')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     onBlur={() => handleBlur('password')}
@@ -277,13 +280,13 @@ export function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm password</Label>
+                <Label htmlFor="confirmPassword">{t('register.confirmPassword')}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                   <Input
                     id="confirmPassword"
                     type="password"
-                    placeholder="Re-enter your password"
+                    placeholder={t('register.confirmPasswordPlaceholder')}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="pl-10"
@@ -291,18 +294,18 @@ export function RegisterPage() {
                   />
                 </div>
                 {!passwordsMatch && (
-                  <p className="text-xs text-red-600">Passwords do not match</p>
+                  <p className="text-xs text-red-600">{t('register.passwordsDoNotMatch')}</p>
                 )}
               </div>
 
               <Button type="submit" className="w-full" disabled={loading || !passwordsMatch}>
-                {loading ? 'Creating account...' : 'Continue'}
+                {loading ? t('register.creatingAccount') : t('register.continue')}
               </Button>
             </form>
           ) : (
             <form onSubmit={handleVerify} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="otp">Verification Code</Label>
+                <Label htmlFor="otp">{t('register.verificationCode')}</Label>
                 <Input
                   id="otp"
                   placeholder="000000"
@@ -313,16 +316,16 @@ export function RegisterPage() {
                   required
                   autoFocus
                 />
-                <p className="text-xs text-slate-500">Code expires in 15 minutes</p>
+                <p className="text-xs text-slate-500">{t('register.codeExpires')}</p>
               </div>
 
               <Button type="submit" className="w-full" disabled={loading || otp.length !== 6}>
-                {loading ? 'Verifying...' : 'Verify Email'}
+                {loading ? t('register.verifying') : t('register.verifyEmail')}
               </Button>
 
               <div className="text-center text-sm">
                 {countdown > 0 ? (
-                  <span className="text-slate-500">Resend code in {countdown}s</span>
+                  <span className="text-slate-500">{t('register.resendIn', { seconds: countdown })}</span>
                 ) : (
                   <button
                     type="button"
@@ -330,7 +333,7 @@ export function RegisterPage() {
                     disabled={loading}
                     className="font-medium text-emerald-700 hover:underline disabled:opacity-50"
                   >
-                    Resend code
+                    {t('register.resendCode')}
                   </button>
                 )}
               </div>
@@ -341,16 +344,16 @@ export function RegisterPage() {
                   onClick={() => { setStep(1); setOtp(''); }}
                   className="text-slate-500 hover:underline text-xs"
                 >
-                  Use a different email
+                  {t('register.useDifferentEmail')}
                 </button>
               </div>
             </form>
           )}
 
           <div className="mt-6 flex items-center justify-center text-sm text-slate-600">
-            <span>Already have an account?</span>
+            <span>{t('register.alreadyHaveAccount')}</span>
             <Link to="/login" className="ml-2 font-medium text-emerald-700 hover:underline">
-              Sign in
+              {t('register.signIn')}
             </Link>
           </div>
         </CardContent>

@@ -1,18 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Building2, Mail, MapPin, Phone } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '../ui/card';
 import { listOperators } from '../../services/passenger.service';
 import type { TenantContactRead } from '../../lib/api-types';
 
 const RTS_CONTACT = {
   name: 'Rwanda Transport System',
-  description: 'National public transport coordination authority',
   email: 'info@rts.gov.rw',
   phone: '+250 788 000 000',
   address: 'KG 7 Ave, Kigali, Rwanda',
 };
 
 export function OperatorsPage() {
+  const { t } = useTranslation('passenger');
   const [operators, setOperators] = useState<TenantContactRead[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,14 +27,14 @@ export function OperatorsPage() {
   return (
     <div className="max-w-3xl space-y-8 pb-10">
       <div>
-        <h1 className="text-2xl font-bold">Transport Operators</h1>
-        <p className="text-slate-500">Contact details for the transport authority and registered operators</p>
+        <h1 className="text-2xl font-bold">{t('operators.title')}</h1>
+        <p className="text-slate-500">{t('operators.subtitle')}</p>
       </div>
 
       {/* Rwanda Transport System */}
       <section>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-400">
-          Transport Authority
+          {t('operators.authority')}
         </h2>
         <Card className="border-blue-200 bg-blue-50">
           <CardContent className="pt-5">
@@ -44,7 +45,7 @@ export function OperatorsPage() {
               <div className="flex-1 space-y-2">
                 <div>
                   <p className="font-semibold text-blue-900">{RTS_CONTACT.name}</p>
-                  <p className="text-sm text-blue-600">{RTS_CONTACT.description}</p>
+                  <p className="text-sm text-blue-600">{t('operators.authorityDescription')}</p>
                 </div>
                 <div className="grid gap-1.5 text-sm text-slate-700 sm:grid-cols-2">
                   <ContactItem icon={<Phone className="size-3.5" />} value={RTS_CONTACT.phone} href={`tel:${RTS_CONTACT.phone}`} />
@@ -60,7 +61,7 @@ export function OperatorsPage() {
       {/* Registered operators */}
       <section>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-400">
-          Registered Bus Operators
+          {t('operators.registeredOperators')}
         </h2>
 
         {loading ? (
@@ -70,7 +71,7 @@ export function OperatorsPage() {
             ))}
           </div>
         ) : operators.length === 0 ? (
-          <p className="text-sm text-slate-400 italic">No registered operators found.</p>
+          <p className="text-sm text-slate-400 italic">{t('operators.noOperators')}</p>
         ) : (
           <div className="space-y-3">
             {operators.map((op) => (

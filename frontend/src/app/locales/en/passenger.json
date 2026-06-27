@@ -81,5 +81,13 @@
     "emptyTitle": "No buses approaching your favourite stops right now.",
     "emptyBody": "Add favourite stops in your profile to receive notifications here.",
     "page": "Page {{page}} of {{total}}"
+  },
+  "operators": {
+    "title": "Transport Operators",
+    "subtitle": "Contact details for the transport authority and registered operators",
+    "authority": "Transport Authority",
+    "authorityDescription": "National public transport coordination authority",
+    "registeredOperators": "Registered Bus Operators",
+    "noOperators": "No registered operators found."
   }
 }

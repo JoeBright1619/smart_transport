@@ -81,5 +81,13 @@
     "emptyTitle": "Nta bisi ziri kwegera amahagarariro wakunze ubu.",
     "emptyBody": "Ongeraho amahagarariro wakunze mu mwirondoro wawe kugira ngo wakire amatangazo hano. [TODO]",
     "page": "Urupapuro {{page}} kuri {{total}}"
+  },
+  "operators": {
+    "title": "Abatwara Abantu",
+    "subtitle": "Aderesi z'urwego rushinzwe ubwikorezi n'abatwara abantu banditswe [TODO]",
+    "authority": "Urwego rushinzwe Ubwikorezi",
+    "authorityDescription": "Urwego rw'Igihugu rushinzwe guhuza ubwikorezi rusange [TODO]",
+    "registeredOperators": "Abatwara Abantu Banditswe",
+    "noOperators": "Nta batwara abantu banditswe baboneka."
   }
 }

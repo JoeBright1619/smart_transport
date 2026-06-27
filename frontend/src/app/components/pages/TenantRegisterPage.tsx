@@ -7,6 +7,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { useAuth } from '../../lib/auth-context';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import {
   validateEmail,
   validateName,
@@ -15,6 +16,7 @@ import {
 } from '../../lib/validation';
 
 export function TenantRegisterPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { register } = useAuth();
 
@@ -57,7 +59,7 @@ export function TenantRegisterPage() {
       case 'password':
         return validatePassword(password) ?? undefined;
       case 'confirmPassword':
-        return password !== confirmPassword ? 'Passwords do not match' : undefined;
+        return password !== confirmPassword ? t('tenantRegister.passwordsDoNotMatch') : undefined;
     }
   };
 
@@ -88,7 +90,7 @@ export function TenantRegisterPage() {
     e.preventDefault();
 
     if (!validateAll()) {
-      toast.error('Please fix the highlighted fields');
+      toast.error(t('tenantRegister.fixHighlighted'));
       return;
     }
 
@@ -105,17 +107,17 @@ export function TenantRegisterPage() {
 
       if (!result.ok) {
         if (result.reason === 'email_taken') {
-          toast.error('An account with this email already exists');
+          toast.error(t('tenantRegister.emailTaken'));
           return;
         }
-        toast.error('Unable to create account');
+        toast.error(t('tenantRegister.unableToCreate'));
         return;
       }
 
-      toast.success('Company registered - please sign in');
+      toast.success(t('tenantRegister.registered'));
       navigate('/login');
     } catch {
-      toast.error('An error occurred');
+      toast.error(t('tenantRegister.errorOccurred'));
     } finally {
       setLoading(false);
     }
@@ -128,23 +130,23 @@ export function TenantRegisterPage() {
           <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-emerald-50">
             <Bus className="size-8 text-emerald-700" />
           </div>
-          <CardTitle className="text-2xl">Create your account</CardTitle>
+          <CardTitle className="text-2xl">{t('tenantRegister.title')}</CardTitle>
           <CardDescription>
-            Register your company and first administrator
+            {t('tenantRegister.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-3">
-              <h2 className="text-sm font-medium text-slate-700">Company</h2>
+              <h2 className="text-sm font-medium text-slate-700">{t('tenantRegister.companySection')}</h2>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="companyName">Company Name</Label>
+                  <Label htmlFor="companyName">{t('tenantRegister.companyName')}</Label>
                   <div className="relative">
                     <Building2 className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                     <Input
                       id="companyName"
-                      placeholder="e.g. EcoFleet Ltd"
+                      placeholder={t('tenantRegister.companyNamePlaceholder')}
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
                       onBlur={() => handleBlur('companyName')}
@@ -159,13 +161,13 @@ export function TenantRegisterPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="contactEmail">Company Contact Email</Label>
+                  <Label htmlFor="contactEmail">{t('tenantRegister.contactEmail')}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                     <Input
                       id="contactEmail"
                       type="email"
-                      placeholder="admin@company.rw"
+                      placeholder={t('tenantRegister.contactEmailPlaceholder')}
                       value={contactEmail}
                       onChange={(e) => setContactEmail(e.target.value)}
                       onBlur={() => handleBlur('contactEmail')}
@@ -182,15 +184,15 @@ export function TenantRegisterPage() {
             </div>
 
             <div className="space-y-3">
-              <h2 className="text-sm font-medium text-slate-700">Administrator</h2>
+              <h2 className="text-sm font-medium text-slate-700">{t('tenantRegister.adminSection')}</h2>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="adminFullName">Admin Name</Label>
+                  <Label htmlFor="adminFullName">{t('tenantRegister.adminName')}</Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                     <Input
                       id="adminFullName"
-                      placeholder="e.g. Jean Claude Mugabo"
+                      placeholder={t('tenantRegister.adminNamePlaceholder')}
                       value={adminFullName}
                       onChange={(e) => setAdminFullName(e.target.value)}
                       onBlur={() => handleBlur('adminFullName')}
@@ -205,13 +207,13 @@ export function TenantRegisterPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="adminEmail">Admin Email</Label>
+                  <Label htmlFor="adminEmail">{t('tenantRegister.adminEmail')}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                     <Input
                       id="adminEmail"
                       type="email"
-                      placeholder="jean@company.rw"
+                      placeholder={t('tenantRegister.adminEmailPlaceholder')}
                       value={adminEmail}
                       onChange={(e) => setAdminEmail(e.target.value)}
                       onBlur={() => handleBlur('adminEmail')}
@@ -226,12 +228,12 @@ export function TenantRegisterPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="adminPhone">Admin Phone (optional)</Label>
+                  <Label htmlFor="adminPhone">{t('tenantRegister.adminPhone')}</Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                     <Input
                       id="adminPhone"
-                      placeholder="+250 7xx xxx xxx"
+                      placeholder={t('tenantRegister.adminPhonePlaceholder')}
                       value={adminPhone}
                       onChange={(e) => setAdminPhone(e.target.value)}
                       onBlur={() => handleBlur('adminPhone')}
@@ -248,13 +250,13 @@ export function TenantRegisterPage() {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('tenantRegister.password')}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Create a password"
+                    placeholder={t('tenantRegister.passwordPlaceholder')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     onBlur={() => handleBlur('password')}
@@ -267,19 +269,19 @@ export function TenantRegisterPage() {
                   <p className="text-xs text-red-600">{errors.password}</p>
                 ) : (
                   <p className="text-xs text-slate-500">
-                    At least 8 characters, with a letter and a number
+                    {t('tenantRegister.passwordHint')}
                   </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm password</Label>
+                <Label htmlFor="confirmPassword">{t('tenantRegister.confirmPassword')}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                   <Input
                     id="confirmPassword"
                     type="password"
-                    placeholder="Re-enter your password"
+                    placeholder={t('tenantRegister.confirmPasswordPlaceholder')}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     onBlur={() => handleBlur('confirmPassword')}
@@ -289,20 +291,20 @@ export function TenantRegisterPage() {
                   />
                 </div>
                 {passwordsMatch ? null : (
-                  <p className="text-xs text-red-600">Passwords do not match</p>
+                  <p className="text-xs text-red-600">{t('tenantRegister.passwordsDoNotMatch')}</p>
                 )}
               </div>
             </div>
 
             <Button type="submit" className="w-full" disabled={loading || !passwordsMatch}>
-              {loading ? 'Creating account...' : 'Create Account'}
+              {loading ? t('tenantRegister.creatingAccount') : t('tenantRegister.createAccount')}
             </Button>
           </form>
 
           <div className="mt-6 flex items-center justify-center text-sm text-slate-600">
-            <span>Already have an account?</span>
+            <span>{t('tenantRegister.alreadyHaveAccount')}</span>
             <Link to="/login" className="ml-2 font-medium text-emerald-700 hover:underline">
-              Back to login
+              {t('tenantRegister.backToLogin')}
             </Link>
           </div>
         </CardContent>
