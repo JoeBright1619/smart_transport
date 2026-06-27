@@ -1,6 +1,7 @@
 import type { Dispatch, FormEvent, SetStateAction } from 'react';
 import { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { DriverRead, RouteRead, VehicleRead, VehicleUpdate } from '../../../lib/api-types';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Input } from '../../ui/input';
@@ -45,6 +46,7 @@ export function VehicleFleetTable({
   submitting,
   createVehicle,
 }: VehicleFleetTableProps) {
+  const { t } = useTranslation('fleet');
   const [page, setPage] = useState(1);
 
   // Reset to first page whenever the filtered list changes
@@ -56,12 +58,12 @@ export function VehicleFleetTable({
     <Card>
       <CardHeader>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <CardTitle>Vehicle Fleet</CardTitle>
+          <CardTitle>{t('table.title')}</CardTitle>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
               <Input
-                placeholder="Search vehicles..."
+                placeholder={t('table.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 className="w-full pl-10 sm:w-64"
@@ -80,23 +82,23 @@ export function VehicleFleetTable({
       </CardHeader>
       <CardContent>
         {vehicles.length === 0 ? (
-          <p className="text-sm text-slate-500">No vehicles found.</p>
+          <p className="text-sm text-slate-500">{t('table.noVehicles')}</p>
         ) : (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Registration</TableHead>
-                  <TableHead>Model</TableHead>
-                  <TableHead>Seats</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Driver</TableHead>
-                  <TableHead>Route</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Fuel</TableHead>
-                  <TableHead>Engine</TableHead>
-                  <TableHead>Updated</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{t('table.registration')}</TableHead>
+                  <TableHead>{t('table.model')}</TableHead>
+                  <TableHead>{t('table.seats')}</TableHead>
+                  <TableHead>{t('table.status')}</TableHead>
+                  <TableHead>{t('table.driver')}</TableHead>
+                  <TableHead>{t('table.route')}</TableHead>
+                  <TableHead>{t('table.location')}</TableHead>
+                  <TableHead>{t('table.fuel')}</TableHead>
+                  <TableHead>{t('table.engine')}</TableHead>
+                  <TableHead>{t('table.updated')}</TableHead>
+                  <TableHead>{t('table.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

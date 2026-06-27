@@ -1,4 +1,5 @@
 import { BarChart, Bus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { FleetErrorState, FleetLoadingState } from './fleet-management/FleetPageStates';
 import { FleetStatsCards } from './fleet-management/FleetStatsCards';
@@ -7,6 +8,7 @@ import { useFleetManagement } from './fleet-management/useFleetManagement';
 import { VehicleFleetTable } from './fleet-management/VehicleFleetTable';
 
 export function FleetManagement() {
+  const { t } = useTranslation('fleet');
   const fleet = useFleetManagement();
 
   if (fleet.loading) {
@@ -20,8 +22,8 @@ export function FleetManagement() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Fleet Management</h1>
-        <p className="text-slate-600">Comprehensive fleet monitoring and control</p>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <p className="text-slate-600">{t('subtitle')}</p>
       </div>
 
       <FleetStatsCards stats={fleet.stats} />
@@ -30,11 +32,11 @@ export function FleetManagement() {
         <TabsList>
           <TabsTrigger value="vehicles">
             <Bus className="mr-2 size-4" />
-            Vehicles
+            {t('tabs.vehicles')}
           </TabsTrigger>
           <TabsTrigger value="utilization">
             <BarChart className="mr-2 size-4" />
-            Utilization
+            {t('tabs.utilization')}
           </TabsTrigger>
         </TabsList>
 

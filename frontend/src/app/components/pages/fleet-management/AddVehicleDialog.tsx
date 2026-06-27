@@ -13,6 +13,7 @@ import {
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
+import { useTranslation } from 'react-i18next';
 import { vehicleStatuses } from './fleet-helpers';
 import type { FleetFormState } from './useFleetManagement';
 
@@ -33,20 +34,21 @@ export function AddVehicleDialog({
   submitting,
   onSubmit,
 }: AddVehicleDialogProps) {
+  const { t } = useTranslation('fleet');
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button>Add Vehicle</Button>
+        <Button>{t('addDialog.trigger')}</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Vehicle</DialogTitle>
-          <DialogDescription>Register a new vehicle in the fleet.</DialogDescription>
+          <DialogTitle>{t('addDialog.title')}</DialogTitle>
+          <DialogDescription>{t('addDialog.description')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="registrationNumber">Registration</Label>
+              <Label htmlFor="registrationNumber">{t('addDialog.registration')}</Label>
               <Input
                 id="registrationNumber"
                 value={form.registrationNumber}
@@ -60,7 +62,7 @@ export function AddVehicleDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="model">Model</Label>
+              <Label htmlFor="model">{t('addDialog.model')}</Label>
               <Input
                 id="model"
                 value={form.model}
@@ -71,7 +73,7 @@ export function AddVehicleDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="seatingCapacity">Seating Capacity</Label>
+              <Label htmlFor="seatingCapacity">{t('addDialog.seatingCapacity')}</Label>
               <Input
                 id="seatingCapacity"
                 type="number"
@@ -86,7 +88,7 @@ export function AddVehicleDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label>{t('addDialog.status')}</Label>
               <Select
                 value={form.status}
                 onValueChange={(value) =>
@@ -99,7 +101,7 @@ export function AddVehicleDialog({
                 <SelectContent>
                   {vehicleStatuses.map((status) => (
                     <SelectItem key={status} value={status}>
-                      {status}
+                      {t(`vehicleStatus.${status}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -108,7 +110,7 @@ export function AddVehicleDialog({
           </div>
           <DialogFooter>
             <Button type="submit" disabled={submitting}>
-              {submitting ? 'Adding...' : 'Add Vehicle'}
+              {submitting ? t('addDialog.adding') : t('addDialog.submit')}
             </Button>
           </DialogFooter>
         </form>

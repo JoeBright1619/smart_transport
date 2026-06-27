@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { DriverRead, RouteRead, VehicleRead, VehicleStatus, VehicleUpdate } from '../../../lib/api-types';
 import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
@@ -31,6 +32,7 @@ export function VehicleTableRow({
   updateVehicle,
   deleteVehicle,
 }: VehicleTableRowProps) {
+  const { t } = useTranslation('fleet');
   const fuel = vehicle.fuel ?? 0;
   const [seatEdit, setSeatEdit] = useState(String(vehicle.seatingCapacity));
 
@@ -70,7 +72,7 @@ export function VehicleTableRow({
           <SelectContent>
             {vehicleStatuses.map((status) => (
               <SelectItem key={status} value={status}>
-                {status}
+                {t(`vehicleStatus.${status}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -112,7 +114,7 @@ export function VehicleTableRow({
                 : 'destructive'
           }
         >
-          {vehicle.engineStatus}
+          {t(`engineStatus.${vehicle.engineStatus}`)}
         </Badge>
       </TableCell>
       <TableCell>{formatRelativeTime(vehicle.lastUpdate)}</TableCell>
@@ -138,6 +140,7 @@ function AssignmentSelect({
   onChange: (value: string | null) => void;
   widthClass?: string;
 }) {
+  const { t } = useTranslation('fleet');
   return (
     <Select
       value={value ?? unassignedValue}
@@ -148,7 +151,7 @@ function AssignmentSelect({
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value={unassignedValue}>Unassigned</SelectItem>
+        <SelectItem value={unassignedValue}>{t('table.unassigned')}</SelectItem>
         {items.map((item) => (
           <SelectItem key={item.id} value={item.id}>
             {item.label}

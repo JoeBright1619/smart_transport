@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { DriverRead, RouteRead, VehicleRead } from '../../../lib/api-types';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { fuelBarClass, getUtilization } from './fleet-helpers';
@@ -13,11 +14,12 @@ export function FleetUtilizationTab({
   driversById,
   routesById,
 }: FleetUtilizationTabProps) {
+  const { t } = useTranslation('fleet');
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle>Fleet Utilization</CardTitle>
+          <CardTitle>{t('utilization.title')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {vehicles.map((vehicle) => {
@@ -32,8 +34,8 @@ export function FleetUtilizationTab({
                   <div className="h-full rounded-full bg-blue-600" style={{ width: `${utilization}%` }} />
                 </div>
                 <p className="mt-1 text-xs text-slate-500">
-                  {driversById.get(vehicle.driverId ?? '')?.name ?? 'No driver'} -{' '}
-                  {routesById.get(vehicle.routeId ?? '')?.number ?? 'No route'}
+                  {driversById.get(vehicle.driverId ?? '')?.name ?? t('utilization.noDriver')} -{' '}
+                  {routesById.get(vehicle.routeId ?? '')?.number ?? t('utilization.noRoute')}
                 </p>
               </div>
             );
@@ -43,7 +45,7 @@ export function FleetUtilizationTab({
 
       <Card>
         <CardHeader>
-          <CardTitle>Average Fuel Levels</CardTitle>
+          <CardTitle>{t('utilization.avgFuelTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

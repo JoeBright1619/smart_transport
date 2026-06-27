@@ -1,0 +1,63 @@
+{
+  "title": "Gucunga Imodoka",
+  "subtitle": "Gukurikirana no kugenzura imodoka mu buryo bwuzuye [TODO]",
+  "tabs": {
+    "vehicles": "Imodoka",
+    "utilization": "Imikoreshereze"
+  },
+  "stats": {
+    "totalVehicles": "Imodoka Zose",
+    "totalCapacity": "Ubushobozi bwose: abagenzi {{count}}",
+    "activeVehicles": "Imodoka Zikora",
+    "percentOfFleet": "{{percent}}% by'imodoka zose",
+    "idleVehicles": "Imodoka Zihagaze",
+    "availableForDispatch": "Zihari zo kohereza",
+    "maintenance": "Isanwa",
+    "avgFuel": "Lisansi isanzwe: {{percent}}%"
+  },
+  "table": {
+    "title": "Imodoka z'Ikigo",
+    "searchPlaceholder": "Shakisha imodoka...",
+    "noVehicles": "Nta modoka zabonetse.",
+    "registration": "Plaki",
+    "model": "Ubwoko",
+    "seats": "Intebe",
+    "status": "Imimerere",
+    "driver": "Umushoferi",
+    "route": "Umuhanda",
+    "location": "Aho iri",
+    "fuel": "Lisansi",
+    "engine": "Moteri",
+    "updated": "Byavuguruwe",
+    "actions": "Ibikorwa",
+    "unassigned": "Ntibyagenwe"
+  },
+  "vehicleStatus": {
+    "active": "Irakora",
+    "idle": "Ihagaze",
+    "maintenance": "Irasanwa",
+    "offline": "Ntikora"
+  },
+  "engineStatus": {
+    "good": "Nziza",
+    "warning": "Iburira",
+    "critical": "Mbi cyane"
+  },
+  "addDialog": {
+    "trigger": "Ongeraho Imodoka",
+    "title": "Ongeraho Imodoka",
+    "description": "Andikisha imodoka nshya mu kigega. [TODO]",
+    "registration": "Plaki",
+    "model": "Ubwoko",
+    "seatingCapacity": "Umubare w'Intebe",
+    "status": "Imimerere",
+    "adding": "Birongerwaho...",
+    "submit": "Ongeraho Imodoka"
+  },
+  "utilization": {
+    "title": "Imikoreshereze y'Imodoka",
+    "noDriver": "Nta mushoferi",
+    "noRoute": "Nta muhanda",
+    "avgFuelTitle": "Lisansi Isanzwe"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "title": "Fleet Management",
+  "subtitle": "Comprehensive fleet monitoring and control",
+  "tabs": {
+    "vehicles": "Vehicles",
+    "utilization": "Utilization"
+  },
+  "stats": {
+    "totalVehicles": "Total Vehicles",
+    "totalCapacity": "Total capacity: {{count}} passengers",
+    "activeVehicles": "Active Vehicles",
+    "percentOfFleet": "{{percent}}% of fleet",
+    "idleVehicles": "Idle Vehicles",
+    "availableForDispatch": "Available for dispatch",
+    "maintenance": "Maintenance",
+    "avgFuel": "Avg fuel: {{percent}}%"
+  },
+  "table": {
+    "title": "Vehicle Fleet",
+    "searchPlaceholder": "Search vehicles...",
+    "noVehicles": "No vehicles found.",
+    "registration": "Registration",
+    "model": "Model",
+    "seats": "Seats",
+    "status": "Status",
+    "driver": "Driver",
+    "route": "Route",
+    "location": "Location",
+    "fuel": "Fuel",
+    "engine": "Engine",
+    "updated": "Updated",
+    "actions": "Actions",
+    "unassigned": "Unassigned"
+  },
+  "vehicleStatus": {
+    "active": "Active",
+    "idle": "Idle",
+    "maintenance": "Maintenance",
+    "offline": "Offline"
+  },
+  "engineStatus": {
+    "good": "Good",
+    "warning": "Warning",
+    "critical": "Critical"
+  },
+  "addDialog": {
+    "trigger": "Add Vehicle",
+    "title": "Add Vehicle",
+    "description": "Register a new vehicle in the fleet.",
+    "registration": "Registration",
+    "model": "Model",
+    "seatingCapacity": "Seating Capacity",
+    "status": "Status",
+    "adding": "Adding...",
+    "submit": "Add Vehicle"
+  },
+  "utilization": {
+    "title": "Fleet Utilization",
+    "noDriver": "No driver",
+    "noRoute": "No route",
+    "avgFuelTitle": "Average Fuel Levels"
+  }
+}
