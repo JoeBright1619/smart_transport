@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { DriverRead, VehicleRead } from '../../../lib/api-types';
 import { Badge } from '../../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
@@ -9,28 +10,29 @@ export function DispatchResourcesCard({
   availableVehicles: VehicleRead[];
   availableDrivers: DriverRead[];
 }) {
+  const { t } = useTranslation('dispatch');
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Available Resources</CardTitle>
+        <CardTitle>{t('resources.title')}</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-4 lg:grid-cols-2">
         <ResourceList
-          title="Available Vehicles"
-          emptyLabel="No idle vehicles"
+          title={t('resources.availableVehicles')}
+          emptyLabel={t('resources.noIdleVehicles')}
           items={availableVehicles.map((vehicle) => ({
             id: vehicle.id,
             label: vehicle.registrationNumber,
-            badge: 'Idle',
+            badge: t('resources.idle'),
           }))}
         />
         <ResourceList
-          title="Available Drivers"
-          emptyLabel="No available drivers"
+          title={t('resources.availableDrivers')}
+          emptyLabel={t('resources.noAvailableDrivers')}
           items={availableDrivers.map((driver) => ({
             id: driver.id,
             label: driver.name,
-            badge: 'Available',
+            badge: t('resources.available'),
           }))}
         />
       </CardContent>

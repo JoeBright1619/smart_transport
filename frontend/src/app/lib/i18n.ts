@@ -10,6 +10,8 @@ import enPassenger from '../locales/en/passenger.json';
 import rwPassenger from '../locales/rw/passenger.json';
 import enFleet from '../locales/en/fleet.json';
 import rwFleet from '../locales/rw/fleet.json';
+import enDispatch from '../locales/en/dispatch.json';
+import rwDispatch from '../locales/rw/dispatch.json';
 
 // localStorage key the chosen language is persisted under — mirrors the
 // `st-access-token` convention in api-client.ts.
@@ -23,13 +25,13 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      en: { common: enCommon, errors: enErrors, passenger: enPassenger, fleet: enFleet },
-      rw: { common: rwCommon, errors: rwErrors, passenger: rwPassenger, fleet: rwFleet },
+      en: { common: enCommon, errors: enErrors, passenger: enPassenger, fleet: enFleet, dispatch: enDispatch },
+      rw: { common: rwCommon, errors: rwErrors, passenger: rwPassenger, fleet: rwFleet, dispatch: rwDispatch },
     },
     fallbackLng: 'en',
     supportedLngs: SUPPORTED_LANGUAGES,
     defaultNS: 'common',
-    ns: ['common', 'errors', 'passenger', 'fleet'],
+    ns: ['common', 'errors', 'passenger', 'fleet', 'dispatch'],
     detection: {
       order: ['localStorage', 'navigator'],
       lookupLocalStorage: LANG_KEY,

@@ -1,8 +1,10 @@
+import { useTranslation } from 'react-i18next';
 import { LoadingSpinner } from '../../ui/loading-spinner';
 import { ErrorMessage } from '../../ui/error-message';
 
 export function DispatchLoadingState() {
-  return <LoadingSpinner message="Loading dispatch..." />;
+  const { t } = useTranslation('dispatch');
+  return <LoadingSpinner message={t('loading')} />;
 }
 
 export function DispatchErrorState({ error, onRetry }: { error: string; onRetry: () => void }) {

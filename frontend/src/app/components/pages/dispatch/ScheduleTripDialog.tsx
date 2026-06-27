@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { CalendarPlus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { messageForError } from '../../../lib/error-messages';
 import type { DriverRead, RouteRead, TripCreate, VehicleRead } from '../../../lib/api-types';
 import { Button } from '../../ui/button';
 import {
@@ -25,6 +27,7 @@ type ScheduleTripDialogProps = {
 };
 
 export function ScheduleTripDialog({ vehicles, drivers, routes, onCreateTrip }: ScheduleTripDialogProps) {
+  const { t } = useTranslation('dispatch');
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<ScheduleTripFormState>(initialScheduleTripFormState);
   const [submitting, setSubmitting] = useState(false);
@@ -35,11 +38,11 @@ export function ScheduleTripDialog({ vehicles, drivers, routes, onCreateTrip }: 
     event.preventDefault();
     const now = new Date();
     if (new Date(form.scheduledStart) < now) {
-      toast.error('Scheduled start must be in the future');
+      toast.error(t('schedule.startInFuture'));
       return;
     }
     if (new Date(form.scheduledEnd) <= new Date(form.scheduledStart)) {
-      toast.error('Scheduled end must be after scheduled start');
+      toast.error(t('schedule.endAfterStart'));
       return;
     }
     setSubmitting(true);
@@ -49,7 +52,7 @@ export function ScheduleTripDialog({ vehicles, drivers, routes, onCreateTrip }: 
       setForm(initialScheduleTripFormState);
       setOpen(false);
     } catch (createError) {
-      toast.error(createError instanceof Error ? createError.message : 'Unable to schedule trip');
+      toast.error(messageForError(createError));
     } finally {
       setSubmitting(false);
     }
@@ -60,31 +63,31 @@ export function ScheduleTripDialog({ vehicles, drivers, routes, onCreateTrip }: 
       <DialogTrigger asChild>
         <Button>
           <CalendarPlus className="mr-2 size-4" />
-          Schedule Trip
+          {t('schedule.trigger')}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Schedule Trip</DialogTitle>
-          <DialogDescription>Assign an available vehicle, route, driver, and trip window.</DialogDescription>
+          <DialogTitle>{t('schedule.title')}</DialogTitle>
+          <DialogDescription>{t('schedule.description')}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <TripSelect label="Vehicle" value={form.vehicleId} onChange={setField(setForm, 'vehicleId')}>
+          <TripSelect label={t('schedule.vehicle')} placeholder={t('schedule.selectVehicle')} value={form.vehicleId} onChange={setField(setForm, 'vehicleId')}>
             {vehicles.map((vehicle) => (
               <SelectItem key={vehicle.id} value={vehicle.id}>
                 {vehicle.registrationNumber}
               </SelectItem>
             ))}
           </TripSelect>
-          <TripSelect label="Route" value={form.routeId} onChange={setField(setForm, 'routeId')}>
+          <TripSelect label={t('schedule.route')} placeholder={t('schedule.selectRoute')} value={form.routeId} onChange={setField(setForm, 'routeId')}>
             {routes.map((route) => (
               <SelectItem key={route.id} value={route.id}>
                 {routeLabel(route)}
               </SelectItem>
             ))}
           </TripSelect>
-          <TripSelect label="Driver" value={form.driverId} onChange={setField(setForm, 'driverId')}>
+          <TripSelect label={t('schedule.driver')} placeholder={t('schedule.selectDriver')} value={form.driverId} onChange={setField(setForm, 'driverId')}>
             {drivers.map((driver) => (
               <SelectItem key={driver.id} value={driver.id}>
                 {driver.name}
@@ -94,7 +97,7 @@ export function ScheduleTripDialog({ vehicles, drivers, routes, onCreateTrip }: 
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="scheduledStart">Scheduled start</Label>
+              <Label htmlFor="scheduledStart">{t('schedule.scheduledStart')}</Label>
               <Input
                 id="scheduledStart"
                 type="datetime-local"
@@ -105,7 +108,7 @@ export function ScheduleTripDialog({ vehicles, drivers, routes, onCreateTrip }: 
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="scheduledEnd">Scheduled end</Label>
+              <Label htmlFor="scheduledEnd">{t('schedule.scheduledEnd')}</Label>
               <Input
                 id="scheduledEnd"
                 type="datetime-local"
@@ -119,10 +122,10 @@ export function ScheduleTripDialog({ vehicles, drivers, routes, onCreateTrip }: 
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Close
+              {t('schedule.close')}
             </Button>
             <Button type="submit" disabled={submitting || !form.vehicleId || !form.routeId || !form.driverId}>
-              {submitting ? 'Scheduling...' : 'Schedule Trip'}
+              {submitting ? t('schedule.scheduling') : t('schedule.submit')}
             </Button>
           </DialogFooter>
         </form>
@@ -131,8 +134,9 @@ export function ScheduleTripDialog({ vehicles, drivers, routes, onCreateTrip }: 
   );
 }
 
-function TripSelect({ label, value, onChange, children }: {
+function TripSelect({ label, placeholder, value, onChange, children }: {
   label: string;
+  placeholder: string;
   value: string;
   onChange: (value: string) => void;
   children: React.ReactNode;
@@ -142,7 +146,7 @@ function TripSelect({ label, value, onChange, children }: {
       <Label>{label}</Label>
       <Select value={value} onValueChange={onChange} required>
         <SelectTrigger>
-          <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
+          <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>{children}</SelectContent>
       </Select>

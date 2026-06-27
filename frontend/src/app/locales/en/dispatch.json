@@ -1,0 +1,61 @@
+{
+  "title": "Dispatch Management",
+  "subtitle": "Centralized trip assignment and dispatch control",
+  "loading": "Loading dispatch...",
+  "stats": {
+    "activeTrips": "Active Trips",
+    "scheduled": "Scheduled",
+    "availableVehicles": "Available Vehicles",
+    "availableDrivers": "Available Drivers"
+  },
+  "panel": {
+    "activeTrips": "Active Trips",
+    "scheduledTrips": "Scheduled Trips",
+    "noActiveTrips": "No active trips.",
+    "noScheduledTrips": "No scheduled trips.",
+    "unknownVehicle": "Unknown vehicle",
+    "unknownDriver": "Unknown driver",
+    "unknownRoute": "Unknown route",
+    "started": "Started",
+    "scheduled": "Scheduled",
+    "end": "End",
+    "passengers": "Passengers",
+    "delayedBy": "Delayed by {{count}} min",
+    "startTrip": "Start Trip",
+    "complete": "Complete",
+    "cancel": "Cancel"
+  },
+  "tripStatus": {
+    "scheduled": "Scheduled",
+    "active": "Active",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
+  "resources": {
+    "title": "Available Resources",
+    "availableVehicles": "Available Vehicles",
+    "availableDrivers": "Available Drivers",
+    "noIdleVehicles": "No idle vehicles",
+    "noAvailableDrivers": "No available drivers",
+    "idle": "Idle",
+    "available": "Available"
+  },
+  "schedule": {
+    "trigger": "Schedule Trip",
+    "title": "Schedule Trip",
+    "description": "Assign an available vehicle, route, driver, and trip window.",
+    "vehicle": "Vehicle",
+    "route": "Route",
+    "driver": "Driver",
+    "selectVehicle": "Select vehicle",
+    "selectRoute": "Select route",
+    "selectDriver": "Select driver",
+    "scheduledStart": "Scheduled start",
+    "scheduledEnd": "Scheduled end",
+    "close": "Close",
+    "scheduling": "Scheduling...",
+    "submit": "Schedule Trip",
+    "startInFuture": "Scheduled start must be in the future",
+    "endAfterStart": "Scheduled end must be after scheduled start"
+  }
+}

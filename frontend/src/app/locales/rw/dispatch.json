@@ -1,0 +1,61 @@
+{
+  "title": "Gucunga Kohereza Imodoka",
+  "subtitle": "Guhuza no kugenzura ingendo hagati [TODO]",
+  "loading": "Birapakira kohereza...",
+  "stats": {
+    "activeTrips": "Ingendo Zikora",
+    "scheduled": "Zateganyijwe",
+    "availableVehicles": "Imodoka Zihari",
+    "availableDrivers": "Abashoferi Bahari"
+  },
+  "panel": {
+    "activeTrips": "Ingendo Zikora",
+    "scheduledTrips": "Ingendo Zateganyijwe",
+    "noActiveTrips": "Nta ngendo zikora.",
+    "noScheduledTrips": "Nta ngendo zateganyijwe.",
+    "unknownVehicle": "Imodoka itazwi",
+    "unknownDriver": "Umushoferi utazwi",
+    "unknownRoute": "Umuhanda utazwi",
+    "started": "Yatangiye",
+    "scheduled": "Yateganyijwe",
+    "end": "Iherezo",
+    "passengers": "Abagenzi",
+    "delayedBy": "Yatinze iminota {{count}}",
+    "startTrip": "Tangira Urugendo",
+    "complete": "Soza",
+    "cancel": "Kuraguza"
+  },
+  "tripStatus": {
+    "scheduled": "Yateganyijwe",
+    "active": "Irakora",
+    "completed": "Yarangiye",
+    "cancelled": "Yahagaritswe"
+  },
+  "resources": {
+    "title": "Ibikoresho Bihari",
+    "availableVehicles": "Imodoka Zihari",
+    "availableDrivers": "Abashoferi Bahari",
+    "noIdleVehicles": "Nta modoka zihagaze",
+    "noAvailableDrivers": "Nta bashoferi bahari",
+    "idle": "Ihagaze",
+    "available": "Ahari"
+  },
+  "schedule": {
+    "trigger": "Teganya Urugendo",
+    "title": "Teganya Urugendo",
+    "description": "Tanga imodoka ihari, umuhanda, umushoferi, n'igihe cy'urugendo. [TODO]",
+    "vehicle": "Imodoka",
+    "route": "Umuhanda",
+    "driver": "Umushoferi",
+    "selectVehicle": "Hitamo imodoka",
+    "selectRoute": "Hitamo umuhanda",
+    "selectDriver": "Hitamo umushoferi",
+    "scheduledStart": "Itangira ryateganyijwe",
+    "scheduledEnd": "Iherezo ryateganyijwe",
+    "close": "Funga",
+    "scheduling": "Biragenwa...",
+    "submit": "Teganya Urugendo",
+    "startInFuture": "Itangira rigomba kuba mu gihe kizaza [TODO]",
+    "endAfterStart": "Iherezo rigomba kuba nyuma y'itangira [TODO]"
+  }
+}
