@@ -1,0 +1,56 @@
+{
+  "title": "Gucunga Isanwa",
+  "subtitle": "Gukurikirana no guteganya isanwa ry'imodoka [TODO]",
+  "loading": "Birapakira isanwa...",
+  "stats": {
+    "scheduled": "Byateganyijwe",
+    "upcomingServices": "Serivisi ziri imbere",
+    "inProgress": "Birakomeza",
+    "currentlyServicing": "Birimo gusanwa",
+    "completed": "Byarangiye",
+    "thisPeriod": "Iki gihe",
+    "totalCost": "Igiciro Cyose",
+    "currency": "RWF"
+  },
+  "table": {
+    "title": "Inyandiko z'Isanwa",
+    "noRecords": "Nta nyandiko z'isanwa zabonetse.",
+    "vehicle": "Imodoka",
+    "type": "Ubwoko",
+    "description": "Ibisobanuro",
+    "scheduledDate": "Itariki Yateganyijwe",
+    "completedDate": "Itariki Byarangiriyeho",
+    "cost": "Igiciro (RWF)",
+    "status": "Imimerere",
+    "nextDue": "Bikurikira",
+    "actions": "Ibikorwa",
+    "unknownVehicle": "Imodoka itazwi",
+    "start": "Tangira",
+    "complete": "Soza"
+  },
+  "maintenanceType": {
+    "routine": "Isanzwe",
+    "repair": "Gukora",
+    "inspection": "Igenzura"
+  },
+  "maintenanceStatus": {
+    "scheduled": "Byateganyijwe",
+    "in-progress": "Birakomeza",
+    "completed": "Byarangiye"
+  },
+  "schedule": {
+    "trigger": "Teganya Isanwa",
+    "title": "Teganya Isanwa",
+    "description": "Kora akazi ko gusana imodoka hamwe n'itariki, ubwoko, n'igiciro. [TODO]",
+    "vehicle": "Imodoka",
+    "selectVehicle": "Hitamo imodoka",
+    "type": "Ubwoko",
+    "cost": "Igiciro",
+    "descriptionLabel": "Ibisobanuro",
+    "scheduledDate": "Itariki yateganyijwe",
+    "nextDue": "Bikurikira",
+    "close": "Funga",
+    "scheduling": "Biragenwa...",
+    "submit": "Teganya Isanwa"
+  }
+}

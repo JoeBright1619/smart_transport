@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { UserCog } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
+import { messageForError } from '../../../lib/error-messages';
 import type { DriverRead, DriverUpdate } from '../../../lib/api-types';
 import { Button } from '../../ui/button';
 import {
@@ -28,6 +30,7 @@ type EditDriverDialogProps = {
 };
 
 export function EditDriverDialog({ driver, open, onOpenChange, onSave }: EditDriverDialogProps) {
+  const { t } = useTranslation('drivers');
   const [form, setForm] = useState<EditFormState>(toFormState(driver));
   const [submitting, setSubmitting] = useState(false);
 
@@ -46,7 +49,7 @@ export function EditDriverDialog({ driver, open, onOpenChange, onSave }: EditDri
       });
       onOpenChange(false);
     } catch (saveError) {
-      toast.error(saveError instanceof Error ? saveError.message : 'Unable to update driver');
+      toast.error(messageForError(saveError));
     } finally {
       setSubmitting(false);
     }
@@ -62,14 +65,14 @@ export function EditDriverDialog({ driver, open, onOpenChange, onSave }: EditDri
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserCog className="size-5" />
-            Edit Driver
+            {t('edit.title')}
           </DialogTitle>
-          <DialogDescription>Update {driver.name}&apos;s information.</DialogDescription>
+          <DialogDescription>{t('edit.description', { name: driver.name })}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="editDriverName">Name</Label>
+            <Label htmlFor="editDriverName">{t('edit.name')}</Label>
             <Input
               id="editDriverName"
               value={form.name}
@@ -79,7 +82,7 @@ export function EditDriverDialog({ driver, open, onOpenChange, onSave }: EditDri
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="editDriverPhone">Phone</Label>
+              <Label htmlFor="editDriverPhone">{t('edit.phone')}</Label>
               <Input
                 id="editDriverPhone"
                 value={form.phone}
@@ -88,7 +91,7 @@ export function EditDriverDialog({ driver, open, onOpenChange, onSave }: EditDri
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="editCertExpiry">Certification expiry</Label>
+              <Label htmlFor="editCertExpiry">{t('edit.certificationExpiry')}</Label>
               <Input
                 id="editCertExpiry"
                 type="date"
@@ -101,10 +104,10 @@ export function EditDriverDialog({ driver, open, onOpenChange, onSave }: EditDri
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t('edit.cancel')}
             </Button>
             <Button type="submit" disabled={submitting}>
-              {submitting ? 'Saving...' : 'Save changes'}
+              {submitting ? t('edit.saving') : t('edit.save')}
             </Button>
           </DialogFooter>
         </form>

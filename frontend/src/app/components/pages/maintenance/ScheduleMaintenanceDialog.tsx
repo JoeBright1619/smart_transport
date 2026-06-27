@@ -1,6 +1,8 @@
 import { useState, type ChangeEvent, type Dispatch, type FormEvent, type SetStateAction } from 'react';
 import { toast } from 'sonner';
 import { CalendarPlus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { messageForError } from '../../../lib/error-messages';
 import type { MaintenanceCreate, VehicleRead } from '../../../lib/api-types';
 import { Button } from '../../ui/button';
 import {
@@ -31,6 +33,7 @@ export function ScheduleMaintenanceDialog({
   vehicles,
   onCreateMaintenance,
 }: ScheduleMaintenanceDialogProps) {
+  const { t } = useTranslation('maintenance');
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<MaintenanceFormState>(initialMaintenanceFormState);
   const [submitting, setSubmitting] = useState(false);
@@ -44,7 +47,7 @@ export function ScheduleMaintenanceDialog({
       setForm(initialMaintenanceFormState);
       setOpen(false);
     } catch (createError) {
-      toast.error(createError instanceof Error ? createError.message : 'Unable to schedule maintenance');
+      toast.error(messageForError(createError));
     } finally {
       setSubmitting(false);
     }
@@ -55,21 +58,21 @@ export function ScheduleMaintenanceDialog({
       <DialogTrigger asChild>
         <Button>
           <CalendarPlus className="mr-2 size-4" />
-          Schedule Maintenance
+          {t('schedule.trigger')}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Schedule Maintenance</DialogTitle>
-          <DialogDescription>Create a vehicle maintenance job with date, type, and cost.</DialogDescription>
+          <DialogTitle>{t('schedule.title')}</DialogTitle>
+          <DialogDescription>{t('schedule.description')}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label>Vehicle</Label>
+            <Label>{t('schedule.vehicle')}</Label>
             <Select value={form.vehicleId} onValueChange={setField(setForm, 'vehicleId')} required>
               <SelectTrigger>
-                <SelectValue placeholder="Select vehicle" />
+                <SelectValue placeholder={t('schedule.selectVehicle')} />
               </SelectTrigger>
               <SelectContent>
                 {vehicles.map((vehicle) => (
@@ -83,7 +86,7 @@ export function ScheduleMaintenanceDialog({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Type</Label>
+              <Label>{t('schedule.type')}</Label>
               <Select value={form.type} onValueChange={setField(setForm, 'type')} required>
                 <SelectTrigger>
                   <SelectValue />
@@ -91,28 +94,28 @@ export function ScheduleMaintenanceDialog({
                 <SelectContent>
                   {maintenanceTypeOptions.map((type) => (
                     <SelectItem key={type} value={type}>
-                      {type}
+                      {t(`maintenanceType.${type}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <InputField label="Cost" type="number" value={form.cost} onChange={updateField(setForm, 'cost')} />
+            <InputField label={t('schedule.cost')} type="number" value={form.cost} onChange={updateField(setForm, 'cost')} />
           </div>
 
-          <InputField label="Description" value={form.description} onChange={updateField(setForm, 'description')} />
+          <InputField label={t('schedule.descriptionLabel')} value={form.description} onChange={updateField(setForm, 'description')} />
 
           <div className="grid gap-4 md:grid-cols-2">
-            <InputField label="Scheduled date" type="date" value={form.scheduledDate} onChange={updateField(setForm, 'scheduledDate')} />
-            <InputField label="Next due" type="date" value={form.nextDue} onChange={updateField(setForm, 'nextDue')} required={false} />
+            <InputField label={t('schedule.scheduledDate')} type="date" value={form.scheduledDate} onChange={updateField(setForm, 'scheduledDate')} />
+            <InputField label={t('schedule.nextDue')} type="date" value={form.nextDue} onChange={updateField(setForm, 'nextDue')} required={false} />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Close
+              {t('schedule.close')}
             </Button>
             <Button type="submit" disabled={submitting || !form.vehicleId}>
-              {submitting ? 'Scheduling...' : 'Schedule Maintenance'}
+              {submitting ? t('schedule.scheduling') : t('schedule.submit')}
             </Button>
           </DialogFooter>
         </form>

@@ -1,0 +1,53 @@
+{
+  "title": "Gucunga Abashoferi",
+  "subtitle": "Gucunga imyirondoro n'imikorere y'abashoferi [TODO]",
+  "loading": "Birapakira abashoferi...",
+  "stats": {
+    "total": "Abashoferi Bose",
+    "onTrip": "Mu Rugendo",
+    "available": "Bahari",
+    "avgRating": "Amanota Asanzwe"
+  },
+  "table": {
+    "title": "Urutonde rw'Abashoferi",
+    "noDrivers": "Nta bashoferi babonetse.",
+    "driver": "Umushoferi",
+    "license": "Uruhushya",
+    "phone": "Telefoni",
+    "rating": "Amanota",
+    "totalTrips": "Ingendo Zose",
+    "status": "Imimerere",
+    "vehicle": "Imodoka",
+    "certExpiry": "Irangira ry'Icyemezo",
+    "actions": "Ibikorwa",
+    "onTripOption": "Mu rugendo — bigenwa n'urugendo rukora [TODO]"
+  },
+  "driverStatus": {
+    "available": "Ahari",
+    "on-trip": "Mu Rugendo",
+    "off-duty": "Ntari ku Kazi"
+  },
+  "add": {
+    "trigger": "Ongeraho Umushoferi",
+    "title": "Ongeraho Umushoferi",
+    "description": "Andikisha umushoferi hamwe n'uruhushya n'icyemezo. [TODO]",
+    "name": "Amazina",
+    "licenseNumber": "Nimero y'uruhushya",
+    "phone": "Telefoni",
+    "phoneRequired": "Telefoni irakenewe",
+    "certificationExpiry": "Irangira ry'icyemezo",
+    "close": "Funga",
+    "adding": "Birongerwaho...",
+    "submit": "Ongeraho Umushoferi"
+  },
+  "edit": {
+    "title": "Hindura Umushoferi",
+    "description": "Hindura amakuru ya {{name}}. [TODO]",
+    "name": "Amazina",
+    "phone": "Telefoni",
+    "certificationExpiry": "Irangira ry'icyemezo",
+    "cancel": "Hagarika",
+    "saving": "Birabikwa...",
+    "save": "Bika impinduka"
+  }
+}

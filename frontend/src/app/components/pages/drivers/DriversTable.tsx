@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Pencil, Star, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { DriverRead, DriverStatus, DriverUpdate, VehicleRead } from '../../../lib/api-types';
 import { EditDriverDialog } from './EditDriverDialog';
 import { Avatar, AvatarFallback } from '../../ui/avatar';
@@ -15,7 +16,7 @@ import {
 } from '../../ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
 import { TablePagination } from '../../ui/table-pagination';
-import { driverInitials, statusBadgeVariant, statusLabels } from './driver-helpers';
+import { driverInitials, statusBadgeVariant } from './driver-helpers';
 
 const PAGE_SIZE = 10;
 
@@ -36,6 +37,7 @@ export function DriversTable({
   onEditDriver,
   onDeleteDriver,
 }: DriversTableProps) {
+  const { t } = useTranslation('drivers');
   const [page, setPage] = useState(1);
   const [editingDriver, setEditingDriver] = useState<DriverRead | null>(null);
   const paginatedDrivers = drivers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -43,27 +45,27 @@ export function DriversTable({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Driver Roster</CardTitle>
+        <CardTitle>{t('table.title')}</CardTitle>
       </CardHeader>
       <CardContent>
         {drivers.length === 0 ? (
           <div className="rounded-md border border-dashed p-8 text-center text-sm text-slate-600">
-            No drivers found.
+            {t('table.noDrivers')}
           </div>
         ) : (
           <>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Driver</TableHead>
-                  <TableHead>License</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Rating</TableHead>
-                  <TableHead>Total Trips</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Vehicle</TableHead>
-                  <TableHead>Cert. Expiry</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{t('table.driver')}</TableHead>
+                  <TableHead>{t('table.license')}</TableHead>
+                  <TableHead>{t('table.phone')}</TableHead>
+                  <TableHead>{t('table.rating')}</TableHead>
+                  <TableHead>{t('table.totalTrips')}</TableHead>
+                  <TableHead>{t('table.status')}</TableHead>
+                  <TableHead>{t('table.vehicle')}</TableHead>
+                  <TableHead>{t('table.certExpiry')}</TableHead>
+                  <TableHead>{t('table.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -117,6 +119,7 @@ function DriverTableRow({
   onOpenEdit: (driver: DriverRead) => void;
   onDeleteDriver: (driver: DriverRead) => void;
 }) {
+  const { t } = useTranslation('drivers');
   return (
     <TableRow>
       <TableCell>
@@ -141,7 +144,7 @@ function DriverTableRow({
       <TableCell>{driver.totalTrips}</TableCell>
       <TableCell>
         <div className="flex items-center gap-2">
-          <Badge variant={statusBadgeVariant(driver.status)}>{statusLabels[driver.status]}</Badge>
+          <Badge variant={statusBadgeVariant(driver.status)}>{t(`driverStatus.${driver.status}`)}</Badge>
           <Select
             value={driver.status}
             disabled={disabled}
@@ -151,10 +154,10 @@ function DriverTableRow({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="available">Available</SelectItem>
-              <SelectItem value="off-duty">Off Duty</SelectItem>
+              <SelectItem value="available">{t('driverStatus.available')}</SelectItem>
+              <SelectItem value="off-duty">{t('driverStatus.off-duty')}</SelectItem>
               <SelectItem value="on-trip" disabled>
-                On Trip — set by active trip
+                {t('table.onTripOption')}
               </SelectItem>
             </SelectContent>
           </Select>

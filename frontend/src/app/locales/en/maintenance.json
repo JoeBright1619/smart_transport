@@ -1,0 +1,56 @@
+{
+  "title": "Maintenance Management",
+  "subtitle": "Vehicle maintenance tracking and scheduling",
+  "loading": "Loading maintenance...",
+  "stats": {
+    "scheduled": "Scheduled",
+    "upcomingServices": "Upcoming services",
+    "inProgress": "In Progress",
+    "currentlyServicing": "Currently servicing",
+    "completed": "Completed",
+    "thisPeriod": "This period",
+    "totalCost": "Total Cost",
+    "currency": "RWF"
+  },
+  "table": {
+    "title": "Maintenance Records",
+    "noRecords": "No maintenance records found.",
+    "vehicle": "Vehicle",
+    "type": "Type",
+    "description": "Description",
+    "scheduledDate": "Scheduled Date",
+    "completedDate": "Completed Date",
+    "cost": "Cost (RWF)",
+    "status": "Status",
+    "nextDue": "Next Due",
+    "actions": "Actions",
+    "unknownVehicle": "Unknown vehicle",
+    "start": "Start",
+    "complete": "Complete"
+  },
+  "maintenanceType": {
+    "routine": "Routine",
+    "repair": "Repair",
+    "inspection": "Inspection"
+  },
+  "maintenanceStatus": {
+    "scheduled": "Scheduled",
+    "in-progress": "In Progress",
+    "completed": "Completed"
+  },
+  "schedule": {
+    "trigger": "Schedule Maintenance",
+    "title": "Schedule Maintenance",
+    "description": "Create a vehicle maintenance job with date, type, and cost.",
+    "vehicle": "Vehicle",
+    "selectVehicle": "Select vehicle",
+    "type": "Type",
+    "cost": "Cost",
+    "descriptionLabel": "Description",
+    "scheduledDate": "Scheduled date",
+    "nextDue": "Next due",
+    "close": "Close",
+    "scheduling": "Scheduling...",
+    "submit": "Schedule Maintenance"
+  }
+}

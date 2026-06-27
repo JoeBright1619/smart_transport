@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { AddDriverDialog } from './drivers/AddDriverDialog';
 import { DriverErrorState, DriverLoadingState } from './drivers/DriverPageStates';
 import { DriverStatsCards } from './drivers/DriverStatsCards';
@@ -5,6 +6,7 @@ import { DriversTable } from './drivers/DriversTable';
 import { useDriversManagement } from './drivers/useDriversManagement';
 
 export function Drivers() {
+  const { t } = useTranslation('drivers');
   const driversManagement = useDriversManagement();
 
   if (driversManagement.loading) {
@@ -24,8 +26,8 @@ export function Drivers() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Driver Management</h1>
-          <p className="text-slate-600">Manage driver profiles and performance</p>
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
+          <p className="text-slate-600">{t('subtitle')}</p>
         </div>
         <AddDriverDialog onCreateDriver={driversManagement.createDriver} />
       </div>

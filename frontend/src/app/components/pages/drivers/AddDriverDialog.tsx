@@ -16,6 +16,8 @@ import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
 import { buildDriverCreatePayload, initialDriverFormState, type DriverFormState } from './driver-helpers';
 import { validateName, validatePhone } from '../../../lib/validation';
+import { messageForError } from '../../../lib/error-messages';
+import { useTranslation } from 'react-i18next';
 import React from 'react';
 
 type AddDriverDialogProps = {
@@ -23,6 +25,7 @@ type AddDriverDialogProps = {
 };
 
 export function AddDriverDialog({ onCreateDriver }: AddDriverDialogProps) {
+  const { t } = useTranslation('drivers');
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<DriverFormState>(initialDriverFormState);
   const [submitting, setSubmitting] = useState(false);
@@ -33,7 +36,7 @@ export function AddDriverDialog({ onCreateDriver }: AddDriverDialogProps) {
     const nameErr = validateName(form.name);
     if (nameErr) next.name = nameErr;
     // Phone is required for drivers — an empty value is an error here.
-    const phoneErr = !form.phone.trim() ? 'Phone is required' : validatePhone(form.phone);
+    const phoneErr = !form.phone.trim() ? t('add.phoneRequired') : validatePhone(form.phone);
     if (phoneErr) next.phone = phoneErr;
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -49,7 +52,7 @@ export function AddDriverDialog({ onCreateDriver }: AddDriverDialogProps) {
       setForm(initialDriverFormState);
       setOpen(false);
     } catch (createError) {
-      toast.error(createError instanceof Error ? createError.message : 'Unable to add driver');
+      toast.error(messageForError(createError));
     } finally {
       setSubmitting(false);
     }
@@ -60,21 +63,21 @@ export function AddDriverDialog({ onCreateDriver }: AddDriverDialogProps) {
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 size-4" />
-          Add Driver
+          {t('add.trigger')}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="size-5" />
-            Add Driver
+            {t('add.title')}
           </DialogTitle>
-          <DialogDescription>Register a driver with license and certification details.</DialogDescription>
+          <DialogDescription>{t('add.description')}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="driverName">Name</Label>
+            <Label htmlFor="driverName">{t('add.name')}</Label>
             <Input
               id="driverName"
               value={form.name}
@@ -86,7 +89,7 @@ export function AddDriverDialog({ onCreateDriver }: AddDriverDialogProps) {
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="licenseNumber">License number</Label>
+              <Label htmlFor="licenseNumber">{t('add.licenseNumber')}</Label>
               <Input
                 id="licenseNumber"
                 value={form.licenseNumber}
@@ -95,7 +98,7 @@ export function AddDriverDialog({ onCreateDriver }: AddDriverDialogProps) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="driverPhone">Phone</Label>
+              <Label htmlFor="driverPhone">{t('add.phone')}</Label>
               <Input
                 id="driverPhone"
                 value={form.phone}
@@ -107,7 +110,7 @@ export function AddDriverDialog({ onCreateDriver }: AddDriverDialogProps) {
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="certificationExpiry">Certification expiry</Label>
+            <Label htmlFor="certificationExpiry">{t('add.certificationExpiry')}</Label>
             <Input
               id="certificationExpiry"
               type="date"
@@ -119,10 +122,10 @@ export function AddDriverDialog({ onCreateDriver }: AddDriverDialogProps) {
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Close
+              {t('add.close')}
             </Button>
             <Button type="submit" disabled={submitting}>
-              {submitting ? 'Adding...' : 'Add Driver'}
+              {submitting ? t('add.adding') : t('add.submit')}
             </Button>
           </DialogFooter>
         </form>

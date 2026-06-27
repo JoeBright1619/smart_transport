@@ -1,0 +1,53 @@
+{
+  "title": "Driver Management",
+  "subtitle": "Manage driver profiles and performance",
+  "loading": "Loading drivers...",
+  "stats": {
+    "total": "Total Drivers",
+    "onTrip": "On Trip",
+    "available": "Available",
+    "avgRating": "Avg Rating"
+  },
+  "table": {
+    "title": "Driver Roster",
+    "noDrivers": "No drivers found.",
+    "driver": "Driver",
+    "license": "License",
+    "phone": "Phone",
+    "rating": "Rating",
+    "totalTrips": "Total Trips",
+    "status": "Status",
+    "vehicle": "Vehicle",
+    "certExpiry": "Cert. Expiry",
+    "actions": "Actions",
+    "onTripOption": "On Trip — set by active trip"
+  },
+  "driverStatus": {
+    "available": "Available",
+    "on-trip": "On Trip",
+    "off-duty": "Off Duty"
+  },
+  "add": {
+    "trigger": "Add Driver",
+    "title": "Add Driver",
+    "description": "Register a driver with license and certification details.",
+    "name": "Name",
+    "licenseNumber": "License number",
+    "phone": "Phone",
+    "phoneRequired": "Phone is required",
+    "certificationExpiry": "Certification expiry",
+    "close": "Close",
+    "adding": "Adding...",
+    "submit": "Add Driver"
+  },
+  "edit": {
+    "title": "Edit Driver",
+    "description": "Update {{name}}'s information.",
+    "name": "Name",
+    "phone": "Phone",
+    "certificationExpiry": "Certification expiry",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "save": "Save changes"
+  }
+}
