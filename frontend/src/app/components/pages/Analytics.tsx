@@ -1,4 +1,5 @@
 import { FileDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../ui/button';
 import { AnalyticsChartsTabs } from './analytics/AnalyticsChartsTabs';
 import { AnalyticsDateRange } from './analytics/AnalyticsDateRange';
@@ -9,6 +10,7 @@ import { useAnalyticsPage } from './analytics/useAnalyticsPage';
 import { useAuth } from '../../lib/auth-context';
 
 export function Analytics() {
+  const { t } = useTranslation('analytics');
   const analytics = useAnalyticsPage();
   const { user } = useAuth();
 
@@ -21,15 +23,15 @@ export function Analytics() {
   }
 
   if (!analytics.data) {
-    return <AnalyticsErrorState error="No analytics data returned" onRetry={() => void analytics.retry()} />;
+    return <AnalyticsErrorState error={t('noData')} onRetry={() => void analytics.retry()} />;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Analytics & Reporting</h1>
-          <p className="text-slate-600">Performance metrics and operational insights</p>
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
+          <p className="text-slate-600">{t('subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           <AnalyticsDateRange
@@ -57,7 +59,7 @@ export function Analytics() {
             }
           >
             <FileDown className="mr-2 size-4" />
-            Export PDF
+            {t('exportPdf')}
           </Button>
         </div>
       </div>

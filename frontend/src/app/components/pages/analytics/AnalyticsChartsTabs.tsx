@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { AnalyticsDaily, DriverRead, RouteRead, VehicleRead } from '../../../lib/api-types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 import type { FleetStatusDatum, RoutePerformanceDatum } from './analytics-helpers';
@@ -25,13 +26,14 @@ export function AnalyticsChartsTabs({
   vehicles,
   drivers,
 }: AnalyticsChartsTabsProps) {
+  const { t } = useTranslation('analytics');
   return (
     <Tabs defaultValue="trends" className="space-y-4">
       <TabsList>
-        <TabsTrigger value="trends">Operational Trends</TabsTrigger>
-        <TabsTrigger value="routes">Route Performance</TabsTrigger>
-        <TabsTrigger value="fleet">Fleet Analysis</TabsTrigger>
-        <TabsTrigger value="custom">Custom Reports</TabsTrigger>
+        <TabsTrigger value="trends">{t('tabs.trends')}</TabsTrigger>
+        <TabsTrigger value="routes">{t('tabs.routes')}</TabsTrigger>
+        <TabsTrigger value="fleet">{t('tabs.fleet')}</TabsTrigger>
+        <TabsTrigger value="custom">{t('tabs.custom')}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="trends" className="space-y-4">

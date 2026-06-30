@@ -16,6 +16,8 @@ import enDrivers from '../locales/en/drivers.json';
 import rwDrivers from '../locales/rw/drivers.json';
 import enMaintenance from '../locales/en/maintenance.json';
 import rwMaintenance from '../locales/rw/maintenance.json';
+import enAnalytics from '../locales/en/analytics.json';
+import rwAnalytics from '../locales/rw/analytics.json';
 
 // localStorage key the chosen language is persisted under — mirrors the
 // `st-access-token` convention in api-client.ts.
@@ -29,13 +31,13 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      en: { common: enCommon, errors: enErrors, passenger: enPassenger, fleet: enFleet, dispatch: enDispatch, drivers: enDrivers, maintenance: enMaintenance },
-      rw: { common: rwCommon, errors: rwErrors, passenger: rwPassenger, fleet: rwFleet, dispatch: rwDispatch, drivers: rwDrivers, maintenance: rwMaintenance },
+      en: { common: enCommon, errors: enErrors, passenger: enPassenger, fleet: enFleet, dispatch: enDispatch, drivers: enDrivers, maintenance: enMaintenance, analytics: enAnalytics },
+      rw: { common: rwCommon, errors: rwErrors, passenger: rwPassenger, fleet: rwFleet, dispatch: rwDispatch, drivers: rwDrivers, maintenance: rwMaintenance, analytics: rwAnalytics },
     },
     fallbackLng: 'en',
     supportedLngs: SUPPORTED_LANGUAGES,
     defaultNS: 'common',
-    ns: ['common', 'errors', 'passenger', 'fleet', 'dispatch', 'drivers', 'maintenance'],
+    ns: ['common', 'errors', 'passenger', 'fleet', 'dispatch', 'drivers', 'maintenance', 'analytics'],
     detection: {
       order: ['localStorage', 'navigator'],
       lookupLocalStorage: LANG_KEY,

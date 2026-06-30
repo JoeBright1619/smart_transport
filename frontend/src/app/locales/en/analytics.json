@@ -1,0 +1,58 @@
+{
+  "title": "Analytics & Reporting",
+  "subtitle": "Performance metrics and operational insights",
+  "exportPdf": "Export PDF",
+  "loading": "Loading analytics...",
+  "noData": "No analytics data returned",
+  "dateRange": {
+    "from": "From",
+    "to": "To"
+  },
+  "stats": {
+    "totalRevenue": "Total Revenue",
+    "avgOnTime": "Avg On-Time Performance",
+    "acrossAllRoutes": "Across all routes",
+    "totalPassengers": "Total Passengers",
+    "fuelConsumption": "Fuel Consumption",
+    "avgPerDay": "Avg {{value}}L per selected day",
+    "firstToLast": "first to last day"
+  },
+  "tabs": {
+    "trends": "Operational Trends",
+    "routes": "Route Performance",
+    "fleet": "Fleet Analysis",
+    "custom": "Custom Reports"
+  },
+  "trends": {
+    "dailyPerformance": "Daily Performance",
+    "revenuePassengers": "Revenue & Passengers",
+    "fuelTrend": "Fuel Consumption Trend",
+    "onTime": "On-Time %",
+    "totalTrips": "Total Trips",
+    "revenue": "Revenue (RWF)",
+    "passengers": "Passengers",
+    "fuelLiters": "Fuel (Liters)"
+  },
+  "routes": {
+    "comparison": "Route Performance Comparison",
+    "statistics": "Route Statistics",
+    "noData": "No route data available.",
+    "totalPassengers": "Total Passengers",
+    "totalTrips": "Total Trips",
+    "route": "Route {{number}}",
+    "trips": "Trips",
+    "passengers": "Passengers",
+    "avgPerTrip": "Avg/Trip"
+  },
+  "fleet": {
+    "statusDistribution": "Fleet Status Distribution",
+    "healthOverview": "Fleet Health Overview",
+    "noHealthData": "No fleet health data available.",
+    "fuelLevel": "Fuel Level",
+    "engineStatus": {
+      "good": "Good",
+      "warning": "Warning",
+      "critical": "Critical"
+    }
+  }
+}

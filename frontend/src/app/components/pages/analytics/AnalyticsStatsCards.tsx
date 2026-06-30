@@ -1,4 +1,5 @@
 import { Clock, DollarSign, Fuel, TrendingDown, TrendingUp, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { AnalyticsSummary } from '../../../lib/api-types';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import {
@@ -15,11 +16,12 @@ type AnalyticsStatsCardsProps = {
 };
 
 export function AnalyticsStatsCards({ summary, trends, dayCount }: AnalyticsStatsCardsProps) {
+  const { t } = useTranslation('analytics');
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-slate-600">Total Revenue</CardTitle>
+          <CardTitle className="text-sm font-medium text-slate-600">{t('stats.totalRevenue')}</CardTitle>
           <DollarSign className="size-4 text-green-600" />
         </CardHeader>
         <CardContent>
@@ -30,18 +32,18 @@ export function AnalyticsStatsCards({ summary, trends, dayCount }: AnalyticsStat
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-slate-600">Avg On-Time Performance</CardTitle>
+          <CardTitle className="text-sm font-medium text-slate-600">{t('stats.avgOnTime')}</CardTitle>
           <Clock className="size-4 text-blue-600" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{summary.onTimePercentage}%</div>
-          <p className="mt-1 text-xs text-slate-500">Across all routes</p>
+          <p className="mt-1 text-xs text-slate-500">{t('stats.acrossAllRoutes')}</p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-slate-600">Total Passengers</CardTitle>
+          <CardTitle className="text-sm font-medium text-slate-600">{t('stats.totalPassengers')}</CardTitle>
           <Users className="size-4 text-purple-600" />
         </CardHeader>
         <CardContent>
@@ -52,13 +54,13 @@ export function AnalyticsStatsCards({ summary, trends, dayCount }: AnalyticsStat
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-slate-600">Fuel Consumption</CardTitle>
+          <CardTitle className="text-sm font-medium text-slate-600">{t('stats.fuelConsumption')}</CardTitle>
           <Fuel className="size-4 text-orange-600" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{Math.round(summary.totalFuelConsumption)}L</div>
           <p className="mt-1 text-xs text-slate-500">
-            Avg {averageDailyFuel(summary.totalFuelConsumption, dayCount)}L per selected day
+            {t('stats.avgPerDay', { value: averageDailyFuel(summary.totalFuelConsumption, dayCount) })}
           </p>
         </CardContent>
       </Card>
@@ -67,6 +69,7 @@ export function AnalyticsStatsCards({ summary, trends, dayCount }: AnalyticsStat
 }
 
 function TrendLine({ value }: { value: string }) {
+  const { t } = useTranslation('analytics');
   const positive = Number(value) >= 0;
 
   return (
@@ -80,7 +83,7 @@ function TrendLine({ value }: { value: string }) {
         {positive ? '+' : ''}
         {value}%
       </span>
-      <span className="text-slate-500">first to last day</span>
+      <span className="text-slate-500">{t('stats.firstToLast')}</span>
     </div>
   );
 }

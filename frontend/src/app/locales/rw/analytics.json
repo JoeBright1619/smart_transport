@@ -1,0 +1,58 @@
+{
+  "title": "Isesengura n'Raporo",
+  "subtitle": "Ibipimo by'imikorere n'ubushishozi ku mikorere [TODO]",
+  "exportPdf": "Kuramo PDF",
+  "loading": "Birapakira isesengura...",
+  "noData": "Nta makuru y'isesengura yagaragaye",
+  "dateRange": {
+    "from": "Kuva",
+    "to": "Kugeza"
+  },
+  "stats": {
+    "totalRevenue": "Amafaranga Yose Yinjiye",
+    "avgOnTime": "Impuzandengo yo Kugera ku Gihe",
+    "acrossAllRoutes": "Ku mihanda yose",
+    "totalPassengers": "Abagenzi Bose",
+    "fuelConsumption": "Lisansi Yakoreshejwe",
+    "avgPerDay": "Impuzandengo ya {{value}}L ku munsi watoranyijwe [TODO]",
+    "firstToLast": "uhereye ku munsi wa mbere ukageza ku wa nyuma [TODO]"
+  },
+  "tabs": {
+    "trends": "Imigendekere y'Imikorere",
+    "routes": "Imikorere y'Imihanda",
+    "fleet": "Isesengura ry'Imodoka",
+    "custom": "Raporo Zihariye"
+  },
+  "trends": {
+    "dailyPerformance": "Imikorere ya buri munsi",
+    "revenuePassengers": "Amafaranga n'Abagenzi",
+    "fuelTrend": "Imigendekere ya Lisansi",
+    "onTime": "Ku Gihe %",
+    "totalTrips": "Ingendo Zose",
+    "revenue": "Amafaranga (RWF)",
+    "passengers": "Abagenzi",
+    "fuelLiters": "Lisansi (Litiro)"
+  },
+  "routes": {
+    "comparison": "Kugereranya Imikorere y'Imihanda",
+    "statistics": "Imibare y'Imihanda",
+    "noData": "Nta makuru y'umuhanda ahari.",
+    "totalPassengers": "Abagenzi Bose",
+    "totalTrips": "Ingendo Zose",
+    "route": "Umuhanda {{number}}",
+    "trips": "Ingendo",
+    "passengers": "Abagenzi",
+    "avgPerTrip": "Impuzandengo/Urugendo"
+  },
+  "fleet": {
+    "statusDistribution": "Imigabanyirize y'Imimerere y'Imodoka",
+    "healthOverview": "Incamake y'Ubuzima bw'Imodoka [TODO]",
+    "noHealthData": "Nta makuru y'ubuzima bw'imodoka ahari. [TODO]",
+    "fuelLevel": "Urwego rwa Lisansi",
+    "engineStatus": {
+      "good": "Nziza",
+      "warning": "Iburira",
+      "critical": "Mbi cyane"
+    }
+  }
+}
