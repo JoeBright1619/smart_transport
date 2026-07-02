@@ -7,7 +7,10 @@
     "loading": "Birapakirwa...",
     "language": "Ururimi",
     "english": "Icyongereza",
-    "kinyarwanda": "Ikinyarwanda"
+    "kinyarwanda": "Ikinyarwanda",
+    "retry": "Ongera ugerageze",
+    "somethingWentWrong": "Hari ikitagenze neza",
+    "notSet": "Ntibyashyizweho"
   },
   "nav": {
     "analyticsPlatform": "Isesengura",
@@ -119,5 +122,38 @@
     "unableToCreate": "Ntibishoboka gufungura konti",
     "registered": "Isosiyete yanditswe — nyamuneka injira",
     "errorOccurred": "Habaye ikibazo"
+  },
+  "acceptInvite": {
+    "invalidTitle": "Link y'Ubutumire Itariyo",
+    "invalidDesc": "Iyi link ibura ikimenyetso cy'ubutumire. Nyamuneka koresha link iri muri imeyili yawe.",
+    "backToLogin": "Subira ku Kwinjira",
+    "activatedTitle": "Konti Yatangijwe!",
+    "activatedDesc": "Ijambobanga ryawe ryashyizweho kandi konti yawe ubu irakora. Ushobora kwinjira hasi.",
+    "goToLogin": "Jya ku Kwinjira",
+    "title": "Emera Ubutumire Bwawe",
+    "subtitle": "Shyiraho ijambobanga kugira ngo utangize konti yawe.",
+    "newPassword": "Ijambobanga Rishya",
+    "atLeast8": "Byibuze inyuguti 8",
+    "confirmPassword": "Emeza Ijambobanga",
+    "repeatPassword": "Ongera wandike ijambobanga",
+    "mismatch": "Amagambobanga ntahura",
+    "activating": "Biratangizwa…",
+    "activateAccount": "Tangiza Konti",
+    "alreadyHaveAccount": "Usanzwe ufite konti?",
+    "logIn": "Injira",
+    "tokenMissing": "Link y'ubutumire itariyo — ikimenyetso kibuze",
+    "failActivate": "Gutangiza konti byanze — link ishobora kuba yararangiye"
+  },
+  "profile": {
+    "title": "Umwirondoro Wanjye",
+    "subtitle": "Amakuru ya konti yawe",
+    "personalInformation": "Amakuru Bwite",
+    "fullName": "Amazina yombi",
+    "email": "Aderesi imeyili",
+    "phone": "Nomero ya telefoni",
+    "phonePlaceholder": "urugero +250 7XX XXX XXX",
+    "role": "Inshingano",
+    "saved": "Byabitswe",
+    "unableSave": "Ntibishoboka kubika"
   }
 }

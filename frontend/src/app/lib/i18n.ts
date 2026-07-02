@@ -30,6 +30,8 @@ import enRoutes from '../locales/en/routes.json';
 import rwRoutes from '../locales/rw/routes.json';
 import enArrivals from '../locales/en/arrivals.json';
 import rwArrivals from '../locales/rw/arrivals.json';
+import enSecurity from '../locales/en/security.json';
+import rwSecurity from '../locales/rw/security.json';
 
 // localStorage key the chosen language is persisted under — mirrors the
 // `st-access-token` convention in api-client.ts.
@@ -43,13 +45,13 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      en: { common: enCommon, errors: enErrors, passenger: enPassenger, fleet: enFleet, dispatch: enDispatch, drivers: enDrivers, maintenance: enMaintenance, analytics: enAnalytics, admin: enAdmin, dashboard: enDashboard, tracking: enTracking, alerts: enAlerts, routes: enRoutes, arrivals: enArrivals },
-      rw: { common: rwCommon, errors: rwErrors, passenger: rwPassenger, fleet: rwFleet, dispatch: rwDispatch, drivers: rwDrivers, maintenance: rwMaintenance, analytics: rwAnalytics, admin: rwAdmin, dashboard: rwDashboard, tracking: rwTracking, alerts: rwAlerts, routes: rwRoutes, arrivals: rwArrivals },
+      en: { common: enCommon, errors: enErrors, passenger: enPassenger, fleet: enFleet, dispatch: enDispatch, drivers: enDrivers, maintenance: enMaintenance, analytics: enAnalytics, admin: enAdmin, dashboard: enDashboard, tracking: enTracking, alerts: enAlerts, routes: enRoutes, arrivals: enArrivals, security: enSecurity },
+      rw: { common: rwCommon, errors: rwErrors, passenger: rwPassenger, fleet: rwFleet, dispatch: rwDispatch, drivers: rwDrivers, maintenance: rwMaintenance, analytics: rwAnalytics, admin: rwAdmin, dashboard: rwDashboard, tracking: rwTracking, alerts: rwAlerts, routes: rwRoutes, arrivals: rwArrivals, security: rwSecurity },
     },
     fallbackLng: 'en',
     supportedLngs: SUPPORTED_LANGUAGES,
     defaultNS: 'common',
-    ns: ['common', 'errors', 'passenger', 'fleet', 'dispatch', 'drivers', 'maintenance', 'analytics', 'admin', 'dashboard', 'tracking', 'alerts', 'routes', 'arrivals'],
+    ns: ['common', 'errors', 'passenger', 'fleet', 'dispatch', 'drivers', 'maintenance', 'analytics', 'admin', 'dashboard', 'tracking', 'alerts', 'routes', 'arrivals', 'security'],
     detection: {
       order: ['localStorage', 'navigator'],
       lookupLocalStorage: LANG_KEY,

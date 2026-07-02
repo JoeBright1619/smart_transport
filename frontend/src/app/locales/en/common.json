@@ -7,7 +7,10 @@
     "loading": "Loading...",
     "language": "Language",
     "english": "English",
-    "kinyarwanda": "Kinyarwanda"
+    "kinyarwanda": "Kinyarwanda",
+    "retry": "Retry",
+    "somethingWentWrong": "Something went wrong",
+    "notSet": "Not set"
   },
   "nav": {
     "analyticsPlatform": "Analytics",
@@ -119,5 +122,38 @@
     "unableToCreate": "Unable to create account",
     "registered": "Company registered — please sign in",
     "errorOccurred": "An error occurred"
+  },
+  "acceptInvite": {
+    "invalidTitle": "Invalid Invitation Link",
+    "invalidDesc": "This link is missing the invitation token. Please use the link from your email.",
+    "backToLogin": "Back to Login",
+    "activatedTitle": "Account Activated!",
+    "activatedDesc": "Your password has been set and your account is now active. You can log in below.",
+    "goToLogin": "Go to Login",
+    "title": "Accept Your Invitation",
+    "subtitle": "Set a password to activate your account.",
+    "newPassword": "New Password",
+    "atLeast8": "At least 8 characters",
+    "confirmPassword": "Confirm Password",
+    "repeatPassword": "Repeat your password",
+    "mismatch": "Passwords do not match",
+    "activating": "Activating…",
+    "activateAccount": "Activate Account",
+    "alreadyHaveAccount": "Already have an account?",
+    "logIn": "Log in",
+    "tokenMissing": "Invalid invitation link — token is missing",
+    "failActivate": "Failed to activate account — the link may have expired"
+  },
+  "profile": {
+    "title": "My Profile",
+    "subtitle": "Your account details",
+    "personalInformation": "Personal Information",
+    "fullName": "Full name",
+    "email": "Email address",
+    "phone": "Phone number",
+    "phonePlaceholder": "e.g. +250 7XX XXX XXX",
+    "role": "Role",
+    "saved": "Saved",
+    "unableSave": "Unable to save"
   }
 }

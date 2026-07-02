@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { UserCircle, Pencil, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../ui/button';
@@ -11,6 +12,7 @@ import type { UserRead } from '../../lib/api-types';
 type EditingField = 'fullName' | 'phone' | null;
 
 export function ProfilePage() {
+  const { t } = useTranslation('common');
   const { user, updateProfile } = useAuth();
   const [serverUser, setServerUser] = useState<UserRead | null>(null);
   const [editing, setEditing] = useState<EditingField>(null);
@@ -48,9 +50,9 @@ export function ProfilePage() {
       setServerUser(updated);
       updateProfile({ fullName: updated.fullName, phone: updated.phone ?? undefined });
       setEditing(null);
-      toast.success('Saved');
+      toast.success(t('profile.saved'));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Unable to save');
+      toast.error(err instanceof Error ? err.message : t('profile.unableSave'));
     } finally {
       setSaving(false);
     }
@@ -59,20 +61,20 @@ export function ProfilePage() {
   return (
     <div className="max-w-lg space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">My Profile</h1>
-        <p className="text-slate-600">Your account details</p>
+        <h1 className="text-2xl font-bold">{t('profile.title')}</h1>
+        <p className="text-slate-600">{t('profile.subtitle')}</p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserCircle className="size-5" />
-            Personal Information
+            {t('profile.personalInformation')}
           </CardTitle>
         </CardHeader>
         <CardContent className="divide-y">
           <ProfileRow
-            label="Full name"
+            label={t('profile.fullName')}
             value={display.fullName}
             field="fullName"
             editing={editing}
@@ -84,7 +86,7 @@ export function ProfilePage() {
             onCancel={cancelEdit}
           />
           <ProfileRow
-            label="Email address"
+            label={t('profile.email')}
             value={display.email}
             editing={editing}
             draft={draft}
@@ -95,10 +97,10 @@ export function ProfilePage() {
             onCancel={cancelEdit}
           />
           <ProfileRow
-            label="Phone number"
+            label={t('profile.phone')}
             value={display.phone ?? ''}
             field="phone"
-            placeholder="e.g. +250 7XX XXX XXX"
+            placeholder={t('profile.phonePlaceholder')}
             editing={editing}
             draft={draft}
             saving={saving}
@@ -108,8 +110,8 @@ export function ProfilePage() {
             onCancel={cancelEdit}
           />
           <ProfileRow
-            label="Role"
-            value={user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+            label={t('profile.role')}
+            value={t(`admin:users.role_${user.role}`, { defaultValue: user.role.charAt(0).toUpperCase() + user.role.slice(1) })}
             editing={editing}
             draft={draft}
             saving={saving}
@@ -151,6 +153,7 @@ function ProfileRow({
   onSave,
   onCancel,
 }: ProfileRowProps) {
+  const { t } = useTranslation('common');
   const isEditing = field !== undefined && editing === field;
 
   return (
@@ -171,7 +174,7 @@ function ProfileRow({
           />
         ) : (
           <p className="text-sm font-medium text-slate-800 truncate">
-            {value || <span className="text-slate-400 italic">Not set</span>}
+            {value || <span className="text-slate-400 italic">{t('common.notSet')}</span>}
           </p>
         )}
       </div>
