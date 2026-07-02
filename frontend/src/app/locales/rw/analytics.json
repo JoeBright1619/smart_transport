@@ -54,5 +54,72 @@
       "warning": "Iburira",
       "critical": "Mbi cyane"
     }
+  },
+  "reports": {
+    "customReports": "Raporo Zihariye",
+    "exportCsv": "Kuramo CSV",
+    "exportPdf": "Kuramo PDF",
+    "loadingReport": "Birapakira raporo…",
+    "generatedAt": "Byakozwe kuri {{time}}",
+    "from": "Kuva",
+    "to": "Kugeza",
+    "tabs": {
+      "route": "Umuhanda",
+      "daily": "Buri munsi",
+      "fleet": "Imodoka",
+      "driver": "Umushoferi",
+      "passenger": "Umugenzi"
+    },
+    "filterByRoute": "Shungura ukurikije Umuhanda",
+    "allRoutes": "Imihanda Yose",
+    "routeOption": "Umuhanda {{number}} — {{name}}",
+    "dailyAggregation": "Kwerekana imibare ya buri munsi mu gihe cyatoranyijwe [TODO]",
+    "filterByVehicle": "Shungura ukurikije Imodoka",
+    "allVehicles": "Imodoka Zose",
+    "vehicleOption": "{{registration}} — {{model}}",
+    "filterByDriver": "Shungura ukurikije Umushoferi",
+    "allDrivers": "Abashoferi Bose",
+    "empty": {
+      "route": "Nta makuru y'umuhanda ahuye n'ibyatoranyijwe.",
+      "daily": "Nta makuru ya buri munsi ku gihe cyatoranyijwe.",
+      "fleet": "Nta makuru y'imodoka ahuye n'ibyatoranyijwe.",
+      "driver": "Nta makuru y'umushoferi ahuye n'ibyatoranyijwe."
+    },
+    "columns": {
+      "route": "Umuhanda",
+      "onTimeRate": "Ku Gihe %",
+      "avgDuration": "Impuzandengo y'Igihe (iminota)",
+      "passengers": "Abagenzi",
+      "utilisation": "Imikoreshereze %",
+      "registration": "Plaki",
+      "maintenanceEvents": "Ibikorwa by'Isanwa",
+      "totalKm": "Km Zose",
+      "status": "Imimerere",
+      "driver": "Umushoferi",
+      "tripsCompleted": "Ingendo Zarangiye"
+    },
+    "daily": {
+      "totalTrips": "Ingendo Zose",
+      "completed": "Zarangiye",
+      "totalPassengers": "Abagenzi Bose",
+      "tripsPerDay": "Ingendo ku Munsi",
+      "cancelled": "Zahagaritswe"
+    },
+    "passenger": {
+      "selectPassenger": "Hitamo Umugenzi",
+      "loadingPassengers": "Birapakira abagenzi…",
+      "choosePassenger": "— Hitamo umugenzi —",
+      "selectToView": "Hitamo umugenzi haruguru kugira ngo urebe amateka y'ingendo ze. [TODO]",
+      "totalTrips": "Ingendo Zose",
+      "onTimeRate": "Igipimo cyo Kugera ku Gihe",
+      "colDate": "Itariki",
+      "colRoute": "Umuhanda",
+      "colBoarding": "Ihagarariro ryo Kuzamukira",
+      "colAlighting": "Ihagarariro ryo Kumanukira",
+      "colDeparture": "Kugenda (Byateganyijwe / Nyakuri)",
+      "colOnTime": "Ku Gihe",
+      "onTime": "Ku Gihe",
+      "late": "Yatinze"
+    }
   }
 }

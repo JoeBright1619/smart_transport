@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Download, Info, Loader2, User } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { messageForError } from '../../../lib/error-messages';
 import { Button } from '../../ui/button';
 import { Card, CardContent } from '../../ui/card';
 import { Label } from '../../ui/label';
@@ -12,14 +14,16 @@ import { EmptyState, TableSkeleton } from './FilteredReportTables';
 // ─── Passenger-specific sub-components ───────────────────────────────────────
 
 function OnTimeBadge({ onTime }: Readonly<{ onTime: boolean }>) {
+  const { t } = useTranslation('analytics');
   return (
     <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${onTime ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-      {onTime ? 'On Time' : 'Late'}
+      {onTime ? t('reports.passenger.onTime') : t('reports.passenger.late')}
     </span>
   );
 }
 
 function PassengerReportTable({ report }: Readonly<{ report: PassengerReportResponse }>) {
+  const { t } = useTranslation('analytics');
   if (report.message && report.data.length === 0) {
     return (
       <div className="flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
@@ -33,7 +37,7 @@ function PassengerReportTable({ report }: Readonly<{ report: PassengerReportResp
   return (
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
-        {[{ label: 'Total Trips', value: total.toLocaleString() }, { label: 'On-Time Rate', value: `${onTimeRate}%` }].map(({ label, value }) => (
+        {[{ label: t('reports.passenger.totalTrips'), value: total.toLocaleString() }, { label: t('reports.passenger.onTimeRate'), value: `${onTimeRate}%` }].map(({ label, value }) => (
           <Card key={label} className="bg-gradient-to-br from-slate-800 to-slate-700 text-white">
             <CardContent className="p-4"><p className="text-xs text-slate-400">{label}</p><p className="mt-1 text-2xl font-bold">{value}</p></CardContent>
           </Card>
@@ -42,7 +46,7 @@ function PassengerReportTable({ report }: Readonly<{ report: PassengerReportResp
       <div className="overflow-x-auto rounded-lg border border-slate-200">
         <table className="w-full text-sm">
           <thead className="bg-slate-800 text-left text-xs uppercase text-white">
-            <tr>{['Date', 'Route', 'Boarding Stop', 'Alighting Stop', 'Dep (Sched / Actual)', 'On Time'].map((h) => <th key={h} className="px-4 py-3">{h}</th>)}</tr>
+            <tr>{[t('reports.passenger.colDate'), t('reports.passenger.colRoute'), t('reports.passenger.colBoarding'), t('reports.passenger.colAlighting'), t('reports.passenger.colDeparture'), t('reports.passenger.colOnTime')].map((h) => <th key={h} className="px-4 py-3">{h}</th>)}</tr>
           </thead>
           <tbody>
             {report.data.map((row: PassengerTripRecord, i: number) => (
@@ -68,6 +72,7 @@ const SELECT_CLS =
   'h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400';
 
 export function PassengerReportTab({ dateFrom, dateTo }: Props) {
+  const { t } = useTranslation('analytics');
   const [passengers, setPassengers] = useState<UserRead[]>([]);
   const [loadingPassengers, setLoadingPassengers] = useState(true);
   const [selectedId, setSelectedId] = useState('');
@@ -92,7 +97,7 @@ export function PassengerReportTab({ dateFrom, dateTo }: Props) {
       const data = await getPassengerReport({ passengerId, dateFrom, dateTo });
       setReport(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load passenger report');
+      setError(messageForError(err));
       setReport(null);
     } finally {
       setLoadingReport(false);
@@ -122,10 +127,10 @@ export function PassengerReportTab({ dateFrom, dateTo }: Props) {
       {/* Passenger picker */}
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <Label htmlFor="passenger-picker" className="text-xs">Select Passenger</Label>
+          <Label htmlFor="passenger-picker" className="text-xs">{t('reports.passenger.selectPassenger')}</Label>
           {loadingPassengers ? (
             <div className="flex h-9 items-center gap-2 text-xs text-slate-400">
-              <Loader2 className="size-3.5 animate-spin" /> Loading passengers…
+              <Loader2 className="size-3.5 animate-spin" /> {t('reports.passenger.loadingPassengers')}
             </div>
           ) : (
             <select
@@ -134,7 +139,7 @@ export function PassengerReportTab({ dateFrom, dateTo }: Props) {
               onChange={(e) => handleSelect(e.target.value)}
               className={SELECT_CLS}
             >
-              <option value="">— Choose a passenger —</option>
+              <option value="">{t('reports.passenger.choosePassenger')}</option>
               {passengers.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.fullName ?? p.email ?? p.id}
@@ -148,7 +153,7 @@ export function PassengerReportTab({ dateFrom, dateTo }: Props) {
           <div className="flex items-end">
             <Button variant="outline" size="sm" onClick={handleExportCsv}>
               <Download className="mr-1.5 size-3.5" />
-              Export CSV
+              {t('reports.exportCsv')}
             </Button>
           </div>
         )}
@@ -177,7 +182,7 @@ export function PassengerReportTab({ dateFrom, dateTo }: Props) {
 
       {/* Results */}
       {!selectedId ? (
-        <EmptyState message="Select a passenger above to view their trip history." />
+        <EmptyState message={t('reports.passenger.selectToView')} />
       ) : loadingReport ? (
         <TableSkeleton />
       ) : report ? (

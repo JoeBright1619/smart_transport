@@ -9,6 +9,7 @@ import {
   YAxis,
 } from 'recharts';
 import { SearchX } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import type {
   DailyReportData,
@@ -124,14 +125,15 @@ export function StatusBadge({ status }: { status: string }) {
 // ─── Report-type result views ─────────────────────────────────────────────────
 
 export function RouteReportTable({ data }: { data: RouteReportData[] }) {
+  const { t } = useTranslation('analytics');
   return (
     <SortableTable
       columns={[
-        { key: 'routeName', label: 'Route' },
-        { key: 'onTimeRate', label: 'On-Time %' },
-        { key: 'avgTripDurationMinutes', label: 'Avg Duration (min)' },
-        { key: 'totalPassengers', label: 'Passengers' },
-        { key: 'utilisationPercentage', label: 'Utilisation %' },
+        { key: 'routeName', label: t('reports.columns.route') },
+        { key: 'onTimeRate', label: t('reports.columns.onTimeRate') },
+        { key: 'avgTripDurationMinutes', label: t('reports.columns.avgDuration') },
+        { key: 'totalPassengers', label: t('reports.columns.passengers') },
+        { key: 'utilisationPercentage', label: t('reports.columns.utilisation') },
       ]}
       data={data}
       formatters={{
@@ -144,6 +146,7 @@ export function RouteReportTable({ data }: { data: RouteReportData[] }) {
 }
 
 export function DailyReportChart({ data }: { data: DailyReportData[] }) {
+  const { t } = useTranslation('analytics');
   const summaryTrips = data.reduce((s, r) => s + r.totalTrips, 0);
   const summaryCompleted = data.reduce((s, r) => s + r.completedTrips, 0);
   const summaryPassengers = data.reduce((s, r) => s + r.totalPassengers, 0);
@@ -152,9 +155,9 @@ export function DailyReportChart({ data }: { data: DailyReportData[] }) {
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-3">
         {[
-          { label: 'Total Trips', value: summaryTrips.toLocaleString() },
-          { label: 'Completed', value: summaryCompleted.toLocaleString() },
-          { label: 'Total Passengers', value: summaryPassengers.toLocaleString() },
+          { label: t('reports.daily.totalTrips'), value: summaryTrips.toLocaleString() },
+          { label: t('reports.daily.completed'), value: summaryCompleted.toLocaleString() },
+          { label: t('reports.daily.totalPassengers'), value: summaryPassengers.toLocaleString() },
         ].map(({ label, value }) => (
           <Card key={label} className="bg-gradient-to-br from-slate-800 to-slate-700 text-white">
             <CardContent className="p-4">
@@ -167,7 +170,7 @@ export function DailyReportChart({ data }: { data: DailyReportData[] }) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm">Trips per Day</CardTitle>
+          <CardTitle className="text-sm">{t('reports.daily.tripsPerDay')}</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={240}>
@@ -176,8 +179,8 @@ export function DailyReportChart({ data }: { data: DailyReportData[] }) {
               <XAxis dataKey="date" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Bar dataKey="completedTrips" fill="#10B981" name="Completed" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="cancelledTrips" fill="#EF4444" name="Cancelled" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="completedTrips" fill="#10B981" name={t('reports.daily.completed')} radius={[3, 3, 0, 0]} />
+              <Bar dataKey="cancelledTrips" fill="#EF4444" name={t('reports.daily.cancelled')} radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -187,12 +190,20 @@ export function DailyReportChart({ data }: { data: DailyReportData[] }) {
 }
 
 export function FleetReportTable({ data }: { data: FleetReportData[] }) {
+  const { t } = useTranslation('analytics');
+  const headers = [
+    t('reports.columns.registration'),
+    t('reports.columns.utilisation'),
+    t('reports.columns.maintenanceEvents'),
+    t('reports.columns.totalKm'),
+    t('reports.columns.status'),
+  ];
   return (
     <div className="overflow-x-auto rounded-lg border border-slate-200">
       <table className="w-full text-sm">
         <thead className="bg-slate-800 text-left text-xs uppercase text-white">
           <tr>
-            {['Registration', 'Utilisation %', 'Maintenance Events', 'Total km', 'Status'].map((h) => (
+            {headers.map((h) => (
               <th key={h} className="px-4 py-3">{h}</th>
             ))}
           </tr>
@@ -216,14 +227,15 @@ export function FleetReportTable({ data }: { data: FleetReportData[] }) {
 }
 
 export function DriverReportTable({ data }: { data: DriverReportData[] }) {
+  const { t } = useTranslation('analytics');
   return (
     <SortableTable
       columns={[
-        { key: 'driverName', label: 'Driver' },
-        { key: 'tripsCompleted', label: 'Trips Completed' },
-        { key: 'onTimeRate', label: 'On-Time %' },
-        { key: 'avgTripDurationMinutes', label: 'Avg Duration (min)' },
-        { key: 'totalPassengers', label: 'Passengers' },
+        { key: 'driverName', label: t('reports.columns.driver') },
+        { key: 'tripsCompleted', label: t('reports.columns.tripsCompleted') },
+        { key: 'onTimeRate', label: t('reports.columns.onTimeRate') },
+        { key: 'avgTripDurationMinutes', label: t('reports.columns.avgDuration') },
+        { key: 'totalPassengers', label: t('reports.columns.passengers') },
       ]}
       data={data}
       formatters={{

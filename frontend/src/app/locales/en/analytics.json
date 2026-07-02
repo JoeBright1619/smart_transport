@@ -54,5 +54,72 @@
       "warning": "Warning",
       "critical": "Critical"
     }
+  },
+  "reports": {
+    "customReports": "Custom Reports",
+    "exportCsv": "Export CSV",
+    "exportPdf": "Export PDF",
+    "loadingReport": "Loading report…",
+    "generatedAt": "Generated at {{time}}",
+    "from": "From",
+    "to": "To",
+    "tabs": {
+      "route": "Route",
+      "daily": "Daily",
+      "fleet": "Fleet",
+      "driver": "Driver",
+      "passenger": "Passenger"
+    },
+    "filterByRoute": "Filter by Route",
+    "allRoutes": "All Routes",
+    "routeOption": "Route {{number}} — {{name}}",
+    "dailyAggregation": "Showing daily aggregation for the selected date range",
+    "filterByVehicle": "Filter by Vehicle",
+    "allVehicles": "All Vehicles",
+    "vehicleOption": "{{registration}} — {{model}}",
+    "filterByDriver": "Filter by Driver",
+    "allDrivers": "All Drivers",
+    "empty": {
+      "route": "No route data matches the selected filters.",
+      "daily": "No daily data for the selected date range.",
+      "fleet": "No fleet data matches the selected filters.",
+      "driver": "No driver data matches the selected filters."
+    },
+    "columns": {
+      "route": "Route",
+      "onTimeRate": "On-Time %",
+      "avgDuration": "Avg Duration (min)",
+      "passengers": "Passengers",
+      "utilisation": "Utilisation %",
+      "registration": "Registration",
+      "maintenanceEvents": "Maintenance Events",
+      "totalKm": "Total km",
+      "status": "Status",
+      "driver": "Driver",
+      "tripsCompleted": "Trips Completed"
+    },
+    "daily": {
+      "totalTrips": "Total Trips",
+      "completed": "Completed",
+      "totalPassengers": "Total Passengers",
+      "tripsPerDay": "Trips per Day",
+      "cancelled": "Cancelled"
+    },
+    "passenger": {
+      "selectPassenger": "Select Passenger",
+      "loadingPassengers": "Loading passengers…",
+      "choosePassenger": "— Choose a passenger —",
+      "selectToView": "Select a passenger above to view their trip history.",
+      "totalTrips": "Total Trips",
+      "onTimeRate": "On-Time Rate",
+      "colDate": "Date",
+      "colRoute": "Route",
+      "colBoarding": "Boarding Stop",
+      "colAlighting": "Alighting Stop",
+      "colDeparture": "Dep (Sched / Actual)",
+      "colOnTime": "On Time",
+      "onTime": "On Time",
+      "late": "Late"
+    }
   }
 }

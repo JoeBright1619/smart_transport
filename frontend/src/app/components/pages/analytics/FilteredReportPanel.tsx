@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Download, FileDown, FileText, Filter, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { messageForError } from '../../../lib/error-messages';
 import { Button } from '../../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Input } from '../../ui/input';
@@ -56,6 +58,7 @@ function FilterSelect({ id, label, value, onChange, children }: Readonly<{
 }
 
 export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredReportPanelProps) {
+  const { t } = useTranslation('analytics');
   const { user } = useAuth();
   const initialRange = defaultDateRange();
 
@@ -87,7 +90,7 @@ export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredRepor
       });
       setResult(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load report');
+      setError(messageForError(err));
       setResult(null);
     } finally {
       setLoading(false);
@@ -138,7 +141,7 @@ export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredRepor
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <Filter className="size-4 text-slate-500" />
-            <CardTitle className="text-base">Custom Reports</CardTitle>
+            <CardTitle className="text-base">{t('reports.customReports')}</CardTitle>
           </div>
           {hasData && (
             <div className="flex gap-2">
@@ -149,7 +152,7 @@ export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredRepor
                 onClick={handleExportCsv}
               >
                 <Download className="mr-1.5 size-3.5" />
-                Export CSV
+                {t('reports.exportCsv')}
               </Button>
               <Button
                 id="filtered-report-export-pdf"
@@ -158,7 +161,7 @@ export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredRepor
                 onClick={() => void handleExportPdf()}
               >
                 <FileDown className="mr-1.5 size-3.5" />
-                Export PDF
+                {t('reports.exportPdf')}
               </Button>
             </div>
           )}
@@ -168,19 +171,19 @@ export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredRepor
       <CardContent className="pt-4">
         <Tabs value={reportType} onValueChange={handleTabChange}>
           <TabsList className="mb-4">
-            <TabsTrigger value="route" id="report-tab-route">Route</TabsTrigger>
-            <TabsTrigger value="daily" id="report-tab-daily">Daily</TabsTrigger>
-            <TabsTrigger value="fleet" id="report-tab-fleet">Fleet</TabsTrigger>
-            <TabsTrigger value="driver" id="report-tab-driver">Driver</TabsTrigger>
+            <TabsTrigger value="route" id="report-tab-route">{t('reports.tabs.route')}</TabsTrigger>
+            <TabsTrigger value="daily" id="report-tab-daily">{t('reports.tabs.daily')}</TabsTrigger>
+            <TabsTrigger value="fleet" id="report-tab-fleet">{t('reports.tabs.fleet')}</TabsTrigger>
+            <TabsTrigger value="driver" id="report-tab-driver">{t('reports.tabs.driver')}</TabsTrigger>
             {user?.role === 'superadmin' && (
-              <TabsTrigger value="passenger" id="report-tab-passenger">Passenger</TabsTrigger>
+              <TabsTrigger value="passenger" id="report-tab-passenger">{t('reports.tabs.passenger')}</TabsTrigger>
             )}
           </TabsList>
 
           {/* ── Common date range ── */}
           <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-1">
-              <Label htmlFor="report-date-from" className="text-xs">From</Label>
+              <Label htmlFor="report-date-from" className="text-xs">{t('reports.from')}</Label>
               <Input
                 id="report-date-from"
                 type="date"
@@ -190,7 +193,7 @@ export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredRepor
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="report-date-to" className="text-xs">To</Label>
+              <Label htmlFor="report-date-to" className="text-xs">{t('reports.to')}</Label>
               <Input
                 id="report-date-to"
                 type="date"
@@ -202,28 +205,28 @@ export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredRepor
 
             {/* ── Context-sensitive filter ── */}
             <TabsContent value="route" className="m-0 col-span-2">
-              <FilterSelect id="report-route-picker" label="Filter by Route" value={selectedRouteId} onChange={setSelectedRouteId}>
-                <option value="">All Routes</option>
-                {routes.map((r) => <option key={r.id} value={r.id}>Route {r.number} — {r.name}</option>)}
+              <FilterSelect id="report-route-picker" label={t('reports.filterByRoute')} value={selectedRouteId} onChange={setSelectedRouteId}>
+                <option value="">{t('reports.allRoutes')}</option>
+                {routes.map((r) => <option key={r.id} value={r.id}>{t('reports.routeOption', { number: r.number, name: r.name })}</option>)}
               </FilterSelect>
             </TabsContent>
 
             <TabsContent value="daily" className="m-0 col-span-2">
               <div className="flex h-9 items-center text-xs text-slate-400 italic">
-                Showing daily aggregation for the selected date range
+                {t('reports.dailyAggregation')}
               </div>
             </TabsContent>
 
             <TabsContent value="fleet" className="m-0 col-span-2">
-              <FilterSelect id="report-vehicle-picker" label="Filter by Vehicle" value={selectedVehicleId} onChange={setSelectedVehicleId}>
-                <option value="">All Vehicles</option>
-                {vehicles.map((v) => <option key={v.id} value={v.id}>{v.registrationNumber} — {v.model}</option>)}
+              <FilterSelect id="report-vehicle-picker" label={t('reports.filterByVehicle')} value={selectedVehicleId} onChange={setSelectedVehicleId}>
+                <option value="">{t('reports.allVehicles')}</option>
+                {vehicles.map((v) => <option key={v.id} value={v.id}>{t('reports.vehicleOption', { registration: v.registrationNumber, model: v.model })}</option>)}
               </FilterSelect>
             </TabsContent>
 
             <TabsContent value="driver" className="m-0 col-span-2">
-              <FilterSelect id="report-driver-picker" label="Filter by Driver" value={selectedDriverId} onChange={setSelectedDriverId}>
-                <option value="">All Drivers</option>
+              <FilterSelect id="report-driver-picker" label={t('reports.filterByDriver')} value={selectedDriverId} onChange={setSelectedDriverId}>
+                <option value="">{t('reports.allDrivers')}</option>
                 {drivers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
               </FilterSelect>
             </TabsContent>
@@ -233,7 +236,7 @@ export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredRepor
           {loading && (
             <div className="mb-3 flex items-center gap-2 text-xs text-slate-500">
               <Loader2 className="size-3.5 animate-spin" />
-              Loading report…
+              {t('reports.loadingReport')}
             </div>
           )}
           {error && !loading && (
@@ -247,7 +250,7 @@ export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredRepor
             {loading ? (
               <TableSkeleton />
             ) : !hasData ? (
-              <EmptyState message="No route data matches the selected filters." />
+              <EmptyState message={t('reports.empty.route')} />
             ) : (
               <RouteReportTable data={result!.data as RouteReportData[]} />
             )}
@@ -257,7 +260,7 @@ export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredRepor
             {loading ? (
               <TableSkeleton />
             ) : !hasData ? (
-              <EmptyState message="No daily data for the selected date range." />
+              <EmptyState message={t('reports.empty.daily')} />
             ) : (
               <DailyReportChart data={result!.data as DailyReportData[]} />
             )}
@@ -267,7 +270,7 @@ export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredRepor
             {loading ? (
               <TableSkeleton />
             ) : !hasData ? (
-              <EmptyState message="No fleet data matches the selected filters." />
+              <EmptyState message={t('reports.empty.fleet')} />
             ) : (
               <FleetReportTable data={result!.data as FleetReportData[]} />
             )}
@@ -277,7 +280,7 @@ export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredRepor
             {loading ? (
               <TableSkeleton />
             ) : !hasData ? (
-              <EmptyState message="No driver data matches the selected filters." />
+              <EmptyState message={t('reports.empty.driver')} />
             ) : (
               <DriverReportTable data={result!.data as DriverReportData[]} />
             )}
@@ -294,7 +297,7 @@ export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredRepor
         {result && (
           <p className="mt-4 text-right text-xs text-slate-400">
             <FileText className="mr-1 inline size-3" />
-            Generated at {new Date(result.generatedAt).toLocaleString()}
+            {t('reports.generatedAt', { time: new Date(result.generatedAt).toLocaleString() })}
           </p>
         )}
       </CardContent>
