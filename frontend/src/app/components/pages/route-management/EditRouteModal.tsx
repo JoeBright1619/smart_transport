@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Pencil, Route as RouteIcon } from 'lucide-react';
 import type { RouteRead, RouteUpdate } from '../../../lib/api-types';
@@ -41,6 +42,7 @@ function toRouteFormState(route: RouteRead): RouteFormState {
 }
 
 export function EditRouteModal({ route, onUpdateRoute, disabled }: EditRouteModalProps) {
+  const { t } = useTranslation('routes');
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<RouteFormState>(() => toRouteFormState(route));
   const [submitting, setSubmitting] = useState(false);
@@ -71,7 +73,7 @@ export function EditRouteModal({ route, onUpdateRoute, disabled }: EditRouteModa
       await onUpdateRoute(route.id, payload);
       setOpen(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Unable to update route');
+      toast.error(error instanceof Error ? error.message : t('unableUpdate'));
     } finally {
       setSubmitting(false);
     }
@@ -82,17 +84,17 @@ export function EditRouteModal({ route, onUpdateRoute, disabled }: EditRouteModa
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" disabled={disabled}>
           <Pencil className="mr-2 size-4" />
-          Edit
+          {t('edit')}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-5xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <RouteIcon className="size-5" />
-            Edit Route
+            {t('editRoute')}
           </DialogTitle>
           <DialogDescription>
-            Modify route details and stops.
+            {t('editRouteDesc')}
           </DialogDescription>
         </DialogHeader>
 
@@ -101,7 +103,7 @@ export function EditRouteModal({ route, onUpdateRoute, disabled }: EditRouteModa
           setForm={setForm}
           onSubmit={handleSubmit}
           submitting={submitting}
-          submitLabel="Save Changes"
+          submitLabel={t('saveChanges')}
           onCancel={() => setOpen(false)}
         />
       </DialogContent>

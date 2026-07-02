@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next';
 import type { ArrivalEstimate, RouteRead, StopRead } from '../../../lib/api-types';
 
 export const ALL_STOPS_ID = '__all__';
@@ -46,13 +47,13 @@ export function sortArrivals<T extends ArrivalEstimate>(estimates: T[]): T[] {
   });
 }
 
-export function etaLabel(estimate: ArrivalEstimate): string {
-  if (estimate.etaMinutes === null) return 'Stopped';
-  if (estimate.etaMinutes <= 1) return 'Arriving';
-  return `${estimate.etaMinutes} min`;
+export function etaLabel(estimate: ArrivalEstimate, t: TFunction): string {
+  if (estimate.etaMinutes === null) return t('etaStopped');
+  if (estimate.etaMinutes <= 1) return t('etaArriving');
+  return t('etaMinutes', { count: estimate.etaMinutes });
 }
 
-export function formatLastUpdated(value: Date | null): string {
-  if (!value) return 'Not refreshed yet';
-  return `Updated ${value.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+export function formatLastUpdated(value: Date | null, t: TFunction): string {
+  if (!value) return t('notRefreshed');
+  return t('updatedAt', { time: value.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
 }

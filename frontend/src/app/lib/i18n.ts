@@ -26,6 +26,10 @@ import enTracking from '../locales/en/tracking.json';
 import rwTracking from '../locales/rw/tracking.json';
 import enAlerts from '../locales/en/alerts.json';
 import rwAlerts from '../locales/rw/alerts.json';
+import enRoutes from '../locales/en/routes.json';
+import rwRoutes from '../locales/rw/routes.json';
+import enArrivals from '../locales/en/arrivals.json';
+import rwArrivals from '../locales/rw/arrivals.json';
 
 // localStorage key the chosen language is persisted under — mirrors the
 // `st-access-token` convention in api-client.ts.
@@ -39,13 +43,13 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      en: { common: enCommon, errors: enErrors, passenger: enPassenger, fleet: enFleet, dispatch: enDispatch, drivers: enDrivers, maintenance: enMaintenance, analytics: enAnalytics, admin: enAdmin, dashboard: enDashboard, tracking: enTracking, alerts: enAlerts },
-      rw: { common: rwCommon, errors: rwErrors, passenger: rwPassenger, fleet: rwFleet, dispatch: rwDispatch, drivers: rwDrivers, maintenance: rwMaintenance, analytics: rwAnalytics, admin: rwAdmin, dashboard: rwDashboard, tracking: rwTracking, alerts: rwAlerts },
+      en: { common: enCommon, errors: enErrors, passenger: enPassenger, fleet: enFleet, dispatch: enDispatch, drivers: enDrivers, maintenance: enMaintenance, analytics: enAnalytics, admin: enAdmin, dashboard: enDashboard, tracking: enTracking, alerts: enAlerts, routes: enRoutes, arrivals: enArrivals },
+      rw: { common: rwCommon, errors: rwErrors, passenger: rwPassenger, fleet: rwFleet, dispatch: rwDispatch, drivers: rwDrivers, maintenance: rwMaintenance, analytics: rwAnalytics, admin: rwAdmin, dashboard: rwDashboard, tracking: rwTracking, alerts: rwAlerts, routes: rwRoutes, arrivals: rwArrivals },
     },
     fallbackLng: 'en',
     supportedLngs: SUPPORTED_LANGUAGES,
     defaultNS: 'common',
-    ns: ['common', 'errors', 'passenger', 'fleet', 'dispatch', 'drivers', 'maintenance', 'analytics', 'admin', 'dashboard', 'tracking', 'alerts'],
+    ns: ['common', 'errors', 'passenger', 'fleet', 'dispatch', 'drivers', 'maintenance', 'analytics', 'admin', 'dashboard', 'tracking', 'alerts', 'routes', 'arrivals'],
     detection: {
       order: ['localStorage', 'navigator'],
       lookupLocalStorage: LANG_KEY,

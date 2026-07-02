@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Download, Upload, Wand2 } from 'lucide-react';
 import type { RouteRead } from '../../../lib/api-types';
@@ -16,22 +17,23 @@ import {
 } from '../../ui/dialog';
 
 function RouteTemplatesDialog({ routes }: { routes: RouteRead[] }) {
+  const { t } = useTranslation('routes');
   const templates = useMemo(() => routes.slice(0, 8), [routes]);
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline">Route templates</Button>
+        <Button variant="outline">{t('routeTemplates')}</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Route library templates</DialogTitle>
+          <DialogTitle>{t('routeLibraryTemplates')}</DialogTitle>
           <DialogDescription>
-            Use existing backend routes as templates for planning.
+            {t('templatesDesc')}
           </DialogDescription>
         </DialogHeader>
         {templates.length === 0 ? (
-          <p className="text-sm text-slate-500">No route templates available.</p>
+          <p className="text-sm text-slate-500">{t('noTemplates')}</p>
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
             {templates.map((route) => (
@@ -45,15 +47,15 @@ function RouteTemplatesDialog({ routes }: { routes: RouteRead[] }) {
                       <p className="font-medium">{route.name}</p>
                     </div>
                     <p className="mt-1 text-xs text-slate-500">
-                      {route.stops.length} stops - {route.distance} km - {route.duration} min
+                      {t('templateMeta', { stops: route.stops.length, distance: route.distance, duration: route.duration })}
                     </p>
                   </div>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => toast.message('Template application is not wired yet')}
+                    onClick={() => toast.message(t('templateNotWired'))}
                   >
-                    Use
+                    {t('use')}
                   </Button>
                 </div>
               </div>
@@ -61,7 +63,7 @@ function RouteTemplatesDialog({ routes }: { routes: RouteRead[] }) {
           </div>
         )}
         <DialogFooter>
-          <Button variant="outline">Manage templates</Button>
+          <Button variant="outline">{t('manageTemplates')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -69,46 +71,47 @@ function RouteTemplatesDialog({ routes }: { routes: RouteRead[] }) {
 }
 
 function RouteImportExportDialog() {
+  const { t } = useTranslation('routes');
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline">Import / Export</Button>
+        <Button variant="outline">{t('importExport')}</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Import / Export route data</DialogTitle>
+          <DialogTitle>{t('importExportTitle')}</DialogTitle>
           <DialogDescription>
-            Prototype import/export actions. Formats typically include GeoJSON, CSV, and GTFS shapes.
+            {t('importExportDesc')}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-lg border p-4">
             <p className="flex items-center gap-2 font-medium">
               <Upload className="size-4" />
-              Import
+              {t('importLabel')}
             </p>
-            <p className="mt-1 text-sm text-slate-600">Upload a route file or paste route definition.</p>
+            <p className="mt-1 text-sm text-slate-600">{t('uploadHint')}</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => toast.message('Upload file is not wired yet')}>
-                Upload file
+              <Button variant="outline" onClick={() => toast.message(t('uploadNotWired'))}>
+                {t('uploadFile')}
               </Button>
-              <Button variant="ghost" onClick={() => toast.message('Paste data is not wired yet')}>
-                Paste data
+              <Button variant="ghost" onClick={() => toast.message(t('pasteNotWired'))}>
+                {t('pasteData')}
               </Button>
             </div>
           </div>
           <div className="rounded-lg border p-4">
             <p className="flex items-center gap-2 font-medium">
               <Download className="size-4" />
-              Export
+              {t('exportLabel')}
             </p>
-            <p className="mt-1 text-sm text-slate-600">Share with planning tools or backup the route library.</p>
+            <p className="mt-1 text-sm text-slate-600">{t('exportHint')}</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Button variant="outline" onClick={() => toast.success('Exported GeoJSON preview')}>
-                Export GeoJSON
+              <Button variant="outline" onClick={() => toast.success(t('exportedGeoJson'))}>
+                {t('exportGeoJson')}
               </Button>
-              <Button variant="outline" onClick={() => toast.success('Exported CSV preview')}>
-                Export CSV
+              <Button variant="outline" onClick={() => toast.success(t('exportedCsv'))}>
+                {t('exportCsv')}
               </Button>
             </div>
           </div>
@@ -119,18 +122,19 @@ function RouteImportExportDialog() {
 }
 
 export function RouteManagementTools({ routes }: { routes: RouteRead[] }) {
+  const { t } = useTranslation('routes');
   const suggestions = [
     {
-      title: 'Balance headways by demand',
-      detail: 'Increase frequency during peak windows based on passenger demand trends.',
+      title: t('suggestHeadwaysTitle'),
+      detail: t('suggestHeadwaysDetail'),
     },
     {
-      title: 'Add recovery time at termini',
-      detail: 'Introduce a short layover to stabilize on-time performance.',
+      title: t('suggestRecoveryTitle'),
+      detail: t('suggestRecoveryDetail'),
     },
     {
-      title: 'Reduce stop clustering',
-      detail: 'Merge low-usage adjacent stops in dense corridors to reduce dwell time.',
+      title: t('suggestClusteringTitle'),
+      detail: t('suggestClusteringDetail'),
     },
   ];
 
@@ -138,8 +142,8 @@ export function RouteManagementTools({ routes }: { routes: RouteRead[] }) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Route tools</CardTitle>
-          <p className="text-sm text-slate-600">Templates, import/export, and optimization previews for planning.</p>
+          <CardTitle>{t('routeTools')}</CardTitle>
+          <p className="text-sm text-slate-600">{t('routeToolsDesc')}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <RouteTemplatesDialog routes={routes} />
@@ -149,13 +153,13 @@ export function RouteManagementTools({ routes }: { routes: RouteRead[] }) {
       <CardContent className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-slate-600">Route performance analytics</CardTitle>
+            <CardTitle className="text-sm text-slate-600">{t('routePerformance')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1 text-sm text-slate-600">
-            <p>- Delay hotspots by segment</p>
-            <p>- Dwell time per stop</p>
-            <p>- Passenger demand overlays</p>
-            <p>- Incident correlation</p>
+            <p>- {t('perfDelayHotspots')}</p>
+            <p>- {t('perfDwellTime')}</p>
+            <p>- {t('perfDemandOverlays')}</p>
+            <p>- {t('perfIncidentCorrelation')}</p>
           </CardContent>
         </Card>
 
@@ -163,7 +167,7 @@ export function RouteManagementTools({ routes }: { routes: RouteRead[] }) {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm text-slate-600">
               <Wand2 className="size-4" />
-              Optimization suggestions
+              {t('optimizationSuggestions')}
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-3">

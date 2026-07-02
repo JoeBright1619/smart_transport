@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MapPin, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import type { Dispatch, SetStateAction } from 'react';
 import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from 'react-leaflet';
@@ -73,6 +74,7 @@ function toRouteFormStop(stop: GlobalStopRead, order: number): RouteFormStop {
 }
 
 export function RouteStopsEditor({ stops, setForm }: RouteStopsEditorProps) {
+  const { t } = useTranslation('routes');
   const [globalStops, setGlobalStops] = useState<GlobalStopRead[]>([]);
   const [loadingStops, setLoadingStops] = useState(true);
   const [stopError, setStopError] = useState<string | null>(null);
@@ -98,7 +100,7 @@ export function RouteStopsEditor({ stops, setForm }: RouteStopsEditorProps) {
     try {
       setGlobalStops(await routesService.listStops());
     } catch (error) {
-      setStopError(error instanceof Error ? error.message : 'Unable to load stops');
+      setStopError(error instanceof Error ? error.message : t('unableLoadStops'));
     } finally {
       setLoadingStops(false);
     }
@@ -146,7 +148,7 @@ export function RouteStopsEditor({ stops, setForm }: RouteStopsEditorProps) {
       setNewStop({ name: '', lat: '', lng: '' });
       setSearch('');
     } catch (error) {
-      setStopError(error instanceof Error ? error.message : 'Unable to create stop');
+      setStopError(error instanceof Error ? error.message : t('unableCreateStop'));
     } finally {
       setCreating(false);
     }
@@ -174,16 +176,16 @@ export function RouteStopsEditor({ stops, setForm }: RouteStopsEditorProps) {
       <div className="space-y-3 md:max-h-[calc(100vh-17rem)] md:overflow-y-auto md:pr-2">
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-3">
-            <Label>Route stops</Label>
+            <Label>{t('routeStops')}</Label>
             <Button type="button" variant="outline" size="sm" onClick={loadStops} disabled={loadingStops}>
               <RefreshCw className="mr-2 size-3" />
-              Refresh
+              {t('refresh')}
             </Button>
           </div>
 
           <div className="max-h-44 space-y-2 overflow-y-auto rounded-md border p-2 md:max-h-[22vh]">
             {stops.length === 0 ? (
-              <p className="px-2 py-6 text-center text-sm text-slate-500">Select or create a stop to build this route.</p>
+              <p className="px-2 py-6 text-center text-sm text-slate-500">{t('selectOrCreate')}</p>
             ) : (
               stops.map((stop, index) => (
                 <div key={stop.key} className="flex items-center justify-between gap-3 rounded-md border bg-white p-2">
@@ -214,18 +216,18 @@ export function RouteStopsEditor({ stops, setForm }: RouteStopsEditorProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="stopSearch">Add existing stop</Label>
+          <Label htmlFor="stopSearch">{t('addExistingStop')}</Label>
           <Input
             id="stopSearch"
-            placeholder="Search stops"
+            placeholder={t('searchStops')}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
           <div className="max-h-32 overflow-y-auto rounded-md border md:max-h-[18vh]">
             {loadingStops ? (
-              <p className="p-3 text-sm text-slate-500">Loading stops...</p>
+              <p className="p-3 text-sm text-slate-500">{t('loadingStops')}</p>
             ) : filteredStops.length === 0 ? (
-              <p className="p-3 text-sm text-slate-500">No available stops match this search.</p>
+              <p className="p-3 text-sm text-slate-500">{t('noAvailableStops')}</p>
             ) : (
               filteredStops.map((stop) => (
                 <button
@@ -245,10 +247,10 @@ export function RouteStopsEditor({ stops, setForm }: RouteStopsEditorProps) {
         <div className="space-y-3 rounded-md border p-3">
           <div className="flex items-center gap-2">
             <MapPin className="size-4 text-slate-500" />
-            <Label>Create new stop</Label>
+            <Label>{t('createNewStop')}</Label>
           </div>
           <Input
-            placeholder="Stop name"
+            placeholder={t('stopName')}
             value={newStop.name}
             onChange={(event) => setNewStop((current) => ({ ...current, name: event.target.value }))}
           />
@@ -256,14 +258,14 @@ export function RouteStopsEditor({ stops, setForm }: RouteStopsEditorProps) {
             <Input
               type="number"
               step="0.000001"
-              placeholder="Latitude"
+              placeholder={t('latitude')}
               value={newStop.lat}
               onChange={(event) => setNewStop((current) => ({ ...current, lat: event.target.value }))}
             />
             <Input
               type="number"
               step="0.000001"
-              placeholder="Longitude"
+              placeholder={t('longitude')}
               value={newStop.lng}
               onChange={(event) => setNewStop((current) => ({ ...current, lng: event.target.value }))}
             />
@@ -275,11 +277,11 @@ export function RouteStopsEditor({ stops, setForm }: RouteStopsEditorProps) {
             disabled={creating || !newStop.name.trim() || !newStop.lat || !newStop.lng}
             onClick={handleCreateStop}
           >
-            {creating ? 'Creating...' : 'Create and add stop'}
+            {creating ? t('creating') : t('createAndAddStop')}
           </Button>
           {draftPosition && (
             <p className="text-xs text-slate-500">
-              New stop marker placed at {draftPosition[0].toFixed(6)}, {draftPosition[1].toFixed(6)}.
+              {t('newStopMarker', { lat: draftPosition[0].toFixed(6), lng: draftPosition[1].toFixed(6) })}
             </p>
           )}
           {stopError && <p className="text-sm text-red-600">{stopError}</p>}
@@ -287,7 +289,7 @@ export function RouteStopsEditor({ stops, setForm }: RouteStopsEditorProps) {
       </div>
 
       <div className="flex flex-col space-y-3">
-        <Label>Stops Map</Label>
+        <Label>{t('stopsMap')}</Label>
         <div className="h-[320px] overflow-hidden rounded-lg border md:h-[calc(100vh-17rem)] md:min-h-[360px] md:max-h-[620px]">
           <MapContainer center={center} zoom={13} style={{ height: '100%', width: '100%' }}>
             <TileLayer
@@ -297,7 +299,7 @@ export function RouteStopsEditor({ stops, setForm }: RouteStopsEditorProps) {
             <MapEvents onMapClick={handleMapClick} />
             {draftPosition && (
               <Marker position={draftPosition} icon={draftStopIcon}>
-                <Popup>New stop location</Popup>
+                <Popup>{t('newStopLocation')}</Popup>
               </Marker>
             )}
             {globalStops.map((stop) => {

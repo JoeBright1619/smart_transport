@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Plus, Route as RouteIcon } from 'lucide-react';
 import type { RouteCreate } from '../../../lib/api-types';
@@ -26,6 +27,7 @@ type CreateRouteModalProps = {
 };
 
 export function CreateRouteModal({ onCreateRoute }: CreateRouteModalProps) {
+  const { t } = useTranslation('routes');
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<RouteFormState>(initialRouteFormState);
   const [submitting, setSubmitting] = useState(false);
@@ -39,7 +41,7 @@ export function CreateRouteModal({ onCreateRoute }: CreateRouteModalProps) {
       setForm(initialRouteFormState);
       setOpen(false);
     } catch (createError) {
-      toast.error(createError instanceof Error ? createError.message : 'Unable to create route');
+      toast.error(createError instanceof Error ? createError.message : t('unableCreate'));
     } finally {
       setSubmitting(false);
     }
@@ -50,17 +52,17 @@ export function CreateRouteModal({ onCreateRoute }: CreateRouteModalProps) {
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 size-4" />
-          Create New Route
+          {t('createNewRoute')}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-5xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <RouteIcon className="size-5" />
-            Create New Route
+            {t('createNewRoute')}
           </DialogTitle>
           <DialogDescription>
-            Define route details and ordered stops for backend route creation.
+            {t('createRouteDesc')}
           </DialogDescription>
         </DialogHeader>
 
@@ -69,7 +71,7 @@ export function CreateRouteModal({ onCreateRoute }: CreateRouteModalProps) {
           setForm={setForm}
           onSubmit={handleSubmit}
           submitting={submitting}
-          submitLabel="Create Route"
+          submitLabel={t('createRoute')}
           onCancel={() => setOpen(false)}
         />
       </DialogContent>

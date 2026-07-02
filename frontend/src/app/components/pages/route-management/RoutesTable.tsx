@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
 import type { RouteRead, RouteUpdate } from '../../../lib/api-types';
 import { Badge } from '../../ui/badge';
@@ -23,29 +24,30 @@ export function RoutesTable({
   onUpdateRoute,
   onDeleteRoute,
 }: RoutesTableProps) {
+  const { t } = useTranslation('routes');
   const [page, setPage] = useState(1);
   const paginatedRoutes = routes.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Routes</CardTitle>
+        <CardTitle>{t('routes')}</CardTitle>
       </CardHeader>
       <CardContent>
         {routes.length === 0 ? (
-          <p className="text-sm text-slate-500">No routes found.</p>
+          <p className="text-sm text-slate-500">{t('noRoutes')}</p>
         ) : (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Route Number</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Stops</TableHead>
-                  <TableHead>Distance</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{t('colRouteNumber')}</TableHead>
+                  <TableHead>{t('colName')}</TableHead>
+                  <TableHead>{t('colStops')}</TableHead>
+                  <TableHead>{t('colDistance')}</TableHead>
+                  <TableHead>{t('colDuration')}</TableHead>
+                  <TableHead>{t('colStatus')}</TableHead>
+                  <TableHead>{t('colActions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -61,12 +63,12 @@ export function RoutesTable({
                       <TableCell className="font-medium">
                         <span className={route.isActive ? undefined : 'text-slate-500'}>{route.name}</span>
                       </TableCell>
-                      <TableCell>{route.stops.length} stops</TableCell>
-                      <TableCell>{route.distance} km</TableCell>
-                      <TableCell>{route.duration} min</TableCell>
+                      <TableCell>{t('stopsCount', { count: route.stops.length })}</TableCell>
+                      <TableCell>{t('km', { value: route.distance })}</TableCell>
+                      <TableCell>{t('min', { value: route.duration })}</TableCell>
                       <TableCell>
                         <Badge variant={route.isActive ? 'default' : 'secondary'}>
-                          {route.isActive ? 'Active' : 'Inactive'}
+                          {route.isActive ? t('active') : t('inactive')}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -77,7 +79,7 @@ export function RoutesTable({
                             disabled={disabled}
                             onClick={() => void onUpdateRoute(route.id, { isActive: !route.isActive })}
                           >
-                            {route.isActive ? 'Deactivate' : 'Activate'}
+                            {route.isActive ? t('deactivate') : t('activate')}
                           </Button>
                           <EditRouteModal
                             route={route}

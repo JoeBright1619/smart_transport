@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Label } from '../../ui/label';
@@ -15,22 +16,23 @@ export function ArrivalStopSelector({
   selectedStopId,
   onStopChange,
 }: ArrivalStopSelectorProps) {
+  const { t } = useTranslation('arrivals');
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <MapPin className="size-5 text-blue-600" />
-          Stop
+          {t('stop')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        <Label>Select stop</Label>
+        <Label>{t('selectStop')}</Label>
         <Select value={selectedStopId} onValueChange={onStopChange} disabled={stops.length === 0}>
           <SelectTrigger>
-            <SelectValue placeholder="Select a stop" />
+            <SelectValue placeholder={t('selectStopPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL_STOPS_ID}>All Stops</SelectItem>
+            <SelectItem value={ALL_STOPS_ID}>{t('allStops')}</SelectItem>
             {stops.map((stop) => (
               <SelectItem key={stop.id} value={stop.id}>
                 {stop.name}
@@ -38,7 +40,7 @@ export function ArrivalStopSelector({
             ))}
           </SelectContent>
         </Select>
-        {stops.length === 0 && <p className="text-sm text-slate-600">No stops found.</p>}
+        {stops.length === 0 && <p className="text-sm text-slate-600">{t('noStops')}</p>}
       </CardContent>
     </Card>
   );

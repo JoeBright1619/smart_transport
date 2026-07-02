@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { RouteRead } from '../../../lib/api-types';
 import { Badge } from '../../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
@@ -12,13 +13,14 @@ type RouteCardsGridProps = {
 };
 
 export function RouteCardsGrid({ routes, updatingRouteId, onUpdateRoute }: RouteCardsGridProps) {
+  const { t } = useTranslation('routes');
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {routes.map((route) => (
         <Card key={route.id} className={cn('relative', !route.isActive && 'opacity-60')}>
           {!route.isActive && (
             <Badge variant="secondary" className="absolute right-3 top-3 z-10">
-              Inactive
+              {t('inactive')}
             </Badge>
           )}
           <CardHeader>
@@ -30,7 +32,7 @@ export function RouteCardsGrid({ routes, updatingRouteId, onUpdateRoute }: Route
                 <CardTitle className="text-base">{route.name}</CardTitle>
               </div>
               <div className="flex gap-2">
-                {route.isActive && <Badge>Active</Badge>}
+                {route.isActive && <Badge>{t('active')}</Badge>}
                 <EditRouteModal
                   route={route}
                   onUpdateRoute={onUpdateRoute}
@@ -42,15 +44,15 @@ export function RouteCardsGrid({ routes, updatingRouteId, onUpdateRoute }: Route
           <CardContent>
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-slate-600">Distance:</span>
-                <span className="font-medium">{route.distance} km</span>
+                <span className="text-slate-600">{t('distance')}</span>
+                <span className="font-medium">{t('km', { value: route.distance })}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-slate-600">Est. Duration:</span>
-                <span className="font-medium">{route.duration} minutes</span>
+                <span className="text-slate-600">{t('estDuration')}</span>
+                <span className="font-medium">{t('minutes', { value: route.duration })}</span>
               </div>
               <div className="border-t pt-3">
-                <p className="mb-2 text-xs font-medium text-slate-600">Route Stops:</p>
+                <p className="mb-2 text-xs font-medium text-slate-600">{t('routeStopsLabel')}</p>
                 <div className="space-y-1">
                   {route.stops.map((stop, index) => (
                     <div key={stop.id} className="flex items-center gap-2 text-sm">

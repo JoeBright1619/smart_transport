@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { type RouteFormState, haversineDistance } from './route-helpers';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
@@ -15,6 +16,7 @@ type RouteFormProps = {
 };
 
 export function RouteForm({ form, setForm, onSubmit, submitting, submitLabel, onCancel }: RouteFormProps) {
+  const { t } = useTranslation('routes');
   useEffect(() => {
     let distanceRounded = '0';
     let durationRounded = '0';
@@ -49,7 +51,7 @@ export function RouteForm({ form, setForm, onSubmit, submitting, submitLabel, on
     <form onSubmit={onSubmit} className="space-y-5">
       <div className="grid gap-4 md:grid-cols-5">
         <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="routeName">Route name</Label>
+          <Label htmlFor="routeName">{t('routeName')}</Label>
           <Input
             id="routeName"
             value={form.name}
@@ -58,7 +60,7 @@ export function RouteForm({ form, setForm, onSubmit, submitting, submitLabel, on
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="routeNumber">Number</Label>
+          <Label htmlFor="routeNumber">{t('number')}</Label>
           <Input
             id="routeNumber"
             value={form.number}
@@ -67,7 +69,7 @@ export function RouteForm({ form, setForm, onSubmit, submitting, submitLabel, on
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="distance">Distance km</Label>
+          <Label htmlFor="distance">{t('distanceKm')}</Label>
           <Input
             id="distance"
             type="number"
@@ -80,7 +82,7 @@ export function RouteForm({ form, setForm, onSubmit, submitting, submitLabel, on
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="duration">Duration min</Label>
+          <Label htmlFor="duration">{t('durationMin')}</Label>
           <Input
             id="duration"
             type="number"
@@ -92,7 +94,7 @@ export function RouteForm({ form, setForm, onSubmit, submitting, submitLabel, on
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="color">Color</Label>
+          <Label htmlFor="color">{t('color')}</Label>
           <Input
             id="color"
             type="color"
@@ -106,10 +108,10 @@ export function RouteForm({ form, setForm, onSubmit, submitting, submitLabel, on
 
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+          {t('cancel')}
         </Button>
         <Button type="submit" disabled={submitting}>
-          {submitting ? 'Saving...' : submitLabel}
+          {submitting ? t('saving') : submitLabel}
         </Button>
       </div>
     </form>
