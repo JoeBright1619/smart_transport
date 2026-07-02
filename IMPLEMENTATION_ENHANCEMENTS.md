@@ -201,7 +201,16 @@ Fix steps:
 **Branch:** `master`
 **Commit:** `feat: locale-aware date/number formatting and report language handling`
 
-- [ ] Task 5.4 complete
+- [x] Task 5.4 complete
+
+**Decision (step 3): option (b) — reports follow the UI language.** All hardcoded jsPDF labels
+in `analytics-pdf.ts` and the passenger report in `PassengerReportModal` are routed through
+`i18n.t` (new `report` namespace). Date/number formatting uses the new `lib/format.ts` helpers
+(`formatDate`/`formatTime`/`formatDateTime`/`formatNumber`) which map `en → 'en-GB'`,
+`rw → 'rw-RW'`. The same helpers replaced hardcoded/implicit locales in on-screen date/time
+displays across the app. Number groupings (`.toLocaleString()` on counts/currency) were left on
+the browser default, as en/rw grouping is equivalent and routing them adds churn without a
+visible difference.
 
 ---
 
@@ -210,4 +219,4 @@ Fix steps:
 | Phase | Title | Tasks | Status |
 |-------|-------|-------|--------|
 | 4 | Passenger Data Integrity & Experience Fixes | 4.1, 4.2, 4.3 | Not started |
-| 5 | Internationalisation: English ↔ Kinyarwanda | 5.1, 5.2, 5.3, 5.4 | Not started |
+| 5 | Internationalisation: English ↔ Kinyarwanda | 5.1, 5.2, 5.3, 5.4 | Complete |

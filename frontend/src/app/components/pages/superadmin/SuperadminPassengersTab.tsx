@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Search, UserX, UserCheck, FileText } from 'lucide-react';
 import type { UserRead } from '../../../lib/api-types';
 import * as superadminService from '../../../services/superadmin.service';
+import { formatDate } from '../../../lib/format';
 import { PassengerReportModal } from './PassengerReportModal';
 import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
@@ -116,7 +117,7 @@ export function SuperadminPassengersTab() {
                     <TableCell className="font-medium">{p.fullName}</TableCell>
                     <TableCell>{p.email}</TableCell>
                     <TableCell>{p.phone ?? '—'}</TableCell>
-                    <TableCell>{new Date(p.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell>{formatDate(p.createdAt)}</TableCell>
                     <TableCell>
                       <Badge variant={isSuspended ? 'destructive' : 'default'}>
                         {isSuspended ? t('passengers.suspended') : t('passengers.active')}

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Badge } from '../../ui/badge';
 import { getMyBoardings, type PassengerTripRecord } from '../../../services/boarding.service';
+import { formatDateTime } from '../../../lib/format';
 
 export function PassengerTrips() {
   const { t } = useTranslation('passenger');
@@ -61,7 +62,7 @@ export function PassengerTrips() {
                 {rec.vehicleModel && <span className="text-slate-400">· {rec.vehicleModel}</span>}
               </p>
             )}
-            <p>{new Date(rec.recordedAt).toLocaleString()}</p>
+            <p>{formatDateTime(rec.recordedAt)}</p>
             <p>{t('trips.occupancyAfter', { count: rec.occupancyAfter })}</p>
           </CardContent>
         </Card>

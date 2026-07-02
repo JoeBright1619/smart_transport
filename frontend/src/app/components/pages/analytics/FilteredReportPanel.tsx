@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Download, FileDown, FileText, Filter, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { messageForError } from '../../../lib/error-messages';
+import { formatDateTime } from '../../../lib/format';
 import { Button } from '../../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Input } from '../../ui/input';
@@ -297,7 +298,7 @@ export function FilteredReportPanel({ routes, vehicles, drivers }: FilteredRepor
         {result && (
           <p className="mt-4 text-right text-xs text-slate-400">
             <FileText className="mr-1 inline size-3" />
-            {t('reports.generatedAt', { time: new Date(result.generatedAt).toLocaleString() })}
+            {t('reports.generatedAt', { time: formatDateTime(result.generatedAt) })}
           </p>
         )}
       </CardContent>

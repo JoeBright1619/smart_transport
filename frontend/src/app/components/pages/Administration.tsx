@@ -10,6 +10,7 @@ import { Users, Trash2, Edit, UserPlus, Mail } from 'lucide-react';
 import { useAuth } from '../../lib/auth-context';
 import { listUsers, createUser, updateUser, deleteUser } from '../../services/users.service';
 import type { UserRead, TenantUserRole } from '../../lib/api-types';
+import { formatDate } from '../../lib/format';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { validateEmail, validateName, validatePhone } from '../../lib/validation';
@@ -253,7 +254,7 @@ export function Administration() {
                         <StatusBadge status={u.status ?? 'active'} />
                       </TableCell>
                       <TableCell>{u.phone ?? '—'}</TableCell>
-                      <TableCell>{new Date(u.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell>{formatDate(u.createdAt)}</TableCell>
                       {isAdmin && (
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" onClick={() => openEdit(u)}>

@@ -1,5 +1,6 @@
 import type { TFunction } from 'i18next';
 import type { ArrivalEstimate, RouteRead, StopRead } from '../../../lib/api-types';
+import { formatTime } from '../../../lib/format';
 
 export const ALL_STOPS_ID = '__all__';
 
@@ -55,5 +56,5 @@ export function etaLabel(estimate: ArrivalEstimate, t: TFunction): string {
 
 export function formatLastUpdated(value: Date | null, t: TFunction): string {
   if (!value) return t('notRefreshed');
-  return t('updatedAt', { time: value.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+  return t('updatedAt', { time: formatTime(value) });
 }

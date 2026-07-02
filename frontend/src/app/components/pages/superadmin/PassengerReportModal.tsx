@@ -18,6 +18,11 @@ import {
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { pageHeader, sectionTitle, stampFooters, TABLE_STYLES, CONTENT_Y } from '../analytics/analytics-pdf';
+import i18n from '../../../lib/i18n';
+import { formatDate, formatTime, formatDateTime } from '../../../lib/format';
+
+// PDF content follows the active UI language (Task 5.4 decision).
+const rt = (key: string, opts?: Record<string, unknown>): string => i18n.t(`report:${key}`, opts);
 
 interface Props {
   passenger: UserRead;
@@ -36,7 +41,7 @@ const RWANDA = { name: 'Rwanda Transport System' };
 
 function downloadPdf(report: PassengerUsageReport): void {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const REPORT_TITLE = `Passenger Usage Report — ${report.passengerName}`;
+  const REPORT_TITLE = rt('passenger.title', { name: report.passengerName });
 
   pageHeader(doc, REPORT_TITLE, report.dateFrom, report.dateTo, RWANDA);
 
@@ -44,14 +49,14 @@ function downloadPdf(report: PassengerUsageReport): void {
   let sec = 1;
 
   // ── 1. Passenger Summary ──────────────────────────────────────────────────
-  y = sectionTitle(doc, 'Passenger Summary', y, sec++);
+  y = sectionTitle(doc, rt('passenger.summary'), y, sec++);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor('#0F172A');
-  doc.text(`Name: ${report.passengerName}   |   Email: ${report.email}`, 14, y);
+  doc.text(rt('passenger.nameEmail', { name: report.passengerName, email: report.email }), 14, y);
   y += 5.5;
   doc.text(
-    `Total Boardings: ${report.totalBoardings}   |   Total Alightings: ${report.totalAlightings}`,
+    rt('passenger.boardingsAlightings', { boardings: report.totalBoardings, alightings: report.totalAlightings }),
     14, y,
   );
   y += 10;
@@ -59,7 +64,7 @@ function downloadPdf(report: PassengerUsageReport): void {
   if (report.totalBoardings === 0 && report.totalAlightings === 0) {
     doc.setFontSize(9);
     doc.setTextColor('#64748B');
-    doc.text(report.message ?? 'No journey data recorded for this period.', 14, y);
+    doc.text(report.message ?? rt('passenger.noJourneyData'), 14, y);
     stampFooters(doc, RWANDA, 'Rwanda Transport System');
     doc.save(`passenger-report-${report.passengerId}-${report.dateFrom}-to-${report.dateTo}.pdf`);
     return;
@@ -67,10 +72,10 @@ function downloadPdf(report: PassengerUsageReport): void {
 
   // ── 2. Top Routes ─────────────────────────────────────────────────────────
   if (report.mostUsedRoutes.length > 0) {
-    y = sectionTitle(doc, 'Top Routes', y, sec++);
+    y = sectionTitle(doc, rt('passenger.topRoutes'), y, sec++);
     autoTable(doc, {
       startY: y,
-      head: [['#', 'Route', 'Boardings']],
+      head: [[rt('passenger.colNum'), rt('passenger.colRoute'), rt('passenger.colBoardings')]],
       body: report.mostUsedRoutes.slice(0, 3).map((r, i) => [i + 1, r.routeName, r.count]),
       columnStyles: { 0: { cellWidth: 'wrap' } },
       ...TABLE_STYLES,
@@ -80,10 +85,10 @@ function downloadPdf(report: PassengerUsageReport): void {
 
   // ── 3. Top Stops ──────────────────────────────────────────────────────────
   if (report.mostUsedStops.length > 0) {
-    y = sectionTitle(doc, 'Top Stops', y, sec++);
+    y = sectionTitle(doc, rt('passenger.topStops'), y, sec++);
     autoTable(doc, {
       startY: y,
-      head: [['#', 'Stop', 'Boardings']],
+      head: [[rt('passenger.colNum'), rt('passenger.colStop'), rt('passenger.colBoardings')]],
       body: report.mostUsedStops.slice(0, 3).map((s, i) => [i + 1, s.stopName, s.count]),
       columnStyles: { 0: { cellWidth: 'wrap' } },
       ...TABLE_STYLES,
@@ -92,21 +97,21 @@ function downloadPdf(report: PassengerUsageReport): void {
   }
 
   // ── 4. Trip Timeline ──────────────────────────────────────────────────────
-  y = sectionTitle(doc, 'Trip Timeline', y, sec++);
+  y = sectionTitle(doc, rt('passenger.tripTimeline'), y, sec++);
   autoTable(doc, {
     startY: y,
-    head: [['#', 'Date', 'Time', 'Event', 'Route', 'Stop']],
-    body: report.timeline.map((t, i) => {
-      const dt = new Date(t.recordedAt);
-      return [
-        i + 1,
-        dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-        dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        t.eventType === 'boarded' ? 'Boarded' : 'Alighted',
-        t.routeName,
-        t.stopName,
-      ];
-    }),
+    head: [[
+      rt('passenger.colNum'), rt('passenger.colDate'), rt('passenger.colTime'),
+      rt('passenger.colEvent'), rt('passenger.colRoute'), rt('passenger.colStop'),
+    ]],
+    body: report.timeline.map((ev, i) => [
+      i + 1,
+      formatDate(ev.recordedAt),
+      formatTime(ev.recordedAt),
+      ev.eventType === 'boarded' ? rt('passenger.eventBoarded') : rt('passenger.eventAlighted'),
+      ev.routeName,
+      ev.stopName,
+    ]),
     columnStyles: { 0: { cellWidth: 'wrap' } },
     ...TABLE_STYLES,
   });
@@ -245,7 +250,7 @@ export function PassengerReportModal({ passenger, open, onClose }: Props) {
                     {report.timeline.map((ev, i) => (
                       <tr key={i} className="even:bg-slate-50">
                         <td className="px-2 py-1 whitespace-nowrap">
-                          {new Date(ev.recordedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                          {formatDateTime(ev.recordedAt)}
                         </td>
                         <td className="px-2 py-1 text-center">
                           <Badge variant={ev.eventType === 'boarded' ? 'default' : 'secondary'} className="text-xs">

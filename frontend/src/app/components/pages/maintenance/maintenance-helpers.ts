@@ -4,6 +4,7 @@ import type {
   MaintenanceStatus,
   MaintenanceType,
 } from '../../../lib/api-types';
+import { formatDate as formatLocaleDate } from '../../../lib/format';
 
 export type MaintenanceFormState = {
   vehicleId: string;
@@ -68,7 +69,7 @@ export function statusBadgeVariant(status: MaintenanceStatus): 'default' | 'seco
 
 export function formatDate(value: string | null): string {
   if (!value) return '-';
-  return new Date(value).toLocaleDateString();
+  return formatLocaleDate(value, { year: 'numeric', month: '2-digit', day: '2-digit' });
 }
 
 function todayDate(): string {

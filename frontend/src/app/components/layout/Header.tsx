@@ -16,6 +16,7 @@ import { listAlerts, acknowledgeAlert } from '../../services/alerts.service';
 import { getMyNotifications } from '../../services/passenger.service';
 import type { AlertRead, AlertSeverity, PassengerNotification } from '../../lib/api-types';
 import { useAuth } from '../../lib/auth-context';
+import { formatDate, formatTime } from '../../lib/format';
 
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -259,9 +260,9 @@ export function Header() {
 
       <div className="text-sm text-right">
         <p className="font-medium">
-          {currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          {formatDate(currentTime, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </p>
-        <p className="text-slate-500">{currentTime.toLocaleTimeString()}</p>
+        <p className="text-slate-500">{formatTime(currentTime, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</p>
       </div>
     </header>
   );

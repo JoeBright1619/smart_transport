@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import { useTranslation } from 'react-i18next';
 import type { AnalyticsDaily } from '../../../lib/api-types';
+import { formatDate } from '../../../lib/format';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 
 export function TrendCharts({ daily }: { daily: AnalyticsDaily[] }) {
@@ -87,5 +88,5 @@ export function TrendCharts({ daily }: { daily: AnalyticsDaily[] }) {
 }
 
 function formatChartDate(value: string) {
-  return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return formatDate(value, { month: 'short', day: 'numeric' });
 }

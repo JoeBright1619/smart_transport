@@ -5,6 +5,7 @@ import type {
   TripRead,
   VehicleRead,
 } from '../../../lib/api-types';
+import { formatTime } from '../../../lib/format';
 
 export type ScheduleTripFormState = {
   vehicleId: string;
@@ -59,7 +60,7 @@ export function routeLabel(route?: RouteRead): string {
 
 export function formatTripTime(value: string | null): string {
   if (!value) return '-';
-  return new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return formatTime(value);
 }
 
 function defaultDateTimeLocal(offsetMinutes: number): string {

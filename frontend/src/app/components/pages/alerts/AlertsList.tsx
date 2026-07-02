@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { AlertRead } from '../../../lib/api-types';
+import { formatDateTime } from '../../../lib/format';
 import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
@@ -88,7 +89,7 @@ function AlertRow({
               <p className={`font-medium ${muted ? 'text-slate-700' : ''}`}>{alert.title}</p>
               <p className="mt-1 text-sm text-slate-600">{alert.message}</p>
               <div className="mt-2 flex items-center gap-2">
-                <p className="text-xs text-slate-400">{new Date(alert.createdAt).toLocaleString()}</p>
+                <p className="text-xs text-slate-400">{formatDateTime(alert.createdAt)}</p>
                 {muted && (
                   <>
                     <CheckCircle className="size-3 text-green-600" />

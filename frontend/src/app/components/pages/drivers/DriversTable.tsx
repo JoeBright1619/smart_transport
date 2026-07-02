@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Pencil, Star, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { DriverRead, DriverStatus, DriverUpdate, VehicleRead } from '../../../lib/api-types';
+import { formatDate } from '../../../lib/format';
 import { EditDriverDialog } from './EditDriverDialog';
 import { Avatar, AvatarFallback } from '../../ui/avatar';
 import { Badge } from '../../ui/badge';
@@ -165,7 +166,7 @@ function DriverTableRow({
       </TableCell>
       <TableCell>{vehicle?.registrationNumber ?? '-'}</TableCell>
       <TableCell className="text-sm">
-        {new Date(driver.certificationExpiry).toLocaleDateString()}
+        {formatDate(driver.certificationExpiry)}
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-1">

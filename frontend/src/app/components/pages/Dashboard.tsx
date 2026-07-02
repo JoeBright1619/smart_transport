@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Skeleton } from '../ui/skeleton';
 import { ErrorMessage } from '../ui/error-message';
 import { formatRevenue } from './analytics/analytics-helpers';
+import { formatTime } from '../../lib/format';
 
 type DashboardState = {
   analytics: AnalyticsData | null;
@@ -259,7 +260,7 @@ export function Dashboard() {
                       </div>
                       <p className="mt-1 text-xs text-slate-600">{alert.message}</p>
                       <p className="mt-1 text-xs text-slate-400">
-                        {new Date(alert.createdAt).toLocaleTimeString()}
+                        {formatTime(alert.createdAt)}
                       </p>
                     </div>
                   </div>

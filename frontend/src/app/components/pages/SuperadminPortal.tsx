@@ -5,6 +5,7 @@ import { SuperadminPassengersTab } from './superadmin/SuperadminPassengersTab';
 import type { SuperadminAnalytics, TenantRead, TenantDetail } from '../../lib/api-types';
 import { setStoredToken } from '../../lib/api-client';
 import * as superadminService from '../../services/superadmin.service';
+import { formatDateTime } from '../../lib/format';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
@@ -355,11 +356,11 @@ export function SuperadminPortal() {
                   <div className="space-y-4">
                     <div>
                       <h4 className="text-sm font-medium text-slate-500">{t('superadmin.createdAt')}</h4>
-                      <p>{new Date(selectedTenant.createdAt).toLocaleString()}</p>
+                      <p>{formatDateTime(selectedTenant.createdAt)}</p>
                     </div>
                     <div>
                       <h4 className="text-sm font-medium text-slate-500">{t('superadmin.updatedAt')}</h4>
-                      <p>{new Date(selectedTenant.updatedAt).toLocaleString()}</p>
+                      <p>{formatDateTime(selectedTenant.updatedAt)}</p>
                     </div>
                     <div className="flex gap-4 pt-2">
                       <div>
