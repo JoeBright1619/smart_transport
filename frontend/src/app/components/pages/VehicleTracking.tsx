@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '../ui/badge';
 import { WifiOff } from 'lucide-react';
 import type { RouteRead, DriverRead } from '../../lib/api-types';
@@ -12,6 +13,7 @@ import { VehicleListPanel } from './vehicle-tracking/VehicleListPanel';
 import { VehicleMapView } from './vehicle-tracking/VehicleMapView';
 
 export function VehicleTracking() {
+  const { t } = useTranslation('tracking');
   const [vehicles, setVehicles] = useState<TrackedVehicle[]>([]);
   const [routes, setRoutes] = useState<RouteRead[]>([]);
   const [drivers, setDrivers] = useState<DriverRead[]>([]);
@@ -132,12 +134,12 @@ export function VehicleTracking() {
     <div className="space-y-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-2xl font-bold">Vehicle Tracking</h1>
-          <p className="text-slate-600">Real-time GPS tracking of all fleet vehicles</p>
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
+          <p className="text-slate-600">{t('subtitle')}</p>
         </div>
         {connectionStatus === 'disconnected' && (
           <Badge variant="destructive" className="flex items-center gap-1">
-            <WifiOff className="size-3" /> Disconnected — reconnecting…
+            <WifiOff className="size-3" /> {t('disconnected')}
           </Badge>
         )}
       </div>

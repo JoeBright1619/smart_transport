@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { AlertFiltersBar } from './alerts/AlertFiltersBar';
 import { AlertErrorState, AlertLoadingState } from './alerts/AlertPageStates';
 import { AlertStatsCards } from './alerts/AlertStatsCards';
@@ -5,6 +6,7 @@ import { AlertsTabs } from './alerts/AlertsTabs';
 import { useAlertsManagement } from './alerts/useAlertsManagement';
 
 export function Alerts() {
+  const { t } = useTranslation('alerts');
   const alertsManagement = useAlertsManagement();
 
   if (alertsManagement.loading) {
@@ -18,8 +20,8 @@ export function Alerts() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Alerts & Notifications</h1>
-        <p className="text-slate-600">System alerts and event notifications</p>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <p className="text-slate-600">{t('subtitle')}</p>
       </div>
 
       <AlertStatsCards stats={alertsManagement.stats} />

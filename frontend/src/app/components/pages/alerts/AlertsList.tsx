@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { AlertRead } from '../../../lib/api-types';
 import { Badge } from '../../ui/badge';
 import { Button } from '../../ui/button';
@@ -27,6 +28,7 @@ export function AlertsList({
   onAcknowledge,
   pagination,
 }: AlertsListProps) {
+  const { t } = useTranslation('alerts');
   return (
     <Card>
       <CardHeader>
@@ -36,7 +38,7 @@ export function AlertsList({
         {alerts.length === 0 ? (
           <div className="py-8 text-center text-slate-500">
             <CheckCircle className="mx-auto mb-3 size-12 text-green-500" />
-            <p>No alerts found</p>
+            <p>{t('noAlerts')}</p>
           </div>
         ) : (
           alerts.map((alert) => (
@@ -70,6 +72,7 @@ function AlertRow({
   disabled: boolean;
   onAcknowledge: (alert: AlertRead) => void;
 }) {
+  const { t } = useTranslation('alerts');
   const Icon = alertIcon(alert.type);
   const muted = alert.isAcknowledged;
 
@@ -89,18 +92,18 @@ function AlertRow({
                 {muted && (
                   <>
                     <CheckCircle className="size-3 text-green-600" />
-                    <span className="text-xs text-green-600">Acknowledged</span>
+                    <span className="text-xs text-green-600">{t('acknowledgedBadge')}</span>
                   </>
                 )}
               </div>
             </div>
             <Badge variant={muted ? 'outline' : severityBadgeVariant(alert.severity)}>
-              {alert.severity}
+              {t(`severity_${alert.severity}`)}
             </Badge>
           </div>
           {!muted && (
             <Button size="sm" variant="outline" className="mt-3" disabled={disabled} onClick={() => onAcknowledge(alert)}>
-              {disabled ? 'Acknowledging...' : 'Acknowledge'}
+              {disabled ? t('acknowledging') : t('acknowledge')}
             </Button>
           )}
         </div>

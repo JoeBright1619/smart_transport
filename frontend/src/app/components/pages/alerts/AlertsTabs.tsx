@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { AlertRead } from '../../../lib/api-types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 import type { AlertStats, AlertTab } from './alert-helpers';
@@ -28,19 +29,20 @@ export function AlertsTabs({
   onAcknowledge,
   onPageChange,
 }: AlertsTabsProps) {
+  const { t } = useTranslation('alerts');
   const pagination = { page, pageSize, total, onPageChange };
 
   return (
     <Tabs value={activeTab} onValueChange={(value) => onTabChange(value as AlertTab)} className="space-y-4">
       <TabsList>
-        <TabsTrigger value="unacknowledged">Unread ({stats.unread})</TabsTrigger>
-        <TabsTrigger value="acknowledged">Acknowledged ({stats.acknowledged})</TabsTrigger>
-        <TabsTrigger value="all">All Alerts ({stats.total})</TabsTrigger>
+        <TabsTrigger value="unacknowledged">{t('tabUnread', { count: stats.unread })}</TabsTrigger>
+        <TabsTrigger value="acknowledged">{t('tabAcknowledged', { count: stats.acknowledged })}</TabsTrigger>
+        <TabsTrigger value="all">{t('tabAll', { count: stats.total })}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="unacknowledged">
         <AlertsList
-          title="Unread Alerts"
+          title={t('unreadAlerts')}
           alerts={alerts}
           acknowledgingAlertId={acknowledgingAlertId}
           onAcknowledge={onAcknowledge}
@@ -49,7 +51,7 @@ export function AlertsTabs({
       </TabsContent>
       <TabsContent value="acknowledged">
         <AlertsList
-          title="Acknowledged Alerts"
+          title={t('acknowledgedAlerts')}
           alerts={alerts}
           acknowledgingAlertId={acknowledgingAlertId}
           onAcknowledge={onAcknowledge}
@@ -58,7 +60,7 @@ export function AlertsTabs({
       </TabsContent>
       <TabsContent value="all">
         <AlertsList
-          title="All Alerts"
+          title={t('allAlertsTitle')}
           alerts={alerts}
           acknowledgingAlertId={acknowledgingAlertId}
           onAcknowledge={onAcknowledge}

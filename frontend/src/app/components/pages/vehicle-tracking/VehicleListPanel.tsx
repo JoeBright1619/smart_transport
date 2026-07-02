@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Badge } from '../../ui/badge';
 import { Input } from '../../ui/input';
@@ -24,15 +25,16 @@ export function VehicleListPanel({
   searchTerm, statusFilter,
   onSelectVehicle, onSearchChange, onStatusFilterChange,
 }: Props) {
+  const { t } = useTranslation('tracking');
   return (
     <Card className="lg:col-span-1">
       <CardHeader>
-        <CardTitle>Fleet Vehicles ({vehicles.length})</CardTitle>
+        <CardTitle>{t('fleetVehicles', { count: vehicles.length })}</CardTitle>
         <div className="space-y-2 mt-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
             <Input
-              placeholder="Search vehicles..."
+              placeholder={t('searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
               className="pl-10"
@@ -40,14 +42,14 @@ export function VehicleListPanel({
           </div>
           <Select value={statusFilter} onValueChange={onStatusFilterChange}>
             <SelectTrigger>
-              <SelectValue placeholder="Filter by status" />
+              <SelectValue placeholder={t('filterByStatus')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="idle">Idle</SelectItem>
-              <SelectItem value="maintenance">Maintenance</SelectItem>
-              <SelectItem value="offline">Offline</SelectItem>
+              <SelectItem value="all">{t('allStatus')}</SelectItem>
+              <SelectItem value="active">{t('fleet:vehicleStatus.active')}</SelectItem>
+              <SelectItem value="idle">{t('fleet:vehicleStatus.idle')}</SelectItem>
+              <SelectItem value="maintenance">{t('fleet:vehicleStatus.maintenance')}</SelectItem>
+              <SelectItem value="offline">{t('fleet:vehicleStatus.offline')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -76,19 +78,19 @@ export function VehicleListPanel({
                       }`} />
                       <p className="font-medium text-sm">{vehicle.registrationNumber}</p>
                       {!vehicle.currentLocation && (
-                        <span className="text-xs text-slate-400 italic">No GPS fix</span>
+                        <span className="text-xs text-slate-400 italic">{t('noGpsFix')}</span>
                       )}
                     </div>
                     <p className="text-xs text-slate-500 mt-1">{vehicle.model}</p>
-                    {route && <p className="text-xs text-blue-600 mt-1">Route {route.number}</p>}
+                    {route && <p className="text-xs text-blue-600 mt-1">{t('route', { number: route.number })}</p>}
                     {vehicle.atStop ? (
                       <div className="mt-1 flex items-center gap-1.5">
                         <span className="inline-block size-2 shrink-0 rounded-full bg-amber-500 animate-pulse" />
-                        <p className="text-xs font-medium text-amber-600">At stop: {vehicle.atStop}</p>
+                        <p className="text-xs font-medium text-amber-600">{t('atStop', { stop: vehicle.atStop })}</p>
                       </div>
                     ) : vehicle.nextStopName ? (
                       <div className="mt-1">
-                        <p className="text-xs text-slate-500">Next: {vehicle.nextStopName}</p>
+                        <p className="text-xs text-slate-500">{t('next', { stop: vehicle.nextStopName })}</p>
                         <div className="mt-0.5 h-1 w-full rounded-full bg-slate-200">
                           <div
                             className="h-full rounded-full bg-blue-500"
@@ -106,12 +108,12 @@ export function VehicleListPanel({
                     }
                     className="shrink-0"
                   >
-                    {vehicle.status}
+                    {t(`fleet:vehicleStatus.${vehicle.status}`)}
                   </Badge>
                 </div>
                 {vehicle.status === 'active' && vehicle.speed !== null && vehicle.fuel !== null && (
                   <div className="mt-2 flex items-center gap-3 text-xs text-slate-600">
-                    <span className="flex items-center gap-1"><Gauge className="size-3" />{Math.round(vehicle.speed)} km/h</span>
+                    <span className="flex items-center gap-1"><Gauge className="size-3" />{t('kmh', { speed: Math.round(vehicle.speed) })}</span>
                     <span className="flex items-center gap-1"><Battery className="size-3" />{vehicle.fuel}%</span>
                   </div>
                 )}
@@ -124,8 +126,8 @@ export function VehicleListPanel({
                       return (
                         <>
                           <div className="flex justify-between text-xs text-slate-500 mb-0.5">
-                            <span>{vehicle.currentOccupancy}/{vehicle.seatingCapacity} seats</span>
-                            <span>{vehicle.remainingSeats} remaining</span>
+                            <span>{t('seats', { current: vehicle.currentOccupancy, capacity: vehicle.seatingCapacity })}</span>
+                            <span>{t('remaining', { count: vehicle.remainingSeats })}</span>
                           </div>
                           <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
                             <div
@@ -138,7 +140,7 @@ export function VehicleListPanel({
                     })()}
                   </div>
                 ) : (
-                  <p className="mt-1.5 text-xs text-slate-400 italic">Not in service</p>
+                  <p className="mt-1.5 text-xs text-slate-400 italic">{t('notInService')}</p>
                 )}
               </div>
             );

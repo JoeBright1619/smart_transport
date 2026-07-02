@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, Navigate } from 'react-router';
 import { AlertTriangle, Bus, CheckCircle, Clock, TrendingUp, Users } from 'lucide-react';
 import type { AlertRead, AnalyticsData, UserRole, VehicleRead, VehicleStatus } from '../../lib/api-types';
@@ -92,6 +93,7 @@ function DashboardSkeleton() {
 }
 
 export function Dashboard() {
+  const { t } = useTranslation('dashboard');
   const { user } = useAuth();
   const [dashboard, setDashboard] = useState<DashboardState>(initialDashboardState);
   const [loading, setLoading] = useState(true);
@@ -115,11 +117,11 @@ export function Dashboard() {
         vehicles: vehicles.items,
       });
     } catch (fetchError) {
-      setError(fetchError instanceof Error ? fetchError.message : 'Unable to load dashboard data');
+      setError(fetchError instanceof Error ? fetchError.message : t('errorLoad'));
     } finally {
       setLoading(false);
     }
-  }, [showAnalytics]);
+  }, [showAnalytics, t]);
 
   useEffect(() => {
     if (user?.role === 'superadmin') return;
@@ -159,19 +161,19 @@ export function Dashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">{tenantName ? `${tenantName} Fleet Dashboard` : 'Fleet Dashboard'}</h1>
-        <p className="text-slate-600">Real-time overview of your transport operations</p>
+        <h1 className="text-2xl font-bold">{tenantName ? t('titleTenant', { name: tenantName }) : t('title')}</h1>
+        <p className="text-slate-600">{t('subtitle')}</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Active Vehicles</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-600">{t('activeVehicles')}</CardTitle>
             <Bus className="size-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{activeVehicles}/{totalVehicles}</div>
-            <p className="text-xs text-slate-500">{fleetUtilization}% fleet utilization</p>
+            <p className="text-xs text-slate-500">{t('fleetUtilization', { pct: fleetUtilization })}</p>
           </CardContent>
         </Card>
 
@@ -179,31 +181,31 @@ export function Dashboard() {
           <>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600">Total Trips</CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-600">{t('totalTrips')}</CardTitle>
                 <Clock className="size-4 text-green-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{analyticsSummary?.totalTrips ?? 0}</div>
                 <p className="text-xs text-slate-500">
-                  Avg delay: {analyticsSummary?.avgDelay ?? 0} min
+                  {t('avgDelay', { min: analyticsSummary?.avgDelay ?? 0 })}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600">On-Time Performance</CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-600">{t('onTimePerformance')}</CardTitle>
                 <CheckCircle className="size-4 text-emerald-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{analyticsSummary?.onTimePercentage ?? 0}%</div>
-                <p className="text-xs text-slate-500">Last 7 days</p>
+                <p className="text-xs text-slate-500">{t('last7Days')}</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600">Total Passengers</CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-600">{t('totalPassengers')}</CardTitle>
                 <Users className="size-4 text-purple-600" />
               </CardHeader>
               <CardContent>
@@ -211,7 +213,7 @@ export function Dashboard() {
                   {(analyticsSummary?.totalPassengers ?? 0).toLocaleString()}
                 </div>
                 <p className="text-xs text-slate-500">
-                  {formatRevenue(analyticsSummary?.totalRevenue ?? 0)} revenue
+                  {t('revenue', { amount: formatRevenue(analyticsSummary?.totalRevenue ?? 0) })}
                 </p>
               </CardContent>
             </Card>
@@ -219,12 +221,12 @@ export function Dashboard() {
         ) : (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">Open Alerts</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-600">{t('openAlerts')}</CardTitle>
               <AlertTriangle className="size-4 text-orange-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{dashboard.alerts.length}</div>
-              <p className="text-xs text-slate-500">Unacknowledged alerts</p>
+              <p className="text-xs text-slate-500">{t('unacknowledgedAlerts')}</p>
             </CardContent>
           </Card>
         )}
@@ -234,15 +236,15 @@ export function Dashboard() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Recent Alerts</CardTitle>
+              <CardTitle>{t('recentAlerts')}</CardTitle>
               <Link to="/alerts">
-                <Button variant="ghost" size="sm">View All</Button>
+                <Button variant="ghost" size="sm">{t('viewAll')}</Button>
               </Link>
             </div>
           </CardHeader>
           <CardContent>
             {dashboard.alerts.length === 0 ? (
-              <p className="text-sm text-slate-500">No unacknowledged alerts.</p>
+              <p className="text-sm text-slate-500">{t('noUnacknowledged')}</p>
             ) : (
               <div className="space-y-3">
                 {dashboard.alerts.map((alert) => (
@@ -252,7 +254,7 @@ export function Dashboard() {
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-sm font-medium">{alert.title}</p>
                         <Badge variant={alert.isAcknowledged ? 'secondary' : 'default'} className="text-xs">
-                          {alert.severity}
+                          {t(`alerts:severity_${alert.severity}`)}
                         </Badge>
                       </div>
                       <p className="mt-1 text-xs text-slate-600">{alert.message}</p>
@@ -269,7 +271,7 @@ export function Dashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Fleet Status</CardTitle>
+            <CardTitle>{t('fleetStatus')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="mb-4 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
@@ -277,14 +279,14 @@ export function Dashboard() {
                 <div key={status} className="rounded-lg border p-2">
                   <div className="flex items-center gap-2">
                     <div className={`size-2 rounded-full ${statusDotClass(status)}`} />
-                    <span className="capitalize text-slate-600">{status}</span>
+                    <span className="text-slate-600">{t(`fleet:vehicleStatus.${status}`)}</span>
                   </div>
                   <p className="mt-1 text-lg font-semibold">{fleetCounts[status]}</p>
                 </div>
               ))}
             </div>
             {dashboard.vehicles.length === 0 ? (
-              <p className="text-sm text-slate-500">No vehicles found.</p>
+              <p className="text-sm text-slate-500">{t('noVehicles')}</p>
             ) : (
               <div className="space-y-3">
                 {dashboard.vehicles.slice(0, 6).map((vehicle) => (
@@ -298,10 +300,10 @@ export function Dashboard() {
                     </div>
                     <div className="text-right">
                       <Badge variant={vehicle.status === 'active' ? 'default' : 'secondary'}>
-                        {vehicle.status}
+                        {t(`fleet:vehicleStatus.${vehicle.status}`)}
                       </Badge>
                       {vehicle.status === 'active' && (
-                        <p className="mt-1 text-xs text-slate-500">{vehicle.speed ?? 0} km/h</p>
+                        <p className="mt-1 text-xs text-slate-500">{t('kmh', { speed: vehicle.speed ?? 0 })}</p>
                       )}
                     </div>
                   </div>
@@ -309,7 +311,7 @@ export function Dashboard() {
               </div>
             )}
             <Link to="/fleet">
-              <Button variant="outline" className="mt-4 w-full">View Full Fleet</Button>
+              <Button variant="outline" className="mt-4 w-full">{t('viewFullFleet')}</Button>
             </Link>
           </CardContent>
         </Card>
@@ -317,34 +319,34 @@ export function Dashboard() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+          <CardTitle>{t('quickActions')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Link to="/tracking">
               <Button variant="outline" className="w-full justify-start">
                 <Bus className="mr-2 size-4" />
-                Track Vehicles
+                {t('trackVehicles')}
               </Button>
             </Link>
             <Link to="/dispatch">
               <Button variant="outline" className="w-full justify-start">
                 <Clock className="mr-2 size-4" />
-                Dispatch Control
+                {t('dispatchControl')}
               </Button>
             </Link>
             {showAnalytics && (
               <Link to="/analytics">
                 <Button variant="outline" className="w-full justify-start">
                   <TrendingUp className="mr-2 size-4" />
-                  View Analytics
+                  {t('viewAnalytics')}
                 </Button>
               </Link>
             )}
             <Link to="/maintenance">
               <Button variant="outline" className="w-full justify-start">
                 <AlertTriangle className="mr-2 size-4" />
-                Maintenance Log
+                {t('maintenanceLog')}
               </Button>
             </Link>
           </div>

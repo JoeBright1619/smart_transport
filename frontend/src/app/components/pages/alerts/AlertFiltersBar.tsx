@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { AlertSeverity, AlertType } from '../../../lib/api-types';
 import { Card, CardContent } from '../../ui/card';
 import { Label } from '../../ui/label';
@@ -21,11 +22,12 @@ export function AlertFiltersBar({
   onSeverityChange,
   onTypeChange,
 }: AlertFiltersBarProps) {
+  const { t } = useTranslation('alerts');
   return (
     <Card>
       <CardContent className="grid gap-4 pt-6 md:grid-cols-2">
         <div className="space-y-2">
-          <Label>Severity</Label>
+          <Label>{t('severity')}</Label>
           <Select value={severity} onValueChange={onSeverityChange}>
             <SelectTrigger>
               <SelectValue />
@@ -33,14 +35,14 @@ export function AlertFiltersBar({
             <SelectContent>
               {alertSeverityOptions.map((option) => (
                 <SelectItem key={option} value={option}>
-                  {label(option)}
+                  {t(`severity_${option}`)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Type</Label>
+          <Label>{t('type')}</Label>
           <Select value={type} onValueChange={onTypeChange}>
             <SelectTrigger>
               <SelectValue />
@@ -48,7 +50,7 @@ export function AlertFiltersBar({
             <SelectContent>
               {alertTypeOptions.map((option) => (
                 <SelectItem key={option} value={option}>
-                  {label(option)}
+                  {t(`type_${option}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -57,11 +59,4 @@ export function AlertFiltersBar({
       </CardContent>
     </Card>
   );
-}
-
-function label(value: string): string {
-  return value
-    .split('-')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
 }

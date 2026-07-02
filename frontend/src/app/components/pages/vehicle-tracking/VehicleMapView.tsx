@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, CircleMarker } from 'react-leaflet';
 import type { Marker as LMarker } from 'leaflet';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
@@ -21,16 +22,17 @@ type Props = {
 };
 
 export function VehicleMapView({ vehicles, routes, drivers, selectedVehicle, selectedRoute, markerRefs, onSelectVehicle }: Props) {
+  const { t } = useTranslation('tracking');
   const noGpsCount = vehicles.filter(v => !v.currentLocation).length;
 
   return (
     <Card className="lg:col-span-2">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Live Map View</CardTitle>
+          <CardTitle>{t('liveMapView')}</CardTitle>
           {noGpsCount > 0 && (
             <span className="text-xs text-slate-400">
-              {noGpsCount} vehicle{noGpsCount > 1 ? 's' : ''} without GPS — start trip to place on map
+              {t('noGpsSummary', { count: noGpsCount })}
             </span>
           )}
         </div>
@@ -67,8 +69,8 @@ export function VehicleMapView({ vehicles, routes, drivers, selectedVehicle, sel
                   color={isAt ? '#D97706' : 'white'} weight={isAt ? 3 : 2} fillOpacity={0.9}>
                   <Popup>
                     <p className="font-medium text-sm">{stop.name}</p>
-                    {isAt && <p className="text-xs text-amber-600 mt-0.5">Bus stopped here</p>}
-                    {isNext && <p className="text-xs text-blue-600 mt-0.5">Next stop</p>}
+                    {isAt && <p className="text-xs text-amber-600 mt-0.5">{t('busStoppedHere')}</p>}
+                    {isNext && <p className="text-xs text-blue-600 mt-0.5">{t('nextStop')}</p>}
                   </Popup>
                 </CircleMarker>
               );
@@ -95,19 +97,19 @@ export function VehicleMapView({ vehicles, routes, drivers, selectedVehicle, sel
                     <div className="p-2 space-y-1">
                       <p className="font-bold">{vehicle.registrationNumber}</p>
                       <p className="text-sm text-slate-600">{vehicle.model}</p>
-                      {route && <p className="text-sm text-blue-600">Route {route.number} — {route.name}</p>}
-                      {driver && <p className="text-sm">Driver: {driver.name}</p>}
+                      {route && <p className="text-sm text-blue-600">{t('routeFull', { number: route.number, name: route.name })}</p>}
+                      {driver && <p className="text-sm">{t('driver', { name: driver.name })}</p>}
                       {vehicle.atStop
-                        ? <p className="text-sm font-medium text-amber-600">At stop: {vehicle.atStop}</p>
-                        : vehicle.nextStopName && <p className="text-sm text-amber-600">Next: {vehicle.nextStopName}</p>
+                        ? <p className="text-sm font-medium text-amber-600">{t('atStop', { stop: vehicle.atStop })}</p>
+                        : vehicle.nextStopName && <p className="text-sm text-amber-600">{t('next', { stop: vehicle.nextStopName })}</p>
                       }
                       {vehicle.status === 'active' && (
                         <p className="text-sm" style={{ color: occupancyColor(occupancyRatio) }}>
-                          {vehicle.currentOccupancy} / {vehicle.seatingCapacity} seats · {vehicle.remainingSeats} remaining
+                          {t('occupancyLine', { current: vehicle.currentOccupancy, capacity: vehicle.seatingCapacity, remaining: vehicle.remainingSeats })}
                         </p>
                       )}
                       <Badge variant={vehicle.status === 'active' ? 'default' : vehicle.status === 'maintenance' ? 'destructive' : 'secondary'}>
-                        {vehicle.status}
+                        {t(`fleet:vehicleStatus.${vehicle.status}`)}
                       </Badge>
                     </div>
                   </Popup>
@@ -117,15 +119,15 @@ export function VehicleMapView({ vehicles, routes, drivers, selectedVehicle, sel
           </MapContainer>
 
           <div className="absolute bottom-4 left-4 z-[1000] bg-white/95 backdrop-blur-sm rounded-lg shadow-md p-3 text-xs space-y-1.5 pointer-events-none">
-            <p className="font-semibold text-slate-700">Legend</p>
-            {[['bg-green-500','Active / low occupancy'],['bg-yellow-500','Idle / 80%+ full'],['bg-red-500','Maintenance / at capacity'],['bg-slate-400','Offline']].map(([cls, label]) => (
+            <p className="font-semibold text-slate-700">{t('legend')}</p>
+            {[['bg-green-500', t('legendActive')],['bg-yellow-500', t('legendIdle')],['bg-red-500', t('legendMaintenance')],['bg-slate-400', t('legendOffline')]].map(([cls, label]) => (
               <div key={label} className="flex items-center gap-2"><span className={`size-2.5 rounded-full ${cls} shrink-0`}/><span>{label}</span></div>
             ))}
             {selectedVehicle && (
               <div className="border-t border-slate-200 pt-1 space-y-1.5">
-                <div className="flex items-center gap-2"><span className="size-2.5 rounded-full border-2 border-blue-500 shrink-0"/><span>Selected</span></div>
-                <div className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-blue-500 shrink-0"/><span>Route stop</span></div>
-                <div className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-amber-500 shrink-0"/><span>Next stop</span></div>
+                <div className="flex items-center gap-2"><span className="size-2.5 rounded-full border-2 border-blue-500 shrink-0"/><span>{t('selected')}</span></div>
+                <div className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-blue-500 shrink-0"/><span>{t('routeStop')}</span></div>
+                <div className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-amber-500 shrink-0"/><span>{t('nextStop')}</span></div>
               </div>
             )}
           </div>
@@ -136,35 +138,35 @@ export function VehicleMapView({ vehicles, routes, drivers, selectedVehicle, sel
             <CardContent className="pt-4">
               <div className="grid gap-4 md:grid-cols-4">
                 <div>
-                  <p className="text-xs text-slate-500">Vehicle</p>
+                  <p className="text-xs text-slate-500">{t('vehicle')}</p>
                   <p className="font-medium">{selectedVehicle.registrationNumber}</p>
                   <p className="text-sm text-slate-600">{selectedVehicle.model}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Status</p>
+                  <p className="text-xs text-slate-500">{t('status')}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge variant={selectedVehicle.status === 'active' ? 'default' : selectedVehicle.status === 'maintenance' ? 'destructive' : 'secondary'}>
-                      {selectedVehicle.status}
+                      {t(`fleet:vehicleStatus.${selectedVehicle.status}`)}
                     </Badge>
                     {selectedVehicle.status === 'active' && selectedVehicle.speed !== null && (
-                      <span className="text-sm">{Math.round(selectedVehicle.speed)} km/h</span>
+                      <span className="text-sm">{t('kmh', { speed: Math.round(selectedVehicle.speed) })}</span>
                     )}
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Fuel & Engine</p>
+                  <p className="text-xs text-slate-500">{t('fuelEngine')}</p>
                   <div className="flex items-center gap-3 mt-1">
                     {selectedVehicle.fuel !== null && (
                       <span className="flex items-center gap-1 text-sm"><Battery className="size-4"/>{selectedVehicle.fuel}%</span>
                     )}
                     <span className="flex items-center gap-1 text-sm">
                       <AlertCircle className={`size-4 ${selectedVehicle.engineStatus === 'good' ? 'text-green-500' : selectedVehicle.engineStatus === 'warning' ? 'text-yellow-500' : 'text-red-500'}`}/>
-                      {selectedVehicle.engineStatus}
+                      {t(`fleet:engineStatus.${selectedVehicle.engineStatus}`)}
                     </span>
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">{selectedVehicle.atStop ? 'At Stop' : 'Next Stop'}</p>
+                  <p className="text-xs text-slate-500">{selectedVehicle.atStop ? t('atStopLabel') : t('nextStopLabel')}</p>
                   {selectedVehicle.atStop ? (
                     <div className="flex items-center gap-1.5 mt-1">
                       <span className="inline-block size-2 shrink-0 rounded-full bg-amber-500 animate-pulse" />
@@ -174,7 +176,7 @@ export function VehicleMapView({ vehicles, routes, drivers, selectedVehicle, sel
                     <>
                       <p className="font-medium text-sm mt-1">{selectedVehicle.nextStopName || '—'}</p>
                       {selectedVehicle.progressPct !== undefined && (
-                        <p className="text-xs text-slate-400">{selectedVehicle.progressPct}% to stop</p>
+                        <p className="text-xs text-slate-400">{t('progressToStop', { pct: selectedVehicle.progressPct })}</p>
                       )}
                     </>
                   )}
@@ -182,7 +184,7 @@ export function VehicleMapView({ vehicles, routes, drivers, selectedVehicle, sel
               </div>
               {selectedVehicle.status === 'active' && (
                 <div className="mt-3 pt-3 border-t border-slate-100">
-                  <p className="text-xs text-slate-500 mb-1">Occupancy</p>
+                  <p className="text-xs text-slate-500 mb-1">{t('occupancy')}</p>
                   <div className="flex items-center gap-3">
                     <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
                       {(() => {
@@ -198,7 +200,7 @@ export function VehicleMapView({ vehicles, routes, drivers, selectedVehicle, sel
                       })()}
                     </div>
                     <span className="text-sm shrink-0">
-                      {selectedVehicle.currentOccupancy}/{selectedVehicle.seatingCapacity} seats · {selectedVehicle.remainingSeats} remaining
+                      {t('occupancyLine', { current: selectedVehicle.currentOccupancy, capacity: selectedVehicle.seatingCapacity, remaining: selectedVehicle.remainingSeats })}
                     </span>
                   </div>
                 </div>
