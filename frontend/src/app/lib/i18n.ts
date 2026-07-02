@@ -18,6 +18,8 @@ import enMaintenance from '../locales/en/maintenance.json';
 import rwMaintenance from '../locales/rw/maintenance.json';
 import enAnalytics from '../locales/en/analytics.json';
 import rwAnalytics from '../locales/rw/analytics.json';
+import enAdmin from '../locales/en/admin.json';
+import rwAdmin from '../locales/rw/admin.json';
 
 // localStorage key the chosen language is persisted under — mirrors the
 // `st-access-token` convention in api-client.ts.
@@ -31,13 +33,13 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      en: { common: enCommon, errors: enErrors, passenger: enPassenger, fleet: enFleet, dispatch: enDispatch, drivers: enDrivers, maintenance: enMaintenance, analytics: enAnalytics },
-      rw: { common: rwCommon, errors: rwErrors, passenger: rwPassenger, fleet: rwFleet, dispatch: rwDispatch, drivers: rwDrivers, maintenance: rwMaintenance, analytics: rwAnalytics },
+      en: { common: enCommon, errors: enErrors, passenger: enPassenger, fleet: enFleet, dispatch: enDispatch, drivers: enDrivers, maintenance: enMaintenance, analytics: enAnalytics, admin: enAdmin },
+      rw: { common: rwCommon, errors: rwErrors, passenger: rwPassenger, fleet: rwFleet, dispatch: rwDispatch, drivers: rwDrivers, maintenance: rwMaintenance, analytics: rwAnalytics, admin: rwAdmin },
     },
     fallbackLng: 'en',
     supportedLngs: SUPPORTED_LANGUAGES,
     defaultNS: 'common',
-    ns: ['common', 'errors', 'passenger', 'fleet', 'dispatch', 'drivers', 'maintenance', 'analytics'],
+    ns: ['common', 'errors', 'passenger', 'fleet', 'dispatch', 'drivers', 'maintenance', 'analytics', 'admin'],
     detection: {
       order: ['localStorage', 'navigator'],
       lookupLocalStorage: LANG_KEY,

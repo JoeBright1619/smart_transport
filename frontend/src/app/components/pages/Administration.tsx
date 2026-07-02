@@ -11,6 +11,7 @@ import { useAuth } from '../../lib/auth-context';
 import { listUsers, createUser, updateUser, deleteUser } from '../../services/users.service';
 import type { UserRead, TenantUserRole } from '../../lib/api-types';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { validateEmail, validateName, validatePhone } from '../../lib/validation';
 import { messageForError } from '../../lib/error-messages';
 
@@ -21,15 +22,17 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation('admin');
   const cls = STATUS_STYLES[status] ?? 'bg-slate-100 text-slate-600';
   return (
     <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${cls}`}>
-      {status === 'pending_verification' ? 'Pending' : status}
+      {t(`users.status_${status}`, { defaultValue: status })}
     </span>
   );
 }
 
 export function Administration() {
+  const { t } = useTranslation('admin');
   const [users, setUsers] = useState<UserRead[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -64,7 +67,7 @@ export function Administration() {
       const data = await listUsers({ pageSize: 100 });
       setUsers(data.items);
     } catch {
-      toast.error('Failed to load users');
+      toast.error(t('users.failedLoad'));
     } finally {
       setLoading(false);
     }
@@ -92,7 +95,7 @@ export function Administration() {
       setIsAddOpen(false);
       setFormData({ fullName: '', email: '', role: 'dispatcher', phone: '' });
       setInviteErrors({});
-      toast.success('Invitation sent! The user will receive an email to set their password.');
+      toast.success(t('users.inviteSent'));
       loadUsers();
     } catch (err: unknown) {
       toast.error(messageForError(err));
@@ -113,17 +116,17 @@ export function Administration() {
       setIsEditOpen(false);
       loadUsers();
     } catch {
-      toast.error('Failed to update user');
+      toast.error(t('users.failedUpdate'));
     }
   };
 
   const handleDelete = async (u: UserRead) => {
-    if (!window.confirm(`Remove ${u.fullName} from this organisation?`)) return;
+    if (!window.confirm(t('users.confirmRemove', { name: u.fullName }))) return;
     try {
       await deleteUser(u.id);
       loadUsers();
     } catch {
-      toast.error('Failed to delete user');
+      toast.error(t('users.failedDelete'));
     }
   };
 
@@ -131,29 +134,28 @@ export function Administration() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">User Management</h1>
-          <p className="text-slate-600">Manage user accounts, roles, and permissions</p>
+          <h1 className="text-2xl font-bold">{t('users.title')}</h1>
+          <p className="text-slate-600">{t('users.subtitle')}</p>
         </div>
         {isAdmin && (
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
             <DialogTrigger asChild>
               <Button>
                 <UserPlus className="mr-2 size-4" />
-                Invite User
+                {t('users.inviteUser')}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Invite New Staff Member</DialogTitle>
+                <DialogTitle>{t('users.inviteTitle')}</DialogTitle>
               </DialogHeader>
               <p className="text-sm text-slate-500 -mt-1">
-                An invitation email will be sent to the address below with a link to set
-                their password.
+                {t('users.inviteHint')}
               </p>
               <form onSubmit={handleAddUser} className="space-y-4 pt-1">
                 <div className="space-y-1">
                   <Input
-                    placeholder="Full Name"
+                    placeholder={t('users.fullName')}
                     required
                     value={formData.fullName}
                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
@@ -166,7 +168,7 @@ export function Administration() {
                 <div className="space-y-1">
                   <Input
                     type="email"
-                    placeholder="Work Email"
+                    placeholder={t('users.workEmail')}
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -178,7 +180,7 @@ export function Administration() {
                 </div>
                 <div className="space-y-1">
                   <Input
-                    placeholder="Phone (optional)"
+                    placeholder={t('users.phoneOptional')}
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     aria-invalid={!!inviteErrors.phone}
@@ -192,21 +194,21 @@ export function Administration() {
                   onValueChange={(val) => setFormData({ ...formData, role: val as TenantUserRole })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Role" />
+                    <SelectValue placeholder={t('users.role')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="operator">Operator</SelectItem>
-                    <SelectItem value="dispatcher">Dispatcher</SelectItem>
+                    <SelectItem value="admin">{t('users.role_admin')}</SelectItem>
+                    <SelectItem value="operator">{t('users.role_operator')}</SelectItem>
+                    <SelectItem value="dispatcher">{t('users.role_dispatcher')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <div className="pt-2 flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>
-                    Cancel
+                    {t('users.cancel')}
                   </Button>
                   <Button type="submit">
                     <Mail className="mr-1.5 size-4" />
-                    Send Invitation
+                    {t('users.sendInvitation')}
                   </Button>
                 </div>
               </form>
@@ -219,24 +221,24 @@ export function Administration() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="size-5" />
-            Registered Users
+            {t('users.registeredUsers')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-slate-500 text-sm">Loading users…</p>
+            <p className="text-slate-500 text-sm">{t('users.loadingUsers')}</p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Joined</TableHead>
-                    {isAdmin && <TableHead className="text-right">Actions</TableHead>}
+                    <TableHead>{t('users.colName')}</TableHead>
+                    <TableHead>{t('users.colEmail')}</TableHead>
+                    <TableHead>{t('users.colRole')}</TableHead>
+                    <TableHead>{t('users.colStatus')}</TableHead>
+                    <TableHead>{t('users.colPhone')}</TableHead>
+                    <TableHead>{t('users.colJoined')}</TableHead>
+                    {isAdmin && <TableHead className="text-right">{t('users.colActions')}</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -245,7 +247,7 @@ export function Administration() {
                       <TableCell className="font-medium">{u.fullName}</TableCell>
                       <TableCell>{u.email}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="capitalize">{u.role}</Badge>
+                        <Badge variant="outline" className="capitalize">{t(`users.role_${u.role}`, { defaultValue: u.role })}</Badge>
                       </TableCell>
                       <TableCell>
                         <StatusBadge status={u.status ?? 'active'} />
@@ -275,7 +277,7 @@ export function Administration() {
                         colSpan={isAdmin ? 7 : 6}
                         className="text-center text-slate-500 py-4"
                       >
-                        No users found
+                        {t('users.noUsers')}
                       </TableCell>
                     </TableRow>
                   )}
@@ -290,17 +292,17 @@ export function Administration() {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
+            <DialogTitle>{t('users.editUser')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleEditUser} className="space-y-4">
             <Input
-              placeholder="Full Name"
+              placeholder={t('users.fullName')}
               required
               value={editData.fullName}
               onChange={(e) => setEditData({ ...editData, fullName: e.target.value })}
             />
             <Input
-              placeholder="Phone"
+              placeholder={t('users.phone')}
               value={editData.phone}
               onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
             />
@@ -312,17 +314,17 @@ export function Administration() {
                 <SelectValue placeholder="Role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="operator">Operator</SelectItem>
-                <SelectItem value="dispatcher">Dispatcher</SelectItem>
-                <SelectItem value="passenger">Passenger</SelectItem>
+                <SelectItem value="admin">{t('users.role_admin')}</SelectItem>
+                <SelectItem value="operator">{t('users.role_operator')}</SelectItem>
+                <SelectItem value="dispatcher">{t('users.role_dispatcher')}</SelectItem>
+                <SelectItem value="passenger">{t('users.role_passenger')}</SelectItem>
               </SelectContent>
             </Select>
             <div className="pt-4 flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>
-                Cancel
+                {t('users.cancel')}
               </Button>
-              <Button type="submit">Save Changes</Button>
+              <Button type="submit">{t('users.saveChanges')}</Button>
             </div>
           </form>
         </DialogContent>

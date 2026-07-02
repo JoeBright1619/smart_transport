@@ -16,6 +16,7 @@ import {
   DialogDescription,
 } from '../../ui/dialog';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { pageHeader, sectionTitle, stampFooters, TABLE_STYLES, CONTENT_Y } from '../analytics/analytics-pdf';
 
 interface Props {
@@ -115,6 +116,7 @@ function downloadPdf(report: PassengerUsageReport): void {
 }
 
 export function PassengerReportModal({ passenger, open, onClose }: Props) {
+  const { t } = useTranslation('admin');
   const defaults = defaultDateRange();
   const [dateFrom, setDateFrom] = useState(defaults.from);
   const [dateTo, setDateTo] = useState(defaults.to);
@@ -124,14 +126,14 @@ export function PassengerReportModal({ passenger, open, onClose }: Props) {
   const handleClose = () => { setReport(null); onClose(); };
 
   const handlePreview = async () => {
-    if (!dateFrom || !dateTo) { toast.error('Select a date range first'); return; }
-    if (dateFrom > dateTo) { toast.error('"From" date must be on or before "To" date'); return; }
+    if (!dateFrom || !dateTo) { toast.error(t('report.selectDateRange')); return; }
+    if (dateFrom > dateTo) { toast.error(t('report.fromBeforeTo')); return; }
     setLoading(true);
     try {
       const data = await superadminService.getPassengerReport(passenger.id, dateFrom, dateTo);
       setReport(data);
     } catch {
-      toast.error('Failed to load report');
+      toast.error(t('report.failedLoad'));
     } finally {
       setLoading(false);
     }
@@ -144,7 +146,7 @@ export function PassengerReportModal({ passenger, open, onClose }: Props) {
         : 'w-[95vw] max-w-sm'
       }>
         <DialogHeader>
-          <DialogTitle>Passenger Report</DialogTitle>
+          <DialogTitle>{t('report.title')}</DialogTitle>
           <DialogDescription>
             {passenger.fullName}
             {report && ` — ${report.dateFrom} to ${report.dateTo}`}
@@ -155,7 +157,7 @@ export function PassengerReportModal({ passenger, open, onClose }: Props) {
           <div className="space-y-4 py-2">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="date-from">From</Label>
+                <Label htmlFor="date-from">{t('report.from')}</Label>
                 <Input
                   id="date-from"
                   type="date"
@@ -165,7 +167,7 @@ export function PassengerReportModal({ passenger, open, onClose }: Props) {
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="date-to">To</Label>
+                <Label htmlFor="date-to">{t('report.to')}</Label>
                 <Input
                   id="date-to"
                   type="date"
@@ -177,17 +179,17 @@ export function PassengerReportModal({ passenger, open, onClose }: Props) {
             </div>
             <Button className="w-full" onClick={() => void handlePreview()} disabled={loading}>
               {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-              Preview Report
+              {t('report.previewReport')}
             </Button>
           </div>
         ) : (
           <div className="space-y-4 py-2">
             {/* Summary */}
             <div className="rounded-lg border bg-slate-50 px-4 py-3 text-sm space-y-1">
-              <p className="font-medium text-slate-700">Summary</p>
+              <p className="font-medium text-slate-700">{t('report.summary')}</p>
               <div className="flex flex-wrap gap-4 text-slate-600">
-                <span>Boardings: <strong>{report.totalBoardings}</strong></span>
-                <span>Alightings: <strong>{report.totalAlightings}</strong></span>
+                <span>{t('report.boardings')}: <strong>{report.totalBoardings}</strong></span>
+                <span>{t('report.alightings')}: <strong>{report.totalAlightings}</strong></span>
               </div>
               {report.message && <p className="text-slate-500 text-xs">{report.message}</p>}
             </div>
@@ -196,9 +198,9 @@ export function PassengerReportModal({ passenger, open, onClose }: Props) {
             {report.mostUsedRoutes.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Top Routes</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">{t('report.topRoutes')}</p>
                   <table className="w-full text-xs">
-                    <thead><tr className="bg-blue-600 text-white"><th className="text-left px-2 py-1">Route</th><th className="px-2 py-1">Boardings</th></tr></thead>
+                    <thead><tr className="bg-blue-600 text-white"><th className="text-left px-2 py-1">{t('report.route')}</th><th className="px-2 py-1">{t('report.boardingsCol')}</th></tr></thead>
                     <tbody>
                       {report.mostUsedRoutes.slice(0, 3).map((r) => (
                         <tr key={r.routeName} className="even:bg-slate-50">
@@ -210,9 +212,9 @@ export function PassengerReportModal({ passenger, open, onClose }: Props) {
                   </table>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Top Stops</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">{t('report.topStops')}</p>
                   <table className="w-full text-xs">
-                    <thead><tr className="bg-blue-600 text-white"><th className="text-left px-2 py-1">Stop</th><th className="px-2 py-1">Boardings</th></tr></thead>
+                    <thead><tr className="bg-blue-600 text-white"><th className="text-left px-2 py-1">{t('report.stop')}</th><th className="px-2 py-1">{t('report.boardingsCol')}</th></tr></thead>
                     <tbody>
                       {report.mostUsedStops.slice(0, 3).map((s) => (
                         <tr key={s.stopName} className="even:bg-slate-50">
@@ -228,30 +230,30 @@ export function PassengerReportModal({ passenger, open, onClose }: Props) {
 
             {/* Timeline */}
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Trip Timeline</p>
+              <p className="text-xs font-semibold text-slate-500 uppercase mb-1">{t('report.tripTimeline')}</p>
               <div className="max-h-96 overflow-y-auto overflow-x-auto rounded border text-xs">
                 <table className="min-w-full w-full">
                   <thead className="sticky top-0 bg-blue-600 text-white">
                     <tr>
-                      <th className="text-left px-2 py-1">Date & Time</th>
-                      <th className="px-2 py-1">Event</th>
-                      <th className="text-left px-2 py-1">Route</th>
-                      <th className="text-left px-2 py-1">Stop</th>
+                      <th className="text-left px-2 py-1">{t('report.dateTime')}</th>
+                      <th className="px-2 py-1">{t('report.event')}</th>
+                      <th className="text-left px-2 py-1">{t('report.route')}</th>
+                      <th className="text-left px-2 py-1">{t('report.stop')}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {report.timeline.map((t, i) => (
+                    {report.timeline.map((ev, i) => (
                       <tr key={i} className="even:bg-slate-50">
                         <td className="px-2 py-1 whitespace-nowrap">
-                          {new Date(t.recordedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                          {new Date(ev.recordedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
                         </td>
                         <td className="px-2 py-1 text-center">
-                          <Badge variant={t.eventType === 'boarded' ? 'default' : 'secondary'} className="text-xs">
-                            {t.eventType === 'boarded' ? 'Boarded' : 'Alighted'}
+                          <Badge variant={ev.eventType === 'boarded' ? 'default' : 'secondary'} className="text-xs">
+                            {ev.eventType === 'boarded' ? t('report.boarded') : t('report.alighted')}
                           </Badge>
                         </td>
-                        <td className="px-2 py-1">{t.routeName}</td>
-                        <td className="px-2 py-1">{t.stopName}</td>
+                        <td className="px-2 py-1">{ev.routeName}</td>
+                        <td className="px-2 py-1">{ev.stopName}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -262,10 +264,10 @@ export function PassengerReportModal({ passenger, open, onClose }: Props) {
             {/* Actions */}
             <div className="flex gap-2 pt-1">
               <Button variant="outline" size="sm" onClick={() => setReport(null)}>
-                <ArrowLeft className="mr-1 size-3.5" /> Change Dates
+                <ArrowLeft className="mr-1 size-3.5" /> {t('report.changeDates')}
               </Button>
-              <Button size="sm" className="flex-1" onClick={() => { downloadPdf(report); toast.success('PDF downloaded'); }}>
-                <FileDown className="mr-2 size-4" /> Download PDF
+              <Button size="sm" className="flex-1" onClick={() => { downloadPdf(report); toast.success(t('report.pdfDownloaded')); }}>
+                <FileDown className="mr-2 size-4" /> {t('report.downloadPdf')}
               </Button>
             </div>
           </div>

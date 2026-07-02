@@ -11,8 +11,10 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '../../ui/table';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export function SuperadminPassengersTab() {
+  const { t } = useTranslation('admin');
   const [passengers, setPassengers] = useState<UserRead[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -35,7 +37,7 @@ export function SuperadminPassengersTab() {
       });
       setPassengers(items);
     } catch {
-      toast.error('Failed to load passengers');
+      toast.error(t('passengers.failedLoad'));
     } finally {
       setLoading(false);
     }
@@ -49,9 +51,9 @@ export function SuperadminPassengersTab() {
     try {
       const updated = await superadminService.suspendPassenger(id);
       setPassengers((prev) => prev.map((p) => (p.id === id ? updated : p)));
-      toast.success('Passenger suspended');
+      toast.success(t('passengers.suspendedToast'));
     } catch {
-      toast.error('Failed to suspend passenger');
+      toast.error(t('passengers.failedSuspend'));
     } finally {
       setActionId(null);
     }
@@ -62,9 +64,9 @@ export function SuperadminPassengersTab() {
     try {
       const updated = await superadminService.reactivatePassenger(id);
       setPassengers((prev) => prev.map((p) => (p.id === id ? updated : p)));
-      toast.success('Passenger reactivated');
+      toast.success(t('passengers.reactivatedToast'));
     } catch {
-      toast.error('Failed to reactivate passenger');
+      toast.error(t('passengers.failedReactivate'));
     } finally {
       setActionId(null);
     }
@@ -73,14 +75,14 @@ export function SuperadminPassengersTab() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Passengers</CardTitle>
+        <CardTitle>{t('passengers.title')}</CardTitle>
         <CardDescription>
-          Platform-wide passenger accounts. Suspend blocks login; Reactivate restores access.
+          {t('passengers.desc')}
         </CardDescription>
         <div className="relative mt-2 max-w-sm">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
           <Input
-            placeholder="Search by name or email..."
+            placeholder={t('passengers.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -89,19 +91,19 @@ export function SuperadminPassengersTab() {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <p className="text-sm text-slate-500">Loading passengers…</p>
+          <p className="text-sm text-slate-500">{t('passengers.loading')}</p>
         ) : passengers.length === 0 ? (
-          <p className="text-sm text-slate-500">No passengers found.</p>
+          <p className="text-sm text-slate-500">{t('passengers.noPassengers')}</p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Registered</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('passengers.colName')}</TableHead>
+                <TableHead>{t('passengers.colEmail')}</TableHead>
+                <TableHead>{t('passengers.colPhone')}</TableHead>
+                <TableHead>{t('passengers.colRegistered')}</TableHead>
+                <TableHead>{t('passengers.colStatus')}</TableHead>
+                <TableHead className="text-right">{t('passengers.colActions')}</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -117,7 +119,7 @@ export function SuperadminPassengersTab() {
                     <TableCell>{new Date(p.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell>
                       <Badge variant={isSuspended ? 'destructive' : 'default'}>
-                        {isSuspended ? 'Suspended' : 'Active'}
+                        {isSuspended ? t('passengers.suspended') : t('passengers.active')}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -125,10 +127,10 @@ export function SuperadminPassengersTab() {
                         <div className="flex justify-end gap-2">
                           <Button size="sm" variant="destructive" disabled={isBusy}
                             onClick={() => void handleSuspend(p.id)}>
-                            <UserX className="mr-1 size-3" />Confirm suspend
+                            <UserX className="mr-1 size-3" />{t('passengers.confirmSuspend')}
                           </Button>
                           <Button size="sm" variant="outline" onClick={() => setConfirmId(null)}>
-                            Cancel
+                            {t('passengers.cancel')}
                           </Button>
                         </div>
                       ) : (
@@ -136,13 +138,13 @@ export function SuperadminPassengersTab() {
                           {!isSuspended && (
                             <Button size="sm" variant="outline" disabled={isBusy}
                               onClick={() => setConfirmId(p.id)}>
-                              <UserX className="mr-1 size-3" />Suspend
+                              <UserX className="mr-1 size-3" />{t('passengers.suspend')}
                             </Button>
                           )}
                           {isSuspended && (
                             <Button size="sm" disabled={isBusy}
                               onClick={() => void handleReactivate(p.id)}>
-                              <UserCheck className="mr-1 size-3" />Reactivate
+                              <UserCheck className="mr-1 size-3" />{t('passengers.reactivate')}
                             </Button>
                           )}
                         </div>
@@ -151,7 +153,7 @@ export function SuperadminPassengersTab() {
                     <TableCell>
                       <Button size="sm" variant="ghost"
                         onClick={() => setReportPassenger(p)}>
-                        <FileText className="mr-1 size-3" />Report
+                        <FileText className="mr-1 size-3" />{t('passengers.report')}
                       </Button>
                     </TableCell>
                   </TableRow>

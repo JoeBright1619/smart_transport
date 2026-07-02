@@ -19,9 +19,12 @@ import {
 } from '../ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
+import { messageForError } from '../../lib/error-messages';
 import React from 'react';
 
 export function SuperadminPortal() {
+  const { t } = useTranslation('admin');
   const [analytics, setAnalytics] = useState<SuperadminAnalytics | null>(null);
   const [tenants, setTenants] = useState<TenantRead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,9 +51,7 @@ export function SuperadminPortal() {
       setAnalytics(analyticsData);
       setTenants(tenantData.items);
     } catch (fetchError) {
-      setError(
-        fetchError instanceof Error ? fetchError.message : 'Unable to load platform data',
-      );
+      setError(messageForError(fetchError));
     } finally {
       setLoading(false);
     }
@@ -75,12 +76,12 @@ export function SuperadminPortal() {
         setSelectedTenant(prev => prev ? { ...prev, isActive: updated.isActive } : prev);
       }
       toast.success(
-        updated.isActive ? `${updated.name} reactivated` : `${updated.name} suspended`,
+        updated.isActive
+          ? t('superadmin.reactivatedToast', { name: updated.name })
+          : t('superadmin.suspendedToast', { name: updated.name }),
       );
     } catch (toggleError) {
-      toast.error(
-        toggleError instanceof Error ? toggleError.message : 'Failed to update tenant',
-      );
+      toast.error(messageForError(toggleError));
     } finally {
       setActionTenantId(null);
     }
@@ -93,14 +94,10 @@ export function SuperadminPortal() {
     try {
       const { accessToken } = await superadminService.impersonateTenant(tenant.id);
       setStoredToken(accessToken);
-      toast.success(`Impersonating ${tenant.name}`);
+      toast.success(t('superadmin.impersonating', { name: tenant.name }));
       window.location.assign('/');
     } catch (impersonateError) {
-      toast.error(
-        impersonateError instanceof Error
-          ? impersonateError.message
-          : 'Failed to impersonate tenant admin',
-      );
+      toast.error(messageForError(impersonateError));
       setActionTenantId(null);
     }
   };
@@ -112,7 +109,7 @@ export function SuperadminPortal() {
       const detail = await superadminService.getTenant(tenantId);
       setSelectedTenant(detail);
     } catch (err) {
-      toast.error('Failed to load tenant details');
+      toast.error(t('superadmin.failedLoadDetail'));
     } finally {
       setLoadingDetail(false);
     }
@@ -140,14 +137,14 @@ export function SuperadminPortal() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">Platform Administration</h1>
-          <p className="text-slate-600">Manage tenants and view platform-wide metrics</p>
+          <h1 className="text-2xl font-bold">{t('superadmin.title')}</h1>
+          <p className="text-slate-600">{t('superadmin.subtitle')}</p>
         </div>
         <Card>
           <CardContent className="flex flex-col items-start gap-4 p-6">
-            <p className="font-medium text-red-700">Unable to load platform data</p>
+            <p className="font-medium text-red-700">{t('superadmin.unableToLoad')}</p>
             <p className="text-sm text-slate-600">{error}</p>
-            <Button onClick={() => void loadPortal()}>Retry</Button>
+            <Button onClick={() => void loadPortal()}>{t('superadmin.retry')}</Button>
           </CardContent>
         </Card>
       </div>
@@ -158,12 +155,12 @@ export function SuperadminPortal() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Platform Administration</h1>
-          <p className="text-slate-600">Manage tenants and view platform-wide metrics</p>
+          <h1 className="text-2xl font-bold">{t('superadmin.title')}</h1>
+          <p className="text-slate-600">{t('superadmin.subtitle')}</p>
         </div>
         <Button variant="outline" onClick={() => void loadPortal()}>
           <RefreshCw className="mr-2 size-4" />
-          Refresh
+          {t('superadmin.refresh')}
         </Button>
       </div>
 
@@ -179,19 +176,19 @@ export function SuperadminPortal() {
         <TabsList>
           <TabsTrigger value="analytics">
             <Activity className="mr-2 size-4" />
-            Analytics
+            {t('superadmin.tabs.analytics')}
           </TabsTrigger>
           <TabsTrigger value="tenants">
             <Building2 className="mr-2 size-4" />
-            Tenants
+            {t('superadmin.tabs.tenants')}
           </TabsTrigger>
           <TabsTrigger value="passengers">
             <Users className="mr-2 size-4" />
-            Passengers
+            {t('superadmin.tabs.passengers')}
           </TabsTrigger>
           <TabsTrigger value="tenant-detail" disabled={!selectedTenant && !loadingDetail}>
             <Info className="mr-2 size-4" />
-            Tenant Detail
+            {t('superadmin.tabs.tenantDetail')}
           </TabsTrigger>
         </TabsList>
 
@@ -199,7 +196,7 @@ export function SuperadminPortal() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600">Total Tenants</CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-600">{t('superadmin.stats.totalTenants')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
@@ -210,7 +207,7 @@ export function SuperadminPortal() {
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600">Active Tenants</CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-600">{t('superadmin.stats.activeTenants')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
@@ -221,7 +218,7 @@ export function SuperadminPortal() {
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600">Total Vehicles</CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-600">{t('superadmin.stats.totalVehicles')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
@@ -232,7 +229,7 @@ export function SuperadminPortal() {
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600">Trips Today</CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-600">{t('superadmin.stats.tripsToday')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{analytics?.totalTripsToday ?? 0}</div>
@@ -240,7 +237,7 @@ export function SuperadminPortal() {
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600">Passengers Today</CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-600">{t('superadmin.stats.passengersToday')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
@@ -257,22 +254,22 @@ export function SuperadminPortal() {
         <TabsContent value="tenants" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Tenants</CardTitle>
-              <CardDescription>Click on a row to view full details.</CardDescription>
+              <CardTitle>{t('superadmin.tenantsTitle')}</CardTitle>
+              <CardDescription>{t('superadmin.tenantsDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               {tenants.length === 0 ? (
-                <p className="text-sm text-slate-500">No tenants registered on the platform.</p>
+                <p className="text-sm text-slate-500">{t('superadmin.noTenants')}</p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Users</TableHead>
-                      <TableHead>Vehicles</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>{t('superadmin.colName')}</TableHead>
+                      <TableHead>{t('superadmin.colContact')}</TableHead>
+                      <TableHead>{t('superadmin.colUsers')}</TableHead>
+                      <TableHead>{t('superadmin.colVehicles')}</TableHead>
+                      <TableHead>{t('superadmin.colStatus')}</TableHead>
+                      <TableHead className="text-right">{t('superadmin.colActions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -291,7 +288,7 @@ export function SuperadminPortal() {
                           <TableCell>{tenant.vehicleCount}</TableCell>
                           <TableCell>
                             <Badge variant={tenant.isActive ? 'default' : 'secondary'}>
-                              {tenant.isActive ? 'Active' : 'Suspended'}
+                              {tenant.isActive ? t('superadmin.active') : t('superadmin.suspended')}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
@@ -302,7 +299,7 @@ export function SuperadminPortal() {
                                 disabled={isBusy || !tenant.isActive}
                                 onClick={(e) => void handleImpersonate(tenant, e)}
                               >
-                                Impersonate
+                                {t('superadmin.impersonate')}
                               </Button>
                               <Button
                                 size="sm"
@@ -310,7 +307,7 @@ export function SuperadminPortal() {
                                 disabled={isBusy}
                                 onClick={(e) => void handleToggleActive(tenant, e)}
                               >
-                                {tenant.isActive ? 'Suspend' : 'Reactivate'}
+                                {tenant.isActive ? t('superadmin.suspend') : t('superadmin.reactivate')}
                               </Button>
                             </div>
                           </TableCell>
@@ -331,8 +328,8 @@ export function SuperadminPortal() {
         <TabsContent value="tenant-detail" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Tenant Detail</CardTitle>
-              <CardDescription>Detailed view of the selected tenant.</CardDescription>
+              <CardTitle>{t('superadmin.detailTitle')}</CardTitle>
+              <CardDescription>{t('superadmin.detailDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               {loadingDetail ? (
@@ -341,43 +338,43 @@ export function SuperadminPortal() {
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="space-y-4">
                     <div>
-                      <h4 className="text-sm font-medium text-slate-500">Name</h4>
+                      <h4 className="text-sm font-medium text-slate-500">{t('superadmin.name')}</h4>
                       <p className="text-lg font-medium">{selectedTenant.name}</p>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-slate-500">Contact Email</h4>
+                      <h4 className="text-sm font-medium text-slate-500">{t('superadmin.contactEmail')}</h4>
                       <p>{selectedTenant.contactEmail}</p>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-slate-500">Status</h4>
+                      <h4 className="text-sm font-medium text-slate-500">{t('superadmin.status')}</h4>
                       <Badge variant={selectedTenant.isActive ? 'default' : 'secondary'} className="mt-1">
-                        {selectedTenant.isActive ? 'Active' : 'Suspended'}
+                        {selectedTenant.isActive ? t('superadmin.active') : t('superadmin.suspended')}
                       </Badge>
                     </div>
                   </div>
                   <div className="space-y-4">
                     <div>
-                      <h4 className="text-sm font-medium text-slate-500">Created At</h4>
+                      <h4 className="text-sm font-medium text-slate-500">{t('superadmin.createdAt')}</h4>
                       <p>{new Date(selectedTenant.createdAt).toLocaleString()}</p>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-slate-500">Updated At</h4>
+                      <h4 className="text-sm font-medium text-slate-500">{t('superadmin.updatedAt')}</h4>
                       <p>{new Date(selectedTenant.updatedAt).toLocaleString()}</p>
                     </div>
                     <div className="flex gap-4 pt-2">
                       <div>
-                        <h4 className="text-sm font-medium text-slate-500">Users</h4>
+                        <h4 className="text-sm font-medium text-slate-500">{t('superadmin.users')}</h4>
                         <p className="text-xl font-bold">{selectedTenant.userCount}</p>
                       </div>
                       <div>
-                        <h4 className="text-sm font-medium text-slate-500">Vehicles</h4>
+                        <h4 className="text-sm font-medium text-slate-500">{t('superadmin.vehicles')}</h4>
                         <p className="text-xl font-bold">{selectedTenant.vehicleCount}</p>
                       </div>
                     </div>
                   </div>
                 </div>
               ) : (
-                <p className="text-slate-500">Select a tenant from the Tenants tab to view details.</p>
+                <p className="text-slate-500">{t('superadmin.selectPrompt')}</p>
               )}
             </CardContent>
           </Card>
