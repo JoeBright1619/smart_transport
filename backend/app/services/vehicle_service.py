@@ -76,6 +76,7 @@ async def create_vehicle(
 ) -> Vehicle:
     existing = await db.execute(
         select(Vehicle).where(
+            Vehicle.tenant_id == tenant_id,
             Vehicle.registration_number == data.registration_number,
             Vehicle.is_deleted.is_(False),
         )

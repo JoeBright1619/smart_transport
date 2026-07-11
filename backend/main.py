@@ -1,5 +1,7 @@
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request, status
@@ -33,6 +35,8 @@ from app.routers import (
 )
 from app.websocket import tracking
 
+logger = logging.getLogger(__name__)
+
 
 def _error_response(status_code: int, code: str, message: str) -> JSONResponse:
     return JSONResponse(
@@ -46,6 +50,49 @@ def _error_response(status_code: int, code: str, message: str) -> JSONResponse:
             },
         },
     )
+
+
+def _apply_cors_headers(request: Request, response: JSONResponse) -> JSONResponse:
+    """Echo CORS headers onto a response.
+
+    The catch-all 500 handler runs in Starlette's ServerErrorMiddleware, which sits
+    *outside* CORSMiddleware, so its responses would otherwise lack an
+    Access-Control-Allow-Origin header — making the browser mislabel a real server
+    error as a CORS failure. We add the headers here so genuine 500s surface as 500s.
+    """
+    origin = request.headers.get("origin")
+    if origin and origin in settings.CORS_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Vary"] = "Origin"
+    return response
+
+
+async def _warn_if_db_behind_head() -> None:
+    """Log a loud warning if the database schema is behind the code's migration head.
+
+    Schema/migration drift (DB behind ``alembic upgrade head``) causes writes to 500 in
+    ways the test suite cannot catch — it builds its schema from the models, not the
+    migration chain. This guardrail surfaces the drift at startup instead. It must never
+    block startup, so all failures are swallowed with a warning.
+    """
+    try:
+        from alembic.config import Config
+        from alembic.script import ScriptDirectory
+
+        cfg = Config(str(Path(__file__).parent / "alembic.ini"))
+        head = ScriptDirectory.from_config(cfg).get_current_head()
+        async with engine.connect() as conn:
+            db_rev = await conn.scalar(text("SELECT version_num FROM alembic_version"))
+        if db_rev != head:
+            logger.warning(
+                "DATABASE SCHEMA OUT OF DATE: db is at %r but code expects head %r. "
+                "Run 'alembic upgrade head' — writes may return 500 until you do.",
+                db_rev,
+                head,
+            )
+    except Exception as exc:  # pragma: no cover - guardrail must never block startup
+        logger.warning("Could not verify database migration state: %s", exc)
 
 
 def _is_error_envelope(detail: Any) -> bool:
@@ -63,6 +110,8 @@ def _is_error_envelope(detail: Any) -> bool:
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     async with engine.connect() as conn:
         await conn.execute(text("SELECT 1"))
+
+    await _warn_if_db_behind_head()
 
     start_vehicle_simulation()
 
@@ -188,10 +237,13 @@ def create_app() -> FastAPI:
         exc: Exception,
     ) -> JSONResponse:
         message = str(exc) if settings.DEBUG else "Internal server error"
-        return _error_response(
-            status.HTTP_500_INTERNAL_SERVER_ERROR,
-            "INTERNAL_SERVER_ERROR",
-            message,
+        return _apply_cors_headers(
+            request,
+            _error_response(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "INTERNAL_SERVER_ERROR",
+                message,
+            ),
         )
 
     return app

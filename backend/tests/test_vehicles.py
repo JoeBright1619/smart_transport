@@ -75,6 +75,41 @@ async def test_create_happy_path(client, admin):
     assert r.json()["data"]["registrationNumber"] == "RAD 999 Z"
 
 
+async def test_create_returns_idle_vehicle_without_gps(client, admin):
+    r = await client.post("/api/v1/vehicles", json=_CREATE, headers=auth_headers(admin))
+    assert r.status_code == 201
+    data = r.json()["data"]
+    assert data["status"] == "idle"
+    assert data["currentLocation"] is None
+
+
+async def test_create_duplicate_within_tenant_returns_409(client, admin):
+    r1 = await client.post(
+        "/api/v1/vehicles", json=_CREATE, headers=auth_headers(admin)
+    )
+    assert r1.status_code == 201
+    r2 = await client.post(
+        "/api/v1/vehicles", json=_CREATE, headers=auth_headers(admin)
+    )
+    assert r2.status_code == 409
+
+
+async def test_create_same_registration_different_tenant_allowed(
+    client, admin, make_tenant, make_user
+):
+    r1 = await client.post(
+        "/api/v1/vehicles", json=_CREATE, headers=auth_headers(admin)
+    )
+    assert r1.status_code == 201
+
+    other_tenant = await make_tenant(name="Other Co")
+    other_admin = await make_user(tenant_id=other_tenant.id, role="admin")
+    r2 = await client.post(
+        "/api/v1/vehicles", json=_CREATE, headers=auth_headers(other_admin)
+    )
+    assert r2.status_code == 201
+
+
 async def test_create_returns_401_without_token(client):
     r = await client.post("/api/v1/vehicles", json=_CREATE)
     assert r.status_code == 401
