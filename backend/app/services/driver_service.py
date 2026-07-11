@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.driver import Driver
 from app.models.trip import Trip
 from app.schemas.driver import DriverCreate, DriverUpdate
-from app.services import audit_service
+from app.services import audit_service, fleet_assignment
 
 
 def _error_detail(code: str, message: str) -> dict:
@@ -148,7 +148,9 @@ async def update_driver(
     if "phone" in update_data:
         driver.phone = update_data["phone"]
     if "vehicle_id" in update_data:
-        driver.vehicle_id = update_data["vehicle_id"]
+        await fleet_assignment.set_driver_assignment(
+            db, driver=driver, vehicle_id=update_data["vehicle_id"], tenant_id=tenant_id
+        )
     if "certification_expiry" in update_data:
         driver.certification_expiry = datetime.combine(
             update_data["certification_expiry"],

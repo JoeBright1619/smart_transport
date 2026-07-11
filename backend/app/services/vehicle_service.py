@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.trip import Trip
 from app.models.vehicle import Vehicle
 from app.schemas.vehicle import VehicleCreate, VehicleUpdate
-from app.services import audit_service
+from app.services import audit_service, fleet_assignment
 from app.services.fleet_position import ensure_vehicle_position
 
 
@@ -155,7 +155,9 @@ async def update_vehicle(
     if "route_id" in update_data:
         vehicle.route_id = update_data["route_id"]
     if "driver_id" in update_data:
-        vehicle.driver_id = update_data["driver_id"]
+        await fleet_assignment.set_vehicle_assignment(
+            db, vehicle=vehicle, driver_id=update_data["driver_id"], tenant_id=tenant_id
+        )
     # current_occupancy is owned by the simulation — silently ignored if passed
 
     await db.flush()
