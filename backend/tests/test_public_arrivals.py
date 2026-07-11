@@ -24,6 +24,11 @@ async def passenger_a(make_user, tenant_a):
 
 
 @pytest.fixture
+async def admin_a(make_user, tenant_a):
+    return await make_user(tenant_id=tenant_a.id, role="admin")
+
+
+@pytest.fixture
 async def shared_stop(db, tenant_a):
     stop = Stop(
         tenant_id=tenant_a.id,
@@ -143,3 +148,12 @@ async def test_public_arrivals_returns_404_for_unknown_stop(client, passenger_a)
         headers=auth_headers(passenger_a),
     )
     assert r.status_code == 404
+
+
+async def test_public_arrivals_allows_admin(client, admin_a, shared_stop):
+    # Staff previewing the passenger app must not be blocked from public arrivals.
+    r = await client.get(
+        f"/api/v1/arrivals/public?stop_id={shared_stop.id}",
+        headers=auth_headers(admin_a),
+    )
+    assert r.status_code == 200
