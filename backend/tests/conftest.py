@@ -18,6 +18,7 @@ from app.core.security import create_access_token, hash_password
 from app.models.driver import Driver
 from app.models.route import Route, Stop
 from app.models.tenant import Tenant
+from app.models.trip import Trip
 from app.models.user import User
 from app.models.vehicle import Vehicle
 
@@ -219,6 +220,37 @@ def make_stop(db: AsyncSession):
         db.add(stop)
         await db.commit()
         return stop
+
+    return _create
+
+
+@pytest.fixture
+def make_trip(db: AsyncSession):
+    async def _create(
+        *,
+        tenant_id: str,
+        vehicle_id: str,
+        route_id: str,
+        driver_id: str,
+        status: str = "scheduled",
+    ) -> Trip:
+        now = datetime.now(timezone.utc)
+        trip = Trip(
+            id=f"trip-{uuid.uuid4()}",
+            tenant_id=tenant_id,
+            vehicle_id=vehicle_id,
+            route_id=route_id,
+            driver_id=driver_id,
+            scheduled_start=now,
+            scheduled_end=now,
+            status=status,
+            passengers=0,
+            delay=0,
+            is_deleted=False,
+        )
+        db.add(trip)
+        await db.commit()
+        return trip
 
     return _create
 

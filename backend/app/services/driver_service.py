@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.driver import Driver
 from app.models.trip import Trip
 from app.schemas.driver import DriverCreate, DriverUpdate
-from app.services import audit_service, fleet_assignment
+from app.services import audit_service, fleet_assignment, trip_reconciliation
 
 
 def _error_detail(code: str, message: str) -> dict:
@@ -126,6 +126,11 @@ async def update_driver(
                 ),
             )
         if new_status == "off-duty":
+            # Self-heal first: clear any orphaned trips (from a restarted/deactivated
+            # simulation) so a stale 'active' row doesn't block off-duty forever.
+            await trip_reconciliation.reconcile_orphaned_trips(
+                db, tenant_id=tenant_id, driver_id=driver_id
+            )
             conflict_result = await db.execute(
                 select(Trip).where(
                     Trip.driver_id == driver_id,

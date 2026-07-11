@@ -95,6 +95,24 @@ async def _warn_if_db_behind_head() -> None:
         logger.warning("Could not verify database migration state: %s", exc)
 
 
+async def _reconcile_orphaned_trips_on_startup() -> None:
+    """Clear orphaned active/scheduled trips left by a prior run so drivers stuck
+    on-trip are freed. A restart is exactly when in-memory simulation state was lost,
+    so this is the right moment to reconcile. Never blocks startup.
+    """
+    try:
+        from app.core.database import AsyncSessionLocal
+        from app.services.trip_reconciliation import reconcile_orphaned_trips
+
+        async with AsyncSessionLocal() as db:
+            count = await reconcile_orphaned_trips(db)
+            await db.commit()
+        if count:
+            logger.info("Reconciled %d orphaned trip(s) on startup", count)
+    except Exception as exc:  # pragma: no cover - must never block startup
+        logger.warning("Orphaned-trip reconciliation failed on startup: %s", exc)
+
+
 def _is_error_envelope(detail: Any) -> bool:
     return (
         isinstance(detail, dict)
@@ -112,6 +130,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         await conn.execute(text("SELECT 1"))
 
     await _warn_if_db_behind_head()
+    await _reconcile_orphaned_trips_on_startup()
 
     start_vehicle_simulation()
 
