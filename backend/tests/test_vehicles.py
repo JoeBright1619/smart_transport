@@ -75,7 +75,9 @@ async def test_create_happy_path(client, admin):
     assert r.json()["data"]["registrationNumber"] == "RAD 999 Z"
 
 
-async def test_create_returns_idle_vehicle_without_gps(client, admin):
+async def test_create_without_stops_has_no_gps(client, admin):
+    # This tenant has no stops, so there is no position to anchor to → GPS stays unset.
+    # (GPS assignment when stops exist is covered in test_vehicle_gps.py.)
     r = await client.post("/api/v1/vehicles", json=_CREATE, headers=auth_headers(admin))
     assert r.status_code == 201
     data = r.json()["data"]

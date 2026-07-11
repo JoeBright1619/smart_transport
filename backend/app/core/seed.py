@@ -486,8 +486,29 @@ async def _seed_drivers(db: AsyncSession) -> None:
         _log(f"driver {drv_id} {'created' if created else 'already exists'}")
 
 
+async def _backfill_vehicle_positions(db: AsyncSession) -> None:
+    """Give every vehicle a last-known GPS position — including idle/maintenance/offline.
+
+    Runs after live trips so already-active vehicles keep their route position; the
+    rest are anchored near a bus stop. Idempotent: vehicles that already have GPS are
+    left untouched.
+    """
+    from app.services.fleet_position import ensure_vehicle_position
+
+    vehicles = (
+        await db.scalars(
+            select(Vehicle).where(
+                Vehicle.tenant_id == _TENANT_ID, Vehicle.is_deleted.is_(False)
+            )
+        )
+    ).all()
+    for vehicle in vehicles:
+        await ensure_vehicle_position(db, vehicle)
+
+
 async def _seed_vehicles(db: AsyncSession) -> None:
-    # All vehicles start idle with no GPS — live trips will activate the relevant ones.
+    # Vehicles start idle; live trips activate the relevant ones and
+    # _backfill_vehicle_positions anchors the rest near a bus stop (last-known GPS).
     # veh-004 is in maintenance (broken down, not available for dispatch).
     vehicles_data = [
         # id, reg, model, seating_capacity, fuel, engine_status, status
@@ -1051,6 +1072,11 @@ async def seed(reset: bool = False) -> None:
 
         # Seed live trips — activates vehicles and links drivers properly
         await _seed_live_trips(db)
+        await db.flush()
+
+        # Every vehicle keeps a last-known GPS position (any status except when the
+        # tenant has no stops); active vehicles already positioned above are skipped.
+        await _backfill_vehicle_positions(db)
         await db.flush()
 
         await _seed_maintenance(db)

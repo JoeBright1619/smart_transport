@@ -16,7 +16,7 @@ from app.core.config import settings as _settings
 from app.core.database import Base, get_db
 from app.core.security import create_access_token, hash_password
 from app.models.driver import Driver
-from app.models.route import Route
+from app.models.route import Route, Stop
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.models.vehicle import Vehicle
@@ -195,6 +195,30 @@ def make_route(db: AsyncSession):
         db.add(route)
         await db.commit()
         return route
+
+    return _create
+
+
+@pytest.fixture
+def make_stop(db: AsyncSession):
+    async def _create(
+        *,
+        tenant_id: str,
+        name: str = "Test Stop",
+        lat: float = -1.9536,
+        lng: float = 30.0606,
+    ) -> Stop:
+        stop = Stop(
+            id=f"stop-{uuid.uuid4()}",
+            tenant_id=tenant_id,
+            name=name,
+            lat=lat,
+            lng=lng,
+            is_deleted=False,
+        )
+        db.add(stop)
+        await db.commit()
+        return stop
 
     return _create
 

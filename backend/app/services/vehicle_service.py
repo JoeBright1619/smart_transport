@@ -8,6 +8,7 @@ from app.models.trip import Trip
 from app.models.vehicle import Vehicle
 from app.schemas.vehicle import VehicleCreate, VehicleUpdate
 from app.services import audit_service
+from app.services.fleet_position import ensure_vehicle_position
 
 
 def _error_detail(code: str, message: str) -> dict:
@@ -96,6 +97,10 @@ async def create_vehicle(
         seating_capacity=data.seating_capacity,
         status=data.status,
     )
+    # Every vehicle carries a last-known GPS position from creation (any status,
+    # including offline) so the fleet is always locatable. Falls back to no GPS only
+    # when the tenant has no stops to anchor to.
+    await ensure_vehicle_position(db, vehicle)
     db.add(vehicle)
     await db.flush()
     await audit_service.log(
