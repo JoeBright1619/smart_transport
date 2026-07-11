@@ -191,6 +191,37 @@ async def get_route_by_id(db: AsyncSession, route_id: str, tenant_id: str) -> Ro
     return route
 
 
+async def ensure_route_active(db: AsyncSession, route_id: str, tenant_id: str) -> Route:
+    """Return the route only if it exists and is active; else 404/409.
+
+    Single guard used wherever a route is put to work (vehicle route assignment, trip
+    dispatch) so a disabled route can never be assigned or dispatched.
+    """
+    route = (
+        await db.execute(
+            select(Route).where(
+                Route.id == route_id,
+                Route.tenant_id == tenant_id,
+                Route.is_deleted.is_(False),
+            )
+        )
+    ).scalar_one_or_none()
+    if route is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=_error_detail("NOT_FOUND", "Route not found"),
+        )
+    if not route.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=_error_detail(
+                "ROUTE_INACTIVE",
+                "Route is disabled — enable it before assigning or dispatching",
+            ),
+        )
+    return route
+
+
 async def create_route(
     db: AsyncSession, data: RouteCreate, tenant_id: str, current_user_id: str
 ) -> Route:

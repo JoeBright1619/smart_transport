@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.trip import Trip
 from app.models.vehicle import Vehicle
 from app.schemas.vehicle import VehicleCreate, VehicleUpdate
-from app.services import audit_service, fleet_assignment, trip_service
+from app.services import audit_service, fleet_assignment, route_service, trip_service
 from app.services.fleet_position import ensure_vehicle_position
 
 
@@ -181,7 +181,10 @@ async def update_vehicle(
     if "seating_capacity" in update_data:
         vehicle.seating_capacity = update_data["seating_capacity"]
     if "route_id" in update_data:
-        vehicle.route_id = update_data["route_id"]
+        route_id = update_data["route_id"]
+        if route_id is not None:
+            await route_service.ensure_route_active(db, route_id, tenant_id)
+        vehicle.route_id = route_id
     if "driver_id" in update_data:
         await fleet_assignment.set_vehicle_assignment(
             db, vehicle=vehicle, driver_id=update_data["driver_id"], tenant_id=tenant_id

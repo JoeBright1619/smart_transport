@@ -46,7 +46,8 @@ export function useFleetManagement() {
       const [vehicleResult, driverResult, routeResult] = await Promise.all([
         vehiclesService.listVehicles({ pageSize: 100 }),
         driversService.listDrivers({ pageSize: 100 }),
-        routesService.listRoutes({ pageSize: 100 }),
+        // Only active routes are assignable to vehicles — disabled routes are excluded.
+        routesService.listRoutes({ pageSize: 100, isActive: true }),
       ]);
 
       setVehicles(vehicleResult.items);

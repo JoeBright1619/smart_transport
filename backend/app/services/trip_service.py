@@ -10,7 +10,7 @@ from app.models.trip import Trip
 from app.models.driver import Driver
 from app.models.vehicle import Vehicle
 from app.schemas.trip import TripCreate, TripUpdate
-from app.services import audit_service
+from app.services import audit_service, route_service
 
 
 def _error_detail(code: str, message: str) -> dict:
@@ -119,6 +119,9 @@ async def create_trip(
             status_code=status.HTTP_409_CONFLICT,
             detail=_error_detail("CONFLICT", "Driver is currently on a trip"),
         )
+
+    # Route must exist and be active (not disabled) to dispatch onto it.
+    await route_service.ensure_route_active(db, data.route_id, tenant_id)
 
     # Reject if vehicle or driver already has a scheduled/active trip
     conflicting_trip = await db.execute(

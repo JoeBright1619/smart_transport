@@ -30,7 +30,8 @@ export function VehicleTracking() {
 
     Promise.all([
       listVehicles({ pageSize: 100 }),
-      listRoutes({ pageSize: 100 }),
+      // Only active routes are drawn on the map — disabled routes are hidden.
+      listRoutes({ pageSize: 100, isActive: true }),
       listDrivers({ pageSize: 100 }),
     ]).then(([vd, rd, dd]) => {
       if (!mounted) return;
