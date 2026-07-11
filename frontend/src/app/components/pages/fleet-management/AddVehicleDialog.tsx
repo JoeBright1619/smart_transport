@@ -14,7 +14,7 @@ import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { useTranslation } from 'react-i18next';
-import { vehicleStatuses } from './fleet-helpers';
+import { settableVehicleStatuses } from './fleet-helpers';
 import type { FleetFormState } from './useFleetManagement';
 
 type AddVehicleDialogProps = {
@@ -99,7 +99,7 @@ export function AddVehicleDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {vehicleStatuses.map((status) => (
+                  {settableVehicleStatuses.map((status) => (
                     <SelectItem key={status} value={status}>
                       {t(`vehicleStatus.${status}`)}
                     </SelectItem>

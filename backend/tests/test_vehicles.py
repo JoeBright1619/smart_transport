@@ -75,6 +75,17 @@ async def test_create_happy_path(client, admin):
     assert r.json()["data"]["registrationNumber"] == "RAD 999 Z"
 
 
+async def test_create_active_vehicle_rejected(client, admin):
+    # A new vehicle has no trip/driver/route, so it can't be created as active.
+    r = await client.post(
+        "/api/v1/vehicles",
+        json={**_CREATE, "status": "active"},
+        headers=auth_headers(admin),
+    )
+    assert r.status_code == 409
+    assert r.json()["error"]["code"] == "CANNOT_CREATE_ACTIVE"
+
+
 async def test_create_without_stops_has_no_gps(client, admin):
     # This tenant has no stops, so there is no position to anchor to → GPS stays unset.
     # (GPS assignment when stops exist is covered in test_vehicle_gps.py.)

@@ -12,6 +12,7 @@
   "ROUTE_IN_USE": "Uyu muhanda ufite ingendo zikora cyangwa ziteganyijwe — banza uzirangize mbere yo kuwuhagarika [TODO]",
   "DRIVER_ON_ACTIVE_JOURNEY": "Uyu mushoferi ari mu rugendo rukora — banza urangize mbere yo kumuhindura [TODO]",
   "VEHICLE_ON_ACTIVE_JOURNEY": "Iyi modoka iri mu rugendo rukora — banza urangize urugendo [TODO]",
+  "CANNOT_CREATE_ACTIVE": "Imodoka nshya ntishobora gushyirwaho nk'ikora — banza uyongereho, hanyuma utangire urugendo [TODO]",
   "DEFAULT": "Habaye ikibazo. Nyamuneka ongera ugerageze",
   "validation": {
     "emailRequired": "Imeyili irakenewe",

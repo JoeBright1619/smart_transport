@@ -12,6 +12,7 @@
   "ROUTE_IN_USE": "This route has active or scheduled trips — end them before disabling",
   "DRIVER_ON_ACTIVE_JOURNEY": "This driver is on an active journey — end it before reassigning them",
   "VEHICLE_ON_ACTIVE_JOURNEY": "This vehicle is on an active journey — end the journey first",
+  "CANNOT_CREATE_ACTIVE": "A new vehicle can't be created as active — add it, then start a journey",
   "DEFAULT": "Something went wrong. Please try again",
   "validation": {
     "emailRequired": "Email is required",

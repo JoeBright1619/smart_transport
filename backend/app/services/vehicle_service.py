@@ -75,6 +75,17 @@ async def get_vehicle_by_id(
 async def create_vehicle(
     db: AsyncSession, data: VehicleCreate, tenant_id: str, current_user_id: str
 ) -> Vehicle:
+    # A brand-new vehicle has no trip, driver or route, so it cannot be "on a journey".
+    # active is only reachable by starting a journey on an existing vehicle.
+    if data.status == "active":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=_error_detail(
+                "CANNOT_CREATE_ACTIVE",
+                "A new vehicle cannot be created as active — add it, then start a journey",
+            ),
+        )
+
     existing = await db.execute(
         select(Vehicle).where(
             Vehicle.tenant_id == tenant_id,
