@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import type { RouteRead, RouteUpdate } from '../../../lib/api-types';
 import * as routesService from '../../../services/routes.service';
+import { messageForError } from '../../../lib/error-messages';
 import { getRouteStats } from './route-helpers';
 
 export function useRouteManagement() {
@@ -18,7 +19,7 @@ export function useRouteManagement() {
       const result = await routesService.listRoutes({ pageSize: 100 });
       setRoutes(result.items);
     } catch (fetchError) {
-      setError(fetchError instanceof Error ? fetchError.message : 'Unable to load routes');
+      setError(messageForError(fetchError));
     } finally {
       setLoading(false);
     }
@@ -43,7 +44,7 @@ export function useRouteManagement() {
       await fetchRoutes();
       toast.success('Route updated');
     } catch (updateError) {
-      toast.error(updateError instanceof Error ? updateError.message : 'Unable to update route');
+      toast.error(messageForError(updateError));
     } finally {
       setUpdatingRouteId(null);
     }
@@ -59,7 +60,7 @@ export function useRouteManagement() {
       setRoutes((current) => current.filter((item) => item.id !== route.id));
       toast.success('Route deleted');
     } catch (deleteError) {
-      toast.error(deleteError instanceof Error ? deleteError.message : 'Unable to delete route');
+      toast.error(messageForError(deleteError));
     } finally {
       setUpdatingRouteId(null);
     }

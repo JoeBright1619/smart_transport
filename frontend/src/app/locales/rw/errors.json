@@ -7,6 +7,11 @@
   "TOO_MANY_REQUESTS": "Wagerageje kenshi cyane — tegereza akanya hanyuma wongere [TODO]",
   "TENANT_INACTIVE": "Iyi konti y'ikigo ntikora [TODO]",
   "INVALID_TOKEN": "Iyi link ntabwo ari yo cyangwa yararangiye [TODO]",
+  "JOURNEY_REQUIRES_DRIVER_ROUTE": "Banza uhe imodoka umushoferi n'umuhanda mbere yo gutangira urugendo [TODO]",
+  "ROUTE_INACTIVE": "Uyu muhanda wahagaritswe — banza uwongere ukore mbere yo kuwukoresha [TODO]",
+  "ROUTE_IN_USE": "Uyu muhanda ufite ingendo zikora cyangwa ziteganyijwe — banza uzirangize mbere yo kuwuhagarika [TODO]",
+  "DRIVER_ON_ACTIVE_JOURNEY": "Uyu mushoferi ari mu rugendo rukora — banza urangize mbere yo kumuhindura [TODO]",
+  "VEHICLE_ON_ACTIVE_JOURNEY": "Iyi modoka iri mu rugendo rukora — banza urangize urugendo [TODO]",
   "DEFAULT": "Habaye ikibazo. Nyamuneka ongera ugerageze",
   "validation": {
     "emailRequired": "Imeyili irakenewe",

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { ApiError } from '../../../lib/api-client';
+import { messageForError } from '../../../lib/error-messages';
 import type { DriverRead, RouteRead, TripCreate, TripRead, TripStatus, VehicleRead } from '../../../lib/api-types';
 import * as driversService from '../../../services/drivers.service';
 import * as routesService from '../../../services/routes.service';
@@ -33,7 +33,7 @@ export function useDispatchManagement() {
       setDrivers(driversResult.items);
       setRoutes(routesResult.items);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load dispatch data');
+      setError(messageForError(loadError));
     } finally {
       setLoading(false);
     }
@@ -79,11 +79,7 @@ export function useDispatchManagement() {
       await loadDispatch();
       toast.success('Trip scheduled');
     } catch (createError) {
-      if (createError instanceof ApiError && [409, 422].includes(createError.status ?? 0)) {
-        toast.error(createError.message);
-        return;
-      }
-      toast.error(createError instanceof Error ? createError.message : 'Unable to schedule trip');
+      toast.error(messageForError(createError));
     }
   };
 
@@ -96,7 +92,7 @@ export function useDispatchManagement() {
       await loadDispatch();
       toast.success('Trip status updated');
     } catch (updateError) {
-      toast.error(updateError instanceof Error ? updateError.message : 'Unable to update trip');
+      toast.error(messageForError(updateError));
     } finally {
       setUpdatingTripId(null);
     }

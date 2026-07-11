@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { ApiError } from '../../../lib/api-client';
+import { messageForError } from '../../../lib/error-messages';
 import type { DriverCreate, DriverRead, DriverStatus, DriverUpdate, VehicleRead } from '../../../lib/api-types';
 import * as driversService from '../../../services/drivers.service';
 import * as vehiclesService from '../../../services/vehicles.service';
@@ -25,7 +25,7 @@ export function useDriversManagement() {
       setDrivers(driversResult.items);
       setVehicles(vehiclesResult.items);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load drivers');
+      setError(messageForError(loadError));
     } finally {
       setLoading(false);
     }
@@ -58,7 +58,7 @@ export function useDriversManagement() {
       );
       toast.success('Driver status updated');
     } catch (updateError) {
-      toast.error(updateError instanceof Error ? updateError.message : 'Unable to update driver');
+      toast.error(messageForError(updateError));
     } finally {
       setUpdatingDriverId(null);
     }
@@ -73,7 +73,7 @@ export function useDriversManagement() {
       );
       toast.success('Driver updated');
     } catch (updateError) {
-      toast.error(updateError instanceof Error ? updateError.message : 'Unable to update driver');
+      toast.error(messageForError(updateError));
       throw updateError;
     } finally {
       setUpdatingDriverId(null);
@@ -91,11 +91,7 @@ export function useDriversManagement() {
       setDrivers((current) => current.filter((item) => item.id !== driver.id));
       toast.success('Driver deleted');
     } catch (deleteError) {
-      if (deleteError instanceof ApiError && deleteError.status === 400) {
-        toast.error(deleteError.message);
-      } else {
-        toast.error(deleteError instanceof Error ? deleteError.message : 'Unable to delete driver');
-      }
+      toast.error(messageForError(deleteError));
     } finally {
       setUpdatingDriverId(null);
     }

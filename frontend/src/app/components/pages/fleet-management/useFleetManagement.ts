@@ -10,6 +10,7 @@ import type {
 import * as driversService from '../../../services/drivers.service';
 import * as routesService from '../../../services/routes.service';
 import * as vehiclesService from '../../../services/vehicles.service';
+import { messageForError } from '../../../lib/error-messages';
 import { getFleetStats } from './fleet-helpers';
 
 export type FleetFormState = {
@@ -54,7 +55,7 @@ export function useFleetManagement() {
       setDrivers(driverResult.items);
       setRoutes(routeResult.items);
     } catch (fetchError) {
-      setError(fetchError instanceof Error ? fetchError.message : 'Unable to load fleet data');
+      setError(messageForError(fetchError));
     } finally {
       setLoading(false);
     }
@@ -96,7 +97,7 @@ export function useFleetManagement() {
       setForm(initialFleetFormState);
       await fetchFleetData();
     } catch (createError) {
-      toast.error(createError instanceof Error ? createError.message : 'Unable to add vehicle');
+      toast.error(messageForError(createError));
     } finally {
       setSubmitting(false);
     }
@@ -111,7 +112,7 @@ export function useFleetManagement() {
       );
       toast.success('Vehicle updated');
     } catch (updateError) {
-      toast.error(updateError instanceof Error ? updateError.message : 'Unable to update vehicle');
+      toast.error(messageForError(updateError));
     } finally {
       setUpdatingVehicleId(null);
     }
@@ -127,7 +128,7 @@ export function useFleetManagement() {
       setVehicles((current) => current.filter((item) => item.id !== vehicle.id));
       toast.success('Vehicle deleted');
     } catch (deleteError) {
-      toast.error(deleteError instanceof Error ? deleteError.message : 'Unable to delete vehicle');
+      toast.error(messageForError(deleteError));
     } finally {
       setUpdatingVehicleId(null);
     }

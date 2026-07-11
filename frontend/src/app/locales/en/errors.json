@@ -7,6 +7,11 @@
   "TOO_MANY_REQUESTS": "Too many attempts — please wait a moment and try again",
   "TENANT_INACTIVE": "This organisation account is inactive",
   "INVALID_TOKEN": "This link is invalid or has expired",
+  "JOURNEY_REQUIRES_DRIVER_ROUTE": "Assign a driver and a route to the vehicle before starting a journey",
+  "ROUTE_INACTIVE": "This route is disabled — enable it before assigning or dispatching",
+  "ROUTE_IN_USE": "This route has active or scheduled trips — end them before disabling",
+  "DRIVER_ON_ACTIVE_JOURNEY": "This driver is on an active journey — end it before reassigning them",
+  "VEHICLE_ON_ACTIVE_JOURNEY": "This vehicle is on an active journey — end the journey first",
   "DEFAULT": "Something went wrong. Please try again",
   "validation": {
     "emailRequired": "Email is required",
