@@ -11,8 +11,8 @@ import {
   formatLocation,
   formatRelativeTime,
   fuelBarClass,
+  settableVehicleStatuses,
   unassignedValue,
-  vehicleStatuses,
 } from './fleet-helpers';
 
 type VehicleTableRowProps = {
@@ -61,22 +61,41 @@ export function VehicleTableRow({
         />
       </TableCell>
       <TableCell>
-        <Select
-          value={vehicle.status}
-          disabled={disabled}
-          onValueChange={(value) => void updateVehicle(vehicle.id, { status: value as VehicleStatus })}
-        >
-          <SelectTrigger size="sm" className="w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {vehicleStatuses.map((status) => (
-              <SelectItem key={status} value={status}>
-                {t(`vehicleStatus.${status}`)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {vehicle.status === 'active' ? (
+          // A running vehicle's status is read-only; the journey is ended from Dispatch.
+          <Badge variant="default" title={t('startJourney.endHint')}>
+            {t('vehicleStatus.active')}
+          </Badge>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Select
+              value={vehicle.status}
+              disabled={disabled}
+              onValueChange={(value) => void updateVehicle(vehicle.id, { status: value as VehicleStatus })}
+            >
+              <SelectTrigger size="sm" className="w-28">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {settableVehicleStatuses.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {t(`vehicleStatus.${status}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7"
+              disabled={disabled || vehicle.status !== 'idle' || !vehicle.driverId || !vehicle.routeId}
+              title={t('startJourney.hint')}
+              onClick={() => void updateVehicle(vehicle.id, { status: 'active' })}
+            >
+              {t('startJourney.button')}
+            </Button>
+          </div>
+        )}
       </TableCell>
       <TableCell>
         <AssignmentSelect

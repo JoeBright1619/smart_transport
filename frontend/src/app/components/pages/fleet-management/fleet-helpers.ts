@@ -1,6 +1,9 @@
 import type { VehicleRead, VehicleStatus } from '../../../lib/api-types';
 
 export const vehicleStatuses: VehicleStatus[] = ['active', 'idle', 'maintenance', 'offline'];
+// Statuses a user may set directly. "active" is intentionally excluded: a vehicle only
+// becomes active by starting a journey (which creates and activates a trip).
+export const settableVehicleStatuses: VehicleStatus[] = ['idle', 'maintenance', 'offline'];
 export const unassignedValue = 'unassigned';
 
 export type FleetStats = {

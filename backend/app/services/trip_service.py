@@ -1,5 +1,5 @@
 from typing import Sequence
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException, status
 from sqlalchemy import select, func, or_
@@ -257,5 +257,45 @@ async def update_trip(
         trip.id,
         "update",
         metadata={"status": new_status},
+    )
+    return trip
+
+
+async def start_journey(
+    db: AsyncSession, *, vehicle: Vehicle, tenant_id: str, current_user_id: str
+) -> Trip:
+    """Start a journey now for a vehicle that already has a driver and route assigned.
+
+    This is the single guarded operation for putting a vehicle on the road: it creates a
+    trip (reusing ``create_trip``'s dispatchability/double-booking guards) and activates
+    it, so the vehicle becomes ``active`` with GPS and the driver goes ``on-trip``. The
+    Fleet screen ("set active") and any dispatch "start now" both funnel through here, so
+    a running vehicle is *always* backed by exactly one active trip — the single source
+    of truth for "on a journey".
+    """
+    if vehicle.driver_id is None or vehicle.route_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=_error_detail(
+                "JOURNEY_REQUIRES_DRIVER_ROUTE",
+                "Assign a driver and a route to the vehicle before starting a journey",
+            ),
+        )
+
+    now = datetime.now(timezone.utc)
+    trip = await create_trip(
+        db,
+        TripCreate(
+            vehicle_id=vehicle.id,
+            driver_id=vehicle.driver_id,
+            route_id=vehicle.route_id,
+            scheduled_start=now,
+            scheduled_end=now + timedelta(hours=1),
+        ),
+        tenant_id,
+        current_user_id,
+    )
+    await update_trip(
+        db, trip.id, TripUpdate(status="active"), tenant_id, current_user_id
     )
     return trip

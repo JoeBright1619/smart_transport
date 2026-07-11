@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.trip import Trip
 from app.models.vehicle import Vehicle
 from app.schemas.vehicle import VehicleCreate, VehicleUpdate
-from app.services import audit_service, fleet_assignment
+from app.services import audit_service, fleet_assignment, trip_service
 from app.services.fleet_position import ensure_vehicle_position
 
 
@@ -109,6 +109,62 @@ async def create_vehicle(
     return vehicle
 
 
+async def _guard_deactivation(
+    db: AsyncSession, vehicle_id: str, new_status: str
+) -> None:
+    """Block idle/maintenance/offline transitions that would strand an open trip."""
+    conflict_trip = (
+        await db.execute(
+            select(Trip).where(
+                Trip.vehicle_id == vehicle_id,
+                Trip.status.in_(["scheduled", "active"]),
+                Trip.is_deleted.is_(False),
+            )
+        )
+    ).scalar_one_or_none()
+    if conflict_trip is None:
+        return
+    if conflict_trip.status == "active":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=_error_detail(
+                "CONFLICT",
+                "Vehicle has an active trip — complete or cancel the trip first",
+            ),
+        )
+    if new_status in ("maintenance", "offline"):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=_error_detail(
+                "CONFLICT",
+                "Cannot set vehicle to maintenance or offline — it has a scheduled trip",
+            ),
+        )
+
+
+async def _apply_status_change(
+    db: AsyncSession,
+    vehicle: Vehicle,
+    new_status: str,
+    tenant_id: str,
+    current_user_id: str,
+) -> None:
+    """Apply a vehicle status change through the single journey lifecycle.
+
+    ``active`` is never a free-set value — a running vehicle must be backed by a trip, so
+    it routes through the guarded start-journey path (needs a driver + route already
+    assigned). Deactivations go through the open-trip guard.
+    """
+    if new_status == "active":
+        await trip_service.start_journey(
+            db, vehicle=vehicle, tenant_id=tenant_id, current_user_id=current_user_id
+        )
+        return
+    if new_status in ("idle", "maintenance", "offline"):
+        await _guard_deactivation(db, vehicle.id, new_status)
+    vehicle.status = new_status
+
+
 async def update_vehicle(
     db: AsyncSession,
     vehicle_id: str,
@@ -119,35 +175,7 @@ async def update_vehicle(
     vehicle = await get_vehicle_by_id(db, vehicle_id, tenant_id)
 
     update_data = data.model_dump(exclude_unset=True)
-    if "status" in update_data:
-        new_status = update_data["status"]
-        if new_status in ("idle", "maintenance", "offline"):
-            conflict_result = await db.execute(
-                select(Trip).where(
-                    Trip.vehicle_id == vehicle_id,
-                    Trip.status.in_(["scheduled", "active"]),
-                    Trip.is_deleted.is_(False),
-                )
-            )
-            conflict_trip = conflict_result.scalar_one_or_none()
-            if conflict_trip:
-                if conflict_trip.status == "active":
-                    raise HTTPException(
-                        status_code=status.HTTP_409_CONFLICT,
-                        detail=_error_detail(
-                            "CONFLICT",
-                            "Vehicle has an active trip — complete or cancel the trip first",
-                        ),
-                    )
-                if new_status in ("maintenance", "offline"):
-                    raise HTTPException(
-                        status_code=status.HTTP_409_CONFLICT,
-                        detail=_error_detail(
-                            "CONFLICT",
-                            "Cannot set vehicle to maintenance or offline — it has a scheduled trip",
-                        ),
-                    )
-        vehicle.status = new_status
+    # Handle assignments before status so a combined "assign + activate" request works.
     if "fuel" in update_data:
         vehicle.fuel = update_data["fuel"]
     if "seating_capacity" in update_data:
@@ -157,6 +185,11 @@ async def update_vehicle(
     if "driver_id" in update_data:
         await fleet_assignment.set_vehicle_assignment(
             db, vehicle=vehicle, driver_id=update_data["driver_id"], tenant_id=tenant_id
+        )
+
+    if "status" in update_data:
+        await _apply_status_change(
+            db, vehicle, update_data["status"], tenant_id, current_user_id
         )
     # current_occupancy is owned by the simulation — silently ignored if passed
 

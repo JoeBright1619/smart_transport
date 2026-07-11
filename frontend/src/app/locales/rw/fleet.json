@@ -38,6 +38,11 @@
     "maintenance": "Irasanwa",
     "offline": "Ntikora"
   },
+  "startJourney": {
+    "button": "Tangira",
+    "hint": "Banza uhe umushoferi n'umuhanda, hanyuma utangire urugendo [TODO]",
+    "endHint": "Iri mu rugendo — urangirize kuri Dispatch [TODO]"
+  },
   "engineStatus": {
     "good": "Nziza",
     "warning": "Iburira",

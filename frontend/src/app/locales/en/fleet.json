@@ -38,6 +38,11 @@
     "maintenance": "Maintenance",
     "offline": "Offline"
   },
+  "startJourney": {
+    "button": "Start",
+    "hint": "Assign a driver and route first, then start the journey",
+    "endHint": "On a journey — end it from Dispatch"
+  },
   "engineStatus": {
     "good": "Good",
     "warning": "Warning",
