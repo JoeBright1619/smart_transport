@@ -14,7 +14,7 @@
 
 ## Current Task Pointer
 
-**Next task:** Task 6.2 — GPS Coordinate Policy for Non-Offline Vehicles
+**Next task:** All tasks complete (Phases 6 & 7 done).
 
 After completing any task, update this pointer to the next unchecked task before stopping to report.
 
@@ -112,7 +112,7 @@ Fix steps:
 
 **Verify:** full backend suite green — `./.venv/Scripts/python.exe -m pytest -q` (298+ passing).
 
-- [ ] Task 6.2 complete
+- [x] Task 6.2 complete
 
 ---
 
@@ -133,7 +133,7 @@ Fix steps:
 
 **Verify:** full backend suite green — `./.venv/Scripts/python.exe -m pytest -q` (298+ passing).
 
-- [ ] Task 6.3 complete
+- [x] Task 6.3 complete
 
 ---
 
@@ -155,7 +155,7 @@ Fix steps:
 
 **Verify:** full backend suite green — `./.venv/Scripts/python.exe -m pytest -q` (298+ passing).
 
-- [ ] Task 6.4 complete
+- [x] Task 6.4 complete
 
 ---
 
@@ -184,7 +184,7 @@ Fix steps:
 
 **Verify:** full backend suite green — `./.venv/Scripts/python.exe -m pytest -q` (298+ passing); plus `npm run build` in `frontend/` with zero new errors.
 
-- [ ] Task 7.1 complete
+- [x] Task 7.1 complete
 
 ---
 
@@ -205,7 +205,7 @@ Fix steps:
 
 **Verify:** full backend suite green — `./.venv/Scripts/python.exe -m pytest -q` (298+ passing).
 
-- [ ] Task 7.2 complete
+- [x] Task 7.2 complete
 
 ---
 
@@ -226,7 +226,7 @@ Fix steps:
 
 **Verify:** full backend suite green — `./.venv/Scripts/python.exe -m pytest -q` (298+ passing); plus `npm run build` in `frontend/` with zero new errors.
 
-- [ ] Task 7.3 complete
+- [x] Task 7.3 complete
 
 ---
 
@@ -234,5 +234,5 @@ Fix steps:
 
 | Phase | Title | Tasks | Status |
 |-------|-------|-------|--------|
-| 6 | Critical Fleet Bugs (Blocking & Data Integrity) | 6.1, 6.2, 6.3, 6.4 | Not started |
-| 7 | Unified Journey Lifecycle (Single Source of Truth) | 7.1, 7.2, 7.3 | Not started |
+| 6 | Critical Fleet Bugs (Blocking & Data Integrity) | 6.1, 6.2, 6.3, 6.4 | Complete |
+| 7 | Unified Journey Lifecycle (Single Source of Truth) | 7.1, 7.2, 7.3 | Complete |
