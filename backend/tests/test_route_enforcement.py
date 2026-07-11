@@ -106,3 +106,57 @@ async def test_routes_list_excludes_inactive_with_filter(
     ids = [route["id"] for route in r.json()["data"]]
     assert active.id in ids
     assert disabled.id not in ids
+
+
+# ---------------------------------------------------------------------------
+# Disabling a route that is in use
+# ---------------------------------------------------------------------------
+
+
+async def test_disable_route_with_active_trip_rejected(
+    client, admin, make_route, make_vehicle, make_driver, make_trip, tenant
+):
+    route = await make_route(tenant_id=tenant.id, is_active=True)
+    vehicle = await make_vehicle(
+        tenant_id=tenant.id, status="active", route_id=route.id
+    )
+    driver = await make_driver(tenant_id=tenant.id, status="on-trip")
+    await make_trip(
+        tenant_id=tenant.id,
+        vehicle_id=vehicle.id,
+        route_id=route.id,
+        driver_id=driver.id,
+        status="active",
+    )
+    r = await client.patch(
+        f"/api/v1/routes/{route.id}",
+        json={"isActive": False},
+        headers=auth_headers(admin),
+    )
+    assert r.status_code == 409
+    assert r.json()["error"]["code"] == "ROUTE_IN_USE"
+
+
+async def test_disable_route_with_active_vehicle_rejected(
+    client, admin, make_route, make_vehicle, tenant
+):
+    route = await make_route(tenant_id=tenant.id, is_active=True)
+    await make_vehicle(tenant_id=tenant.id, status="active", route_id=route.id)
+    r = await client.patch(
+        f"/api/v1/routes/{route.id}",
+        json={"isActive": False},
+        headers=auth_headers(admin),
+    )
+    assert r.status_code == 409
+    assert r.json()["error"]["code"] == "ROUTE_IN_USE"
+
+
+async def test_disable_unused_route_ok(client, admin, make_route, tenant):
+    route = await make_route(tenant_id=tenant.id, is_active=True)
+    r = await client.patch(
+        f"/api/v1/routes/{route.id}",
+        json={"isActive": False},
+        headers=auth_headers(admin),
+    )
+    assert r.status_code == 200
+    assert r.json()["data"]["isActive"] is False

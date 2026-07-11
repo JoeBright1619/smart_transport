@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.route import Route, Stop, RouteStop
 from app.models.trip import Trip
+from app.models.vehicle import Vehicle
 from app.schemas.route import RouteCreate, RouteUpdate
 from app.services import audit_service
 
@@ -222,6 +223,40 @@ async def ensure_route_active(db: AsyncSession, route_id: str, tenant_id: str) -
     return route
 
 
+async def _route_in_use(db: AsyncSession, route_id: str) -> bool:
+    """True if a route is currently being used — an active/scheduled trip or an active
+    vehicle sits on it. Used to block disabling a route mid-journey."""
+    trip = (
+        (
+            await db.execute(
+                select(Trip).where(
+                    Trip.route_id == route_id,
+                    Trip.status.in_(["active", "scheduled"]),
+                    Trip.is_deleted.is_(False),
+                )
+            )
+        )
+        .scalars()
+        .first()
+    )
+    if trip is not None:
+        return True
+    vehicle = (
+        (
+            await db.execute(
+                select(Vehicle).where(
+                    Vehicle.route_id == route_id,
+                    Vehicle.status == "active",
+                    Vehicle.is_deleted.is_(False),
+                )
+            )
+        )
+        .scalars()
+        .first()
+    )
+    return vehicle is not None
+
+
 async def create_route(
     db: AsyncSession, data: RouteCreate, tenant_id: str, current_user_id: str
 ) -> Route:
@@ -292,6 +327,20 @@ async def update_route(
     if "duration" in update_data:
         route.duration = update_data["duration"]
     if "is_active" in update_data:
+        # Disabling a route mid-journey would strand a running vehicle (and hide its
+        # route from the map). Block it while the route is in use; enabling is always ok.
+        if (
+            route.is_active
+            and not update_data["is_active"]
+            and await _route_in_use(db, route_id)
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=_error_detail(
+                    "ROUTE_IN_USE",
+                    "Route has active or scheduled trips — end them before disabling",
+                ),
+            )
         route.is_active = update_data["is_active"]
     if "color" in update_data:
         route.color = update_data["color"]
