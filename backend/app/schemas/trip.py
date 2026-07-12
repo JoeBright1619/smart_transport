@@ -71,9 +71,15 @@ class TripRead(APIModel):
     status: TripStatus = Field(json_schema_extra={"example": "active"})
     passengers: int = Field(json_schema_extra={"example": 34})
     delay: int = Field(json_schema_extra={"example": 3})
+    start_delay: int = Field(default=0, json_schema_extra={"example": 6})
     created_at: datetime = Field(json_schema_extra={"example": "2026-04-08T17:00:00Z"})
 
     @computed_field
     def delay_status(self) -> DelayStatus:
-        """delayed / on_time / quick, derived from the signed delay and the tolerance."""
+        """delayed / on_time / quick, derived from the signed running delay + tolerance."""
         return classify_delay(self.delay)
+
+    @computed_field
+    def start_delay_status(self) -> DelayStatus:
+        """delayed / on_time / quick for the departure, from the signed start delay."""
+        return classify_delay(self.start_delay)

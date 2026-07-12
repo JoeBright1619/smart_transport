@@ -17,9 +17,10 @@ export function useDispatchManagement() {
   const [error, setError] = useState<string | null>(null);
   const [updatingTripId, setUpdatingTripId] = useState<string | null>(null);
 
-  const loadDispatch = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  // `silent` refreshes (the 10s poll) update data without toggling the loading spinner
+  // or clobbering the screen with a transient fetch error.
+  const loadDispatch = useCallback(async (options?: { silent?: boolean }) => {
+    if (!options?.silent) setLoading(true);
 
     try {
       const [tripsResult, vehiclesResult, driversResult, routesResult] = await Promise.all([
@@ -32,15 +33,20 @@ export function useDispatchManagement() {
       setVehicles(vehiclesResult.items);
       setDrivers(driversResult.items);
       setRoutes(routesResult.items);
+      setError(null);
     } catch (loadError) {
-      setError(messageForError(loadError));
+      if (!options?.silent) setError(messageForError(loadError));
     } finally {
-      setLoading(false);
+      if (!options?.silent) setLoading(false);
     }
   }, []);
 
+  // Poll so trips the backend auto-starts (and their status changes) show up without a
+  // manual reload.
   useEffect(() => {
     void loadDispatch();
+    const interval = setInterval(() => void loadDispatch({ silent: true }), 10000);
+    return () => clearInterval(interval);
   }, [loadDispatch]);
 
   const activeTrips = useMemo(() => trips.filter((trip) => trip.status === 'active'), [trips]);

@@ -96,6 +96,14 @@ function TripCard({
         </div>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
+        {trip.actualStart &&
+          (trip.startDelayStatus === 'delayed' ? (
+            <Badge variant="destructive">{t('panel.startedLate', { count: trip.startDelay })}</Badge>
+          ) : trip.startDelayStatus === 'quick' ? (
+            <Badge variant="secondary">{t('panel.startedEarly', { count: Math.abs(trip.startDelay) })}</Badge>
+          ) : (
+            <Badge variant="outline">{t('panel.startedOnTime')}</Badge>
+          ))}
         {trip.status === 'completed' &&
           (trip.delayStatus === 'delayed' ? (
             <Badge variant="destructive">{t('panel.delayedBy', { count: trip.delay })}</Badge>

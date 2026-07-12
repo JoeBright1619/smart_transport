@@ -243,6 +243,9 @@ export interface TripRead {
   /** Signed minutes vs the route's planned duration: >0 late, ~0 on time, <0 early. */
   delay: number;
   delayStatus: DelayStatus;
+  /** Signed minutes between actual and scheduled start: >0 departed late, <0 early. */
+  startDelay: number;
+  startDelayStatus: DelayStatus;
   createdAt: string;
 }
 

@@ -23,6 +23,9 @@
     "delayedBy": "Yatinze iminota {{count}}",
     "quickBy": "Yihuse iminota {{count}}",
     "onTime": "Ku gihe",
+    "startedLate": "Yatangiye iminota {{count}} itinze",
+    "startedEarly": "Yatangiye iminota {{count}} mbere",
+    "startedOnTime": "Yatangiye ku gihe",
     "startTrip": "Tangira Urugendo",
     "complete": "Soza",
     "cancel": "Kuraguza"

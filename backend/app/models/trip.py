@@ -56,7 +56,13 @@ class Trip(Base):
         default="scheduled",
     )
     passengers: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # Running delay: signed minutes the loop ran over/under the route's planned duration.
     delay: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # Departure delay: signed minutes between actual and scheduled start (set at
+    # activation). Positive = departed late, ~0 = on time, negative = departed early.
+    start_delay: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
 
     is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(

@@ -23,6 +23,9 @@
     "delayedBy": "Delayed by {{count}} min",
     "quickBy": "Quick by {{count}} min",
     "onTime": "On time",
+    "startedLate": "Started {{count}} min late",
+    "startedEarly": "Started {{count}} min early",
+    "startedOnTime": "Started on time",
     "startTrip": "Start Trip",
     "complete": "Complete",
     "cancel": "Cancel"

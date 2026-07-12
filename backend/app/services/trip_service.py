@@ -178,6 +178,13 @@ async def _activate_trip(db: AsyncSession, trip: Trip, now: datetime) -> None:
     """Put the trip's driver and vehicle on the road and start the rounds counter."""
     trip.actual_start = now
 
+    # Departure delay = actual − scheduled start (signed minutes). A DB timestamp can be
+    # tz-naive (e.g. SQLite) while ``now`` is tz-aware; normalise before subtracting.
+    scheduled = trip.scheduled_start
+    if scheduled.tzinfo is None:
+        scheduled = scheduled.replace(tzinfo=timezone.utc)
+    trip.start_delay = round((now - scheduled).total_seconds() / 60)
+
     driver = await db.scalar(select(Driver).where(Driver.id == trip.driver_id))
     if driver:
         driver.status = "on-trip"
@@ -243,8 +250,14 @@ async def update_trip(
     trip_id: str,
     data: TripUpdate,
     tenant_id: str,
-    current_user_id: str,
+    current_user_id: str | None,
 ) -> Trip:
+    """Advance a trip through its lifecycle.
+
+    ``current_user_id`` is ``None`` for automated (system) transitions — e.g. the
+    auto-start dispatcher — in which case no audit row is written, since audit entries
+    require a real user and there is no human actor.
+    """
     trip = await get_trip_by_id(db, trip_id, tenant_id)
 
     new_status = data.status
@@ -266,15 +279,16 @@ async def update_trip(
         await _finalize_trip(db, trip, new_status, now)
 
     await db.flush()
-    await audit_service.log(
-        db,
-        current_user_id,
-        tenant_id,
-        "Trip",
-        trip.id,
-        "update",
-        metadata={"status": new_status},
-    )
+    if current_user_id is not None:
+        await audit_service.log(
+            db,
+            current_user_id,
+            tenant_id,
+            "Trip",
+            trip.id,
+            "update",
+            metadata={"status": new_status},
+        )
     return trip
 
 
