@@ -52,6 +52,8 @@
     "selectDriver": "Hitamo umushoferi",
     "scheduledStart": "Itangira ryateganyijwe",
     "scheduledEnd": "Iherezo ryateganyijwe",
+    "rounds": "Inshuro",
+    "roundsHint": "Inshuro umushoferi azasubiramo umuhanda mbere yo kwirangiza [TODO]",
     "close": "Funga",
     "scheduling": "Biragenwa...",
     "submit": "Teganya Urugendo",

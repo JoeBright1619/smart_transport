@@ -7,6 +7,11 @@ from app.schemas.base import APIModel
 
 TripStatus = Literal["scheduled", "active", "completed", "cancelled"]
 
+# Default number of full route loops a dispatched trip runs before it auto-ends. Used when
+# a trip is created without an explicit rounds count (seed data, scripts, API callers that
+# omit it), so no journey loops forever by accident.
+DEFAULT_JOURNEY_LOOPS = 5
+
 
 class TripCreate(APIModel):
     vehicle_id: str = Field(json_schema_extra={"example": "veh-uuid"})
@@ -17,6 +22,13 @@ class TripCreate(APIModel):
     )
     scheduled_end: datetime = Field(
         json_schema_extra={"example": "2026-04-09T08:35:00Z"}
+    )
+    planned_loops: int = Field(
+        default=DEFAULT_JOURNEY_LOOPS,
+        gt=0,
+        description="How many times the driver runs the route before the journey "
+        "auto-ends.",
+        json_schema_extra={"example": DEFAULT_JOURNEY_LOOPS},
     )
 
 

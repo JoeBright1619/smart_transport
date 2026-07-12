@@ -61,6 +61,8 @@ class VehicleRead(APIModel):
     driver_id: str | None = Field(
         default=None, json_schema_extra={"example": "drv-uuid"}
     )
+    planned_loops: int | None = Field(default=None, json_schema_extra={"example": 5})
+    completed_loops: int = Field(default=0, json_schema_extra={"example": 2})
     updated_at: datetime = Field(
         serialization_alias="lastUpdate",
         json_schema_extra={"example": "2026-04-08T17:00:00Z"},

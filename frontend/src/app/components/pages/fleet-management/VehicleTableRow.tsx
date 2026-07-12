@@ -63,9 +63,19 @@ export function VehicleTableRow({
       <TableCell>
         {vehicle.status === 'active' ? (
           // A running vehicle's status is read-only; the journey is ended from Dispatch.
-          <Badge variant="default" title={t('startJourney.endHint')}>
-            {t('vehicleStatus.active')}
-          </Badge>
+          <div className="flex flex-col gap-0.5">
+            <Badge variant="default" title={t('startJourney.endHint')}>
+              {t('vehicleStatus.active')}
+            </Badge>
+            {vehicle.plannedLoops != null && (
+              <span className="text-xs text-muted-foreground">
+                {t('startJourney.progress', {
+                  completed: Math.min(vehicle.completedLoops + 1, vehicle.plannedLoops),
+                  planned: vehicle.plannedLoops,
+                })}
+              </span>
+            )}
+          </div>
         ) : (
           <div className="flex items-center gap-2">
             <Select

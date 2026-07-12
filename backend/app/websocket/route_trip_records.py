@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from random import randint
 from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.driver import Driver
 from app.models.trip import Trip
 from app.models.vehicle import Vehicle
 
@@ -85,6 +86,10 @@ async def complete_trip(
         return
 
     started_at = trip.actual_start or now
+    # A timestamp read back from the DB can be tz-naive (e.g. SQLite) while ``now`` is
+    # tz-aware; normalise so the subtraction never mixes the two.
+    if started_at.tzinfo is None:
+        started_at = started_at.replace(tzinfo=timezone.utc)
     actual_duration = (now - started_at).total_seconds() / 60
     scheduled_duration_min = 35
     delay = max(0, int(actual_duration - scheduled_duration_min))
@@ -97,3 +102,33 @@ async def complete_trip(
     trip.updated_at = now
     await db.flush()
     state["current_trip_id"] = None
+
+
+async def end_journey(
+    db: AsyncSession, vehicle: Vehicle, state: dict[str, Any], now: datetime
+) -> None:
+    """Stand a journey down after its planned rounds are complete.
+
+    Completes the final loop's trip (recording its passengers/delay like any other loop),
+    then returns the vehicle to idle and frees the driver — mirroring the manual
+    end-of-journey reset in ``trip_service.update_trip`` so auto-end (rounds reached) and
+    manual completion leave the same clean state. The per-tick simulation state is cleared
+    by the caller."""
+    await complete_trip(db, vehicle, state, now)
+
+    if vehicle.driver_id is not None:
+        driver = await db.scalar(select(Driver).where(Driver.id == vehicle.driver_id))
+        if driver is not None:
+            if driver.status == "on-trip":
+                driver.status = "available"
+                driver.total_trips += 1
+            driver.vehicle_id = None
+
+    vehicle.status = "idle"
+    vehicle.speed = 0
+    vehicle.driver_id = None
+    vehicle.route_id = None
+    vehicle.current_occupancy = 0
+    vehicle.planned_loops = None
+    vehicle.completed_loops = 0
+    await db.flush()

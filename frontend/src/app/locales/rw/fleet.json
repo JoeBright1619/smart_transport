@@ -41,7 +41,8 @@
   "startJourney": {
     "button": "Tangira",
     "hint": "Banza uhe umushoferi n'umuhanda, hanyuma utangire urugendo [TODO]",
-    "endHint": "Iri mu rugendo — urangirize kuri Dispatch [TODO]"
+    "endHint": "Iri mu rugendo — urangirize kuri Dispatch [TODO]",
+    "progress": "Inshuro ya {{completed}} kuri {{planned}} [TODO]"
   },
   "engineStatus": {
     "good": "Nziza",

@@ -22,6 +22,7 @@ from app.models.tenant import Tenant
 from app.models.trip import Trip
 from app.models.user import User
 from app.models.vehicle import Vehicle
+from app.services import trip_service
 
 logger = logging.getLogger(__name__)
 
@@ -650,6 +651,10 @@ async def _seed_live_trips(db: AsyncSession) -> None:
             vehicle.speed = speed
             vehicle.heading = heading
             vehicle.fuel = fuel
+            # Seeded journeys run the default number of rounds, then auto-end (matching
+            # anything started outside the dashboard).
+            vehicle.planned_loops = trip_service.DEFAULT_JOURNEY_LOOPS
+            vehicle.completed_loops = 0
 
         # Set driver to on-trip and link to vehicle
         driver = (

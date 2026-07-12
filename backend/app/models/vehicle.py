@@ -45,6 +45,16 @@ class Vehicle(Base):
         Integer, nullable=False, default=0, server_default="0"
     )
 
+    # Rounds cap for the current journey. planned_loops is the target number of full
+    # route loops (None = uncapped); completed_loops counts how many have finished. When
+    # completed_loops reaches planned_loops the simulation auto-ends the journey. Both are
+    # set when a journey starts and cleared when it ends, so they survive a restart even
+    # though the per-tick simulation state does not.
+    planned_loops: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    completed_loops: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
+
     status: Mapped[str] = mapped_column(
         Enum("active", "idle", "maintenance", "offline", name="vehicle_status_enum"),
         nullable=False,

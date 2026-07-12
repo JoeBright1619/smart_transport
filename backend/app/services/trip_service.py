@@ -9,7 +9,7 @@ from app.models.route import RouteStop, Stop
 from app.models.trip import Trip
 from app.models.driver import Driver
 from app.models.vehicle import Vehicle
-from app.schemas.trip import TripCreate, TripUpdate
+from app.schemas.trip import DEFAULT_JOURNEY_LOOPS, TripCreate, TripUpdate
 from app.services import audit_service, route_service
 
 
@@ -157,6 +157,11 @@ async def create_trip(
     vehicle.route_id = trip.route_id
     driver.vehicle_id = trip.vehicle_id
 
+    # The rounds count is chosen at dispatch: how many times the driver runs the route
+    # before the journey auto-ends. It rides on the vehicle (the journey's home) and is
+    # honoured by the simulation once the trip is activated.
+    vehicle.planned_loops = data.planned_loops
+
     await audit_service.log(db, current_user_id, tenant_id, "Trip", trip.id, "create")
     return trip
 
@@ -167,6 +172,70 @@ VALID_TRANSITIONS = {
     "completed": [],
     "cancelled": [],
 }
+
+
+async def _activate_trip(db: AsyncSession, trip: Trip, now: datetime) -> None:
+    """Put the trip's driver and vehicle on the road and start the rounds counter."""
+    trip.actual_start = now
+
+    driver = await db.scalar(select(Driver).where(Driver.id == trip.driver_id))
+    if driver:
+        driver.status = "on-trip"
+
+    vehicle = await db.scalar(select(Vehicle).where(Vehicle.id == trip.vehicle_id))
+    if not vehicle:
+        return
+    vehicle.status = "active"
+    # Start the journey's rounds counter. planned_loops is only defaulted when the
+    # caller (start_journey / dispatch) hasn't already chosen a count.
+    vehicle.completed_loops = 0
+    if vehicle.planned_loops is None:
+        vehicle.planned_loops = DEFAULT_JOURNEY_LOOPS
+    if vehicle.lat is None or vehicle.lng is None:
+        first_stop = (
+            await db.execute(
+                select(Stop.lat, Stop.lng)
+                .join(RouteStop, RouteStop.stop_id == Stop.id)
+                .where(
+                    RouteStop.route_id == trip.route_id,
+                    Stop.is_deleted.is_(False),
+                )
+                .order_by(RouteStop.stop_order.asc())
+                .limit(1)
+            )
+        ).first()
+        if first_stop:
+            vehicle.lat = first_stop.lat
+            vehicle.lng = first_stop.lng
+
+
+async def _finalize_trip(
+    db: AsyncSession, trip: Trip, new_status: str, now: datetime
+) -> None:
+    """Complete or cancel a trip: free the driver and stand the vehicle down."""
+    if new_status == "completed":
+        trip.actual_end = now
+
+    driver = await db.scalar(select(Driver).where(Driver.id == trip.driver_id))
+    if driver:
+        if driver.status == "on-trip":
+            driver.status = "available"
+            if new_status == "completed":
+                driver.total_trips += 1
+        driver.vehicle_id = None
+
+    vehicle = await db.scalar(select(Vehicle).where(Vehicle.id == trip.vehicle_id))
+    if vehicle:
+        if vehicle.status == "active":
+            vehicle.status = "idle"
+        vehicle.driver_id = None
+        vehicle.route_id = None
+        # The journey is over — clear its rounds counter so a future journey starts
+        # fresh rather than inheriting a stale/finished count.
+        vehicle.planned_loops = None
+        vehicle.completed_loops = 0
+        if new_status == "completed":
+            vehicle.current_occupancy = 0
 
 
 async def update_trip(
@@ -192,64 +261,9 @@ async def update_trip(
 
     trip.status = new_status
     if new_status == "active":
-        trip.actual_start = now
-
-        driver_result = await db.execute(
-            select(Driver).where(Driver.id == trip.driver_id)
-        )
-        driver = driver_result.scalar_one_or_none()
-        if driver:
-            driver.status = "on-trip"
-
-        vehicle_result = await db.execute(
-            select(Vehicle).where(Vehicle.id == trip.vehicle_id)
-        )
-        vehicle = vehicle_result.scalar_one_or_none()
-        if vehicle:
-            vehicle.status = "active"
-            if vehicle.lat is None or vehicle.lng is None:
-                first_stop = (
-                    await db.execute(
-                        select(Stop.lat, Stop.lng)
-                        .join(RouteStop, RouteStop.stop_id == Stop.id)
-                        .where(
-                            RouteStop.route_id == trip.route_id,
-                            Stop.is_deleted.is_(False),
-                        )
-                        .order_by(RouteStop.stop_order.asc())
-                        .limit(1)
-                    )
-                ).first()
-                if first_stop:
-                    vehicle.lat = first_stop.lat
-                    vehicle.lng = first_stop.lng
-
-    elif new_status == "completed" or new_status == "cancelled":
-        if new_status == "completed":
-            trip.actual_end = now
-
-        driver_result = await db.execute(
-            select(Driver).where(Driver.id == trip.driver_id)
-        )
-        driver = driver_result.scalar_one_or_none()
-        if driver:
-            if driver.status == "on-trip":
-                driver.status = "available"
-                if new_status == "completed":
-                    driver.total_trips += 1
-            driver.vehicle_id = None
-
-        vehicle_result = await db.execute(
-            select(Vehicle).where(Vehicle.id == trip.vehicle_id)
-        )
-        vehicle = vehicle_result.scalar_one_or_none()
-        if vehicle:
-            if vehicle.status == "active":
-                vehicle.status = "idle"
-            vehicle.driver_id = None
-            vehicle.route_id = None
-            if new_status == "completed":
-                vehicle.current_occupancy = 0
+        await _activate_trip(db, trip, now)
+    elif new_status in ("completed", "cancelled"):
+        await _finalize_trip(db, trip, new_status, now)
 
     await db.flush()
     await audit_service.log(
@@ -274,7 +288,8 @@ async def start_journey(
     it, so the vehicle becomes ``active`` with GPS and the driver goes ``on-trip``. The
     Fleet screen ("set active") and any dispatch "start now" both funnel through here, so
     a running vehicle is *always* backed by exactly one active trip — the single source
-    of truth for "on a journey".
+    of truth for "on a journey". The rounds count comes from ``create_trip`` (the default,
+    since the Fleet quick-start does not pick one).
     """
     if vehicle.driver_id is None or vehicle.route_id is None:
         raise HTTPException(

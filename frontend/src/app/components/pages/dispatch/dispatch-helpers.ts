@@ -13,6 +13,7 @@ export type ScheduleTripFormState = {
   driverId: string;
   scheduledStart: string;
   scheduledEnd: string;
+  plannedLoops: string;
 };
 
 export type DispatchStats = {
@@ -22,21 +23,26 @@ export type DispatchStats = {
   availableDrivers: number;
 };
 
+export const DEFAULT_TRIP_ROUNDS = 5;
+
 export const initialScheduleTripFormState: ScheduleTripFormState = {
   vehicleId: '',
   routeId: '',
   driverId: '',
   scheduledStart: defaultDateTimeLocal(30),
   scheduledEnd: defaultDateTimeLocal(90),
+  plannedLoops: String(DEFAULT_TRIP_ROUNDS),
 };
 
 export function buildTripCreatePayload(form: ScheduleTripFormState): TripCreate {
+  const rounds = Number(form.plannedLoops);
   return {
     vehicleId: form.vehicleId,
     routeId: form.routeId,
     driverId: form.driverId,
     scheduledStart: new Date(form.scheduledStart).toISOString(),
     scheduledEnd: new Date(form.scheduledEnd).toISOString(),
+    plannedLoops: rounds > 0 ? rounds : DEFAULT_TRIP_ROUNDS,
   };
 }
 

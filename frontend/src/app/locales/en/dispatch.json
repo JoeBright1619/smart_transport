@@ -52,6 +52,8 @@
     "selectDriver": "Select driver",
     "scheduledStart": "Scheduled start",
     "scheduledEnd": "Scheduled end",
+    "rounds": "Rounds",
+    "roundsHint": "How many times the driver runs the route before the journey auto-ends",
     "close": "Close",
     "scheduling": "Scheduling...",
     "submit": "Schedule Trip",

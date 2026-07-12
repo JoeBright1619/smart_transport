@@ -116,6 +116,8 @@ export interface VehicleRead {
   currentLocation: VehicleLocation | null;
   routeId: string | null;
   driverId: string | null;
+  plannedLoops: number | null;
+  completedLoops: number;
   lastUpdate: string;
 }
 
@@ -247,6 +249,8 @@ export interface TripCreate {
   driverId: string;
   scheduledStart: string;
   scheduledEnd: string;
+  /** How many times the driver runs the route before the journey auto-ends. */
+  plannedLoops?: number;
 }
 
 export interface TripUpdate {

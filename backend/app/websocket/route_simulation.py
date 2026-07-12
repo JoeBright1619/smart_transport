@@ -12,7 +12,7 @@ from app.core.geo_math import bearing, haversine_distance, move_along_bearing
 from app.models.route import RouteStop, Stop
 from app.models.vehicle import Vehicle
 from app.websocket.passenger_simulation import simulate_passengers_at_stop
-from app.websocket.route_trip_records import complete_trip, start_trip
+from app.websocket.route_trip_records import complete_trip, end_journey, start_trip
 
 TICK_SECONDS = 5
 OPEN_ROAD_SPEED = 35
@@ -130,7 +130,24 @@ async def advance_vehicle(
         )
 
         if state["next_stop_index"] == 0:
-            state["loop_count"] = int(state.get("loop_count", 0)) + 1
+            # One full loop of the route done. Track it on the vehicle (persists across
+            # restarts, unlike the in-memory state) so the rounds cap is durable.
+            vehicle.completed_loops = (vehicle.completed_loops or 0) + 1
+            state["loop_count"] = vehicle.completed_loops
+            if _journey_is_done(vehicle):
+                # Ran the planned number of rounds — complete the final loop's trip and
+                # park the vehicle. No new trip is started on the next tick because the
+                # vehicle is now idle and drops out of the active-vehicle query.
+                await end_journey(db, vehicle, state, now)
+                clear_vehicle_state(vehicle.id)
+                return {
+                    "lat": lat,
+                    "lng": lng,
+                    "speed": 0,
+                    "heading": heading,
+                    "fuel": vehicle.fuel if vehicle.fuel is not None else 0,
+                    "fuel_drop": 0.0,
+                }
             await complete_trip(db, vehicle, state, now)
     else:
         brg = bearing(vehicle.lat, vehicle.lng, target.lat, target.lng)
@@ -159,6 +176,17 @@ async def advance_vehicle(
         "fuel": round(new_fuel),
         "fuel_drop": fuel_drop,
     }
+
+
+def _journey_is_done(vehicle: Vehicle) -> bool:
+    """True when a capped journey has finished its planned number of loops.
+
+    A ``planned_loops`` of ``None`` means the journey is uncapped and loops indefinitely.
+    """
+    return (
+        vehicle.planned_loops is not None
+        and (vehicle.completed_loops or 0) >= vehicle.planned_loops
+    )
 
 
 def get_or_init_state(vehicle_id: str, stop_count: int) -> dict[str, Any]:

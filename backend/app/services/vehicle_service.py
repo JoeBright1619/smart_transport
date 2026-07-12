@@ -164,7 +164,8 @@ async def _apply_status_change(
 
     ``active`` is never a free-set value — a running vehicle must be backed by a trip, so
     it routes through the guarded start-journey path (needs a driver + route already
-    assigned). Deactivations go through the open-trip guard.
+    assigned). The journey's rounds count comes from dispatch (``create_trip``).
+    Deactivations go through the open-trip guard.
     """
     if new_status == "active":
         await trip_service.start_journey(

@@ -41,7 +41,8 @@
   "startJourney": {
     "button": "Start",
     "hint": "Assign a driver and route first, then start the journey",
-    "endHint": "On a journey — end it from Dispatch"
+    "endHint": "On a journey — end it from Dispatch",
+    "progress": "Round {{completed}} of {{planned}}"
   },
   "engineStatus": {
     "good": "Good",

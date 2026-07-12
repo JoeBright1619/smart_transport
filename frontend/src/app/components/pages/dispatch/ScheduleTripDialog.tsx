@@ -120,6 +120,19 @@ export function ScheduleTripDialog({ vehicles, drivers, routes, onCreateTrip }: 
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="plannedLoops">{t('schedule.rounds')}</Label>
+            <Input
+              id="plannedLoops"
+              type="number"
+              min="1"
+              value={form.plannedLoops}
+              onChange={(event) => setForm((current) => ({ ...current, plannedLoops: event.target.value }))}
+              required
+            />
+            <p className="text-xs text-muted-foreground">{t('schedule.roundsHint')}</p>
+          </div>
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               {t('schedule.close')}
