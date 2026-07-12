@@ -96,7 +96,14 @@ function TripCard({
         </div>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        {trip.delay > 0 && <Badge variant="destructive">{t('panel.delayedBy', { count: trip.delay })}</Badge>}
+        {trip.status === 'completed' &&
+          (trip.delayStatus === 'delayed' ? (
+            <Badge variant="destructive">{t('panel.delayedBy', { count: trip.delay })}</Badge>
+          ) : trip.delayStatus === 'quick' ? (
+            <Badge variant="secondary">{t('panel.quickBy', { count: Math.abs(trip.delay) })}</Badge>
+          ) : (
+            <Badge variant="outline">{t('panel.onTime')}</Badge>
+          ))}
         {trip.status === 'scheduled' && (
           <Button size="sm" disabled={disabled} onClick={() => onUpdateStatus(trip.id, 'active')}>
             <CheckCircle className="mr-2 size-4" />

@@ -21,6 +21,8 @@
     "end": "Iherezo",
     "passengers": "Abagenzi",
     "delayedBy": "Yatinze iminota {{count}}",
+    "quickBy": "Yihuse iminota {{count}}",
+    "onTime": "Ku gihe",
     "startTrip": "Tangira Urugendo",
     "complete": "Soza",
     "cancel": "Kuraguza"

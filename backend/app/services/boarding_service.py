@@ -26,12 +26,18 @@ async def record_stop_events(
     passenger_id: str | None = None,
     stop_name: str = "",
     route_id: str | None = None,
+    trip_id: str | None = None,
 ) -> None:
-    """Persist one boarding row and one alighting row for a stop visit."""
+    """Persist one boarding row and one alighting row for a stop visit.
+
+    ``trip_id`` attributes these (otherwise-anonymous) counts to the loop's trip, so a
+    trip's total ridership can be summed straight from the boarding records.
+    """
     if alighting_count > 0:
         occupancy_after_alight = max(0, occupancy_after_boarding - boarding_count)
         db.add(
             BoardingRecord(
+                trip_id=trip_id,
                 stop_id=stop_id,
                 route_id=route_id,
                 passenger_id=passenger_id,
@@ -46,6 +52,7 @@ async def record_stop_events(
     if boarding_count > 0:
         db.add(
             BoardingRecord(
+                trip_id=trip_id,
                 stop_id=stop_id,
                 route_id=route_id,
                 passenger_id=passenger_id,

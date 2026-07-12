@@ -227,6 +227,7 @@ async def simulate_passengers_at_stop(
             now,
             stop_name=stops[current_stop_index].name,
             route_id=route_id,
+            trip_id=trip_id,
         )
 
     # 6. Add to live daily revenue

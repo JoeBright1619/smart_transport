@@ -21,6 +21,8 @@
     "end": "End",
     "passengers": "Passengers",
     "delayedBy": "Delayed by {{count}} min",
+    "quickBy": "Quick by {{count}} min",
+    "onTime": "On time",
     "startTrip": "Start Trip",
     "complete": "Complete",
     "cancel": "Cancel"

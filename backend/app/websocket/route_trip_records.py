@@ -1,15 +1,27 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from random import randint
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.boarding_record import BoardingRecord
 from app.models.driver import Driver
+from app.models.route import Route
 from app.models.trip import Trip
 from app.models.vehicle import Vehicle
+
+# Falls back to this scheduled duration (minutes) only when a route has no duration set.
+FALLBACK_SCHEDULED_MIN = 35
+
+
+async def _route_duration_min(db: AsyncSession, route_id: str | None) -> int:
+    """The route's planned duration in minutes, or the fallback if unavailable."""
+    if route_id is None:
+        return FALLBACK_SCHEDULED_MIN
+    duration = await db.scalar(select(Route.duration).where(Route.id == route_id))
+    return int(duration) if duration else FALLBACK_SCHEDULED_MIN
 
 
 async def _open_active_trip(db: AsyncSession, vehicle: Vehicle) -> Trip | None:
@@ -44,7 +56,7 @@ async def start_trip(
         state.setdefault("trip_started_at", existing.actual_start or now)
         return
 
-    scheduled_duration_min = 35
+    scheduled_duration_min = await _route_duration_min(db, vehicle.route_id)
     trip = Trip(
         tenant_id=vehicle.tenant_id,
         vehicle_id=vehicle.id,
@@ -91,13 +103,24 @@ async def complete_trip(
     if started_at.tzinfo is None:
         started_at = started_at.replace(tzinfo=timezone.utc)
     actual_duration = (now - started_at).total_seconds() / 60
-    scheduled_duration_min = 35
-    delay = max(0, int(actual_duration - scheduled_duration_min))
-    passenger_upper_bound = max(20, vehicle.seating_capacity)
+
+    # Delay is signed and measured against the route's own planned duration: positive =
+    # late, ~0 = on time, negative = early/quick (see classify_delay's tolerance band).
+    scheduled_duration_min = await _route_duration_min(db, trip.route_id)
+    delay = round(actual_duration - scheduled_duration_min)
+
+    # Passengers = everyone who actually boarded during this loop, summed from the
+    # boarding records attributed to this trip (0 if none — e.g. no stops visited yet).
+    boarded = await db.scalar(
+        select(func.coalesce(func.sum(BoardingRecord.count), 0)).where(
+            BoardingRecord.trip_id == trip.id,
+            BoardingRecord.event_type == "boarded",
+        )
+    )
 
     trip.actual_end = now
     trip.status = "completed"
-    trip.passengers = randint(20, passenger_upper_bound)  # nosec B311
+    trip.passengers = int(boarded or 0)
     trip.delay = delay
     trip.updated_at = now
     await db.flush()

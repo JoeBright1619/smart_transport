@@ -227,6 +227,7 @@ export interface DriverUpdate {
 
 // Trips
 export type TripStatus = 'scheduled' | 'active' | 'completed' | 'cancelled';
+export type DelayStatus = 'delayed' | 'on_time' | 'quick';
 
 export interface TripRead {
   id: string;
@@ -239,7 +240,9 @@ export interface TripRead {
   actualEnd: string | null;
   status: TripStatus;
   passengers: number;
+  /** Signed minutes vs the route's planned duration: >0 late, ~0 on time, <0 early. */
   delay: number;
+  delayStatus: DelayStatus;
   createdAt: string;
 }
 

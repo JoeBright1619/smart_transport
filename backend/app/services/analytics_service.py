@@ -4,7 +4,7 @@ from datetime import date, datetime, timedelta
 from typing import Any
 
 import redis.asyncio as redis
-from sqlalchemy import select, func, case, cast, Date
+from sqlalchemy import select, func, case, cast, Date, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy.orm import selectinload
@@ -17,6 +17,7 @@ from app.models.route import Route
 from app.models.trip import Trip
 from app.models.vehicle import Vehicle
 from app.models.user import User
+from app.schemas.trip import ON_TIME_TOLERANCE_MIN
 from app.schemas.analytics import (
     DailyReportData,
     DriverReportData,
@@ -47,8 +48,20 @@ async def get_analytics(
         select(
             cast(Trip.created_at, Date).label("d"),
             func.count(Trip.id).label("total_trips"),
-            func.sum(case((Trip.delay <= 0, 1), else_=0)).label("on_time_trips"),
-            func.sum(Trip.delay).label("total_delay"),
+            func.sum(
+                case(
+                    (
+                        and_(
+                            Trip.delay >= -ON_TIME_TOLERANCE_MIN,
+                            Trip.delay <= ON_TIME_TOLERANCE_MIN,
+                        ),
+                        1,
+                    ),
+                    else_=0,
+                )
+            ).label("on_time_trips"),
+            # Total minutes *late* only — early trips shouldn't offset lateness.
+            func.sum(case((Trip.delay > 0, Trip.delay), else_=0)).label("total_delay"),
             func.sum(Trip.passengers).label("total_passengers"),
         )
         .where(
@@ -231,7 +244,7 @@ async def get_filtered_report(
             if t.route_id in route_stats:
                 rs = route_stats[t.route_id]
                 rs["trips"].append(t)
-                if t.delay <= 0:
+                if -ON_TIME_TOLERANCE_MIN <= t.delay <= ON_TIME_TOLERANCE_MIN:
                     rs["on_time"] += 1
                 if t.actual_end and t.actual_start:
                     rs["duration_sum"] += (
@@ -426,7 +439,7 @@ async def get_filtered_report(
                 ds["total"] += 1
                 if t.status == "completed":
                     ds["completed"] += 1
-                if t.delay <= 0:
+                if -ON_TIME_TOLERANCE_MIN <= t.delay <= ON_TIME_TOLERANCE_MIN:
                     ds["on_time"] += 1
                 if t.actual_end and t.actual_start:
                     ds["duration_sum"] += (
