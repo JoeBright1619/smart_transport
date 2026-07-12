@@ -75,6 +75,12 @@ async def advance_vehicle(
 
     state = get_or_init_state(vehicle.id, len(stops))
 
+    # A running vehicle must always have exactly one active trip (adopt an existing open
+    # trip, or create one). Doing this every tick — not only when the terminal is reached
+    # — means Dispatch always reflects moving vehicles and there is no gap on the return
+    # leg or after a mid-journey route change.
+    await start_trip(db, vehicle, state, now)
+
     # Bus pauses at each stop for DWELL_TICKS before moving on
     dwell = int(state.get("dwell_remaining", 0))
     if dwell > 0:
@@ -118,9 +124,6 @@ async def advance_vehicle(
         state["next_stop_index"] = (current_stop_index + 1) % len(stops)
         state["dwell_remaining"] = DWELL_TICKS
         state["at_stop_name"] = stops[current_stop_index].name
-
-        if current_stop_index == 0:
-            await start_trip(db, vehicle, state, now)
 
         await simulate_passengers_at_stop(
             db, vehicle, stops, current_stop_index, state, now

@@ -134,3 +134,54 @@ async def test_full_loop_then_fresh_next_loop_never_two_active(
     await start_trip(db, vehicle, state, _now())
     assert len(await _trips(db, vehicle.id, status="active")) == 1
     assert len(await _trips(db, vehicle.id)) == 2  # one completed + one active
+
+
+async def test_advance_vehicle_ensures_active_trip(
+    db: AsyncSession, make_route, make_driver, make_vehicle, tenant
+):
+    from app.models.route import RouteStop, Stop
+    from app.websocket import route_simulation
+
+    route = await make_route(tenant_id=tenant.id)
+    s1 = Stop(
+        id="stop-sim-1",
+        tenant_id=tenant.id,
+        name="A",
+        lat=-1.95,
+        lng=30.06,
+        is_deleted=False,
+    )
+    s2 = Stop(
+        id="stop-sim-2",
+        tenant_id=tenant.id,
+        name="B",
+        lat=-1.96,
+        lng=30.07,
+        is_deleted=False,
+    )
+    db.add_all([s1, s2])
+    await db.flush()
+    db.add_all(
+        [
+            RouteStop(route_id=route.id, stop_id=s1.id, stop_order=0),
+            RouteStop(route_id=route.id, stop_id=s2.id, stop_order=1),
+        ]
+    )
+    await db.commit()
+
+    driver = await make_driver(tenant_id=tenant.id, status="on-trip")
+    vehicle = await make_vehicle(
+        tenant_id=tenant.id,
+        status="active",
+        route_id=route.id,
+        driver_id=driver.id,
+        lat=s1.lat,
+        lng=s1.lng,
+    )
+
+    route_simulation._route_stops_cache.pop(route.id, None)
+    route_simulation.clear_vehicle_state(vehicle.id)
+
+    # A single tick of a moving vehicle must leave it with exactly one active trip.
+    await route_simulation.advance_vehicle(db, vehicle, _now())
+    assert len(await _trips(db, vehicle.id, status="active")) == 1
