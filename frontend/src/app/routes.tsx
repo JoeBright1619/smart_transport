@@ -13,6 +13,7 @@ import { RouteManagement } from './components/pages/RouteManagement';
 import { ArrivalTimes } from './components/pages/ArrivalTimes';
 import { PassengerApp } from './components/pages/PassengerApp';
 import { Dispatch } from './components/pages/Dispatch';
+import { Trips } from './components/pages/Trips';
 import { Drivers } from './components/pages/Drivers';
 import { Maintenance } from './components/pages/Maintenance';
 import { Analytics } from './components/pages/Analytics';
@@ -68,6 +69,7 @@ export const router = createBrowserRouter([
       { path: 'arrivals', Component: ArrivalTimes },
       { path: 'passenger', Component: PassengerApp },
       { path: 'dispatch', Component: Dispatch },
+      { path: 'trips', Component: Trips },
       { path: 'drivers', Component: Drivers },
       { path: 'maintenance', Component: Maintenance },
       { path: 'analytics', Component: Analytics },

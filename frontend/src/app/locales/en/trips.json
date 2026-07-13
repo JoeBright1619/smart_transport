@@ -1,0 +1,34 @@
+{
+  "title": "Trips",
+  "subtitle": "All dispatched trips, most recent first.",
+  "loading": "Loading trips...",
+  "filter": {
+    "label": "Status",
+    "all": "All statuses"
+  },
+  "status": {
+    "scheduled": "Scheduled",
+    "active": "Active",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
+  "minutes": {
+    "delayed": "{{duration}} late",
+    "quick": "{{duration}} early",
+    "on_time": "On time"
+  },
+  "table": {
+    "title": "Trip history",
+    "noTrips": "No trips match this filter.",
+    "route": "Route",
+    "vehicle": "Vehicle",
+    "driver": "Driver",
+    "status": "Status",
+    "actualStart": "Actual start",
+    "actualEnd": "Actual end",
+    "passengers": "Passengers",
+    "departure": "Departure",
+    "delay": "Delay",
+    "unknown": "—"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "title": "Ingendo",
+  "subtitle": "Ingendo zose zoherejwe, iziheruka mbere.",
+  "loading": "Ingendo zirapakirwa...",
+  "filter": {
+    "label": "Imiterere",
+    "all": "Imiterere yose [TODO]"
+  },
+  "status": {
+    "scheduled": "Iteganyijwe",
+    "active": "Irakora",
+    "completed": "Yarangiye",
+    "cancelled": "Yahagaritswe"
+  },
+  "minutes": {
+    "delayed": "Yatinze {{duration}}",
+    "quick": "Yihuse {{duration}}",
+    "on_time": "Ku gihe"
+  },
+  "table": {
+    "title": "Amateka y'ingendo [TODO]",
+    "noTrips": "Nta rugendo ruhuye n'aya matonde [TODO]",
+    "route": "Umuhanda",
+    "vehicle": "Imodoka",
+    "driver": "Umushoferi",
+    "status": "Imiterere",
+    "actualStart": "Itangira nyaryo [TODO]",
+    "actualEnd": "Irangira nyaryo [TODO]",
+    "passengers": "Abagenzi",
+    "departure": "Kugenda [TODO]",
+    "delay": "Gutinda",
+    "unknown": "—"
+  }
+}

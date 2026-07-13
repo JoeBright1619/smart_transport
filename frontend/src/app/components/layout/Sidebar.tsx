@@ -17,6 +17,7 @@ import {
   Building2,
   Activity,
   PhoneCall,
+  ListChecks,
 } from 'lucide-react';
 import { cn } from '../ui/utils';
 import { useAuth } from '../../lib/auth-context';
@@ -44,6 +45,7 @@ const navigation = [
   { labelKey: 'nav.passengerApp', href: '/passenger', icon: Smartphone, roles: ['admin', 'passenger'] },
   { labelKey: 'nav.operators', href: '/operators', icon: PhoneCall, roles: ['passenger'] },
   { labelKey: 'nav.dispatch', href: '/dispatch', icon: UserCog, roles: ['admin', 'dispatcher'] },
+  { labelKey: 'nav.trips', href: '/trips', icon: ListChecks, roles: ['admin', 'operator', 'dispatcher'] },
   { labelKey: 'nav.drivers', href: '/drivers', icon: Users, roles: ['admin', 'operator'] },
   { labelKey: 'nav.maintenance', href: '/maintenance', icon: Wrench, roles: ['admin', 'operator'] },
   { labelKey: 'nav.analytics', href: '/analytics', icon: BarChart3, roles: ['admin', 'operator'] },
