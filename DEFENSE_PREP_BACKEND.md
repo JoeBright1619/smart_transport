@@ -2,7 +2,9 @@
 
 > **Goal of this file:** Teach you the backend well enough that in the defense you can (a) explain how the system works, and (b) instantly open the right file when asked "show me where X is implemented."
 
-**Stack:** FastAPI (async) · SQLAlchemy 2.0 async ORM · PostgreSQL (asyncpg) · Redis (pub/sub + cache) · Alembic (migrations) · JWT auth · pytest. It is a **multi-tenant SaaS** — one deployment serves many transport companies ("tenants"), and their data is isolated from each other.
+**Stack:** FastAPI (async) · SQLAlchemy 2.0 async ORM · PostgreSQL (asyncpg) · Redis (pub/sub + cache) · Alembic (migrations) · JWT auth · pytest.
+
+> **Positioning (read [DEFENSE_PREP.md](DEFENSE_PREP.md) §0):** The thesis deliverable is **EcoFleet's** system. It is *architected* **multi-tenant** — one deployment can serve many operators ("tenants") with isolated data — as a deliberate decision for post-thesis SaaS commercialization. Lead with Ecofleet; present the "tenant" / superadmin concepts as the commercialization/administration layer, not the headline.
 
 **Root:** `backend/` — entry point `backend/main.py`, app package `backend/app/`.
 

@@ -4,6 +4,8 @@
 
 **Stack:** React 18 + Vite 6 + TypeScript SPA · **React Router 7** · axios · Leaflet/react-leaflet (maps) · Recharts (charts) · jsPDF (PDF export) · i18next (English + Kinyarwanda) · Radix UI + Tailwind v4. **Global state = React Context only** (no Redux/Zustand).
 
+> **Positioning (read [DEFENSE_PREP.md](DEFENSE_PREP.md) §0):** Demo as **`admin@ecofleet.rw`** — then the app reads entirely as EcoFleet's system and the superadmin nav item is hidden. `SuperadminPortal` / `SuperadminRoute` are the SaaS **commercialization layer**; show them only if explicitly asked.
+
 **Root:** `frontend/` — source under `frontend/src/app/`.
 
 ---

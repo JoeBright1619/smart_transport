@@ -73,6 +73,19 @@ export function toRouteCreatePayload(form: RouteFormState): RouteCreate {
   };
 }
 
+// Duration estimate assumptions. A city bus that stops at every stop averages well below
+// road speed, so duration is modelled as travel at an urban average speed plus a fixed
+// dwell at each stop — not distance-as-minutes (which implied an unrealistic 60 km/h).
+export const AVG_ROUTE_SPEED_KMH = 20;
+export const DWELL_MINUTES_PER_STOP = 1;
+
+/** Estimate route duration in minutes from total distance (km) and number of stops. */
+export function estimateRouteDurationMinutes(distanceKm: number, stopCount: number): number {
+  const travelMinutes = (distanceKm / AVG_ROUTE_SPEED_KMH) * 60;
+  const dwellMinutes = stopCount * DWELL_MINUTES_PER_STOP;
+  return Math.round(travelMinutes + dwellMinutes);
+}
+
 export function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371; // Earth radius in km
   const dLat = (lat2 - lat1) * (Math.PI / 180);

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { type RouteFormState, haversineDistance } from './route-helpers';
+import { type RouteFormState, estimateRouteDurationMinutes, haversineDistance } from './route-helpers';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Label } from '../../ui/label';
@@ -31,7 +31,7 @@ export function RouteForm({ form, setForm, onSubmit, submitting, submitLabel, on
         }
       }
       distanceRounded = dist.toFixed(1);
-      durationRounded = Math.round(dist).toString();
+      durationRounded = estimateRouteDurationMinutes(dist, form.stops.length).toString();
     }
 
     setForm((current) => {

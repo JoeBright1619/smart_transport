@@ -7,9 +7,19 @@ This is your exam study pack. Read this file first for the big picture, then div
 
 ---
 
+## 0. ⚠️ Positioning — read this first (Ecofleet vs. multi-tenant)
+
+This system was built **for EcoFleet Ltd** — that is the thesis deliverable, and all documented requirements are implemented for them. You *also* architected it as a **multi-tenant platform** (each operator's data isolated) so it can be commercialized as a SaaS to other operators after the thesis. **Lead with Ecofleet; present multi-tenancy as a deliberate architectural/commercialization decision — never hide it, never overstate it.**
+
+- **Demo as `admin@ecofleet.rw`** (seeded, [seed.py:156](backend/app/core/seed.py#L156)). Then everything on screen is "Ecofleet's system" and the superadmin menu isn't even visible.
+- **Say once, in your architecture section:** *"The core deliverable is Ecofleet's system; I additionally designed it multi-tenant so it can be offered as SaaS to other operators later."*
+- **If asked about the superadmin:** *"Ecofleet is one tenant; the superadmin is the SaaS platform-operator role that onboards and oversees operator companies. It sits above Ecofleet and touches none of their daily operations."*
+- **If told "this wasn't in scope":** *"Correct — the documented requirements target Ecofleet as a single operator and are fully delivered. Multi-tenancy is an architectural decision beyond that scope for commercialization; it adds no Ecofleet-facing feature and is a security strength — one operator can never see another's data (`tests/test_tenant_isolation.py`)."*
+- **Don't log in as superadmin** unless explicitly asked; then show it briefly.
+
 ## 1. What the system is (say this in your opening)
 
-> "Smart Transport is a **multi-tenant** public-transport management platform. One deployment serves many transport companies; each company manages its vehicles, routes, stops, drivers, trips, alerts and maintenance, sees live vehicle tracking on a map, and gets analytics with exportable PDF reports. Passengers get their own app to track buses and see arrival times. A superadmin oversees all companies. The backend is **FastAPI + PostgreSQL + Redis**; the frontend is **React + Vite + TypeScript**; auth is **JWT with rotating refresh tokens**; and the UI supports **English and Kinyarwanda**."
+> "This is EcoFleet's public-transport management system. EcoFleet manages its vehicles, routes, stops, drivers, trips, alerts and maintenance, sees live vehicle tracking on a map, and gets analytics with exportable PDF reports; passengers get their own app to track buses and see arrival times. The backend is **FastAPI + PostgreSQL + Redis**; the frontend is **React + Vite + TypeScript**; auth is **JWT with rotating refresh tokens**; the UI supports **English and Kinyarwanda**. Architecturally it is built **multi-tenant**, so the same platform can serve additional transport operators as a commercial SaaS."
 
 ---
 
@@ -17,11 +27,14 @@ This is your exam study pack. Read this file first for the big picture, then div
 
 `superadmin > admin > operator > dispatcher > passenger`
 
-- **superadmin** — platform owner; manages all tenants, impersonates, sees platform-wide analytics.
-- **admin** — a company's owner; full control of their tenant + user management.
+**The four Ecofleet-facing roles (this is your thesis story):**
+- **admin** — EcoFleet's owner/administrator; full control + user management.
 - **operator** — manages fleet/routes/drivers/maintenance.
 - **dispatcher** — schedules and runs trips.
 - **passenger** — tracks buses and views arrivals.
+
+**Platform role (commercialization layer, above Ecofleet):**
+- **superadmin** — the SaaS platform-operator; onboards/oversees operator companies (tenants), impersonates for support, sees platform-wide analytics. *Not part of Ecofleet's day-to-day; present only if asked.*
 
 ---
 
@@ -44,11 +57,13 @@ If the JWT is expired, the backend returns 401, and `api-client.ts` silently ref
 
 ---
 
-## 4. The three "signature" features to be ready to demo
+## 4. The signature features to demo (all as Ecofleet)
 
-1. **Multi-tenancy + isolation** — every query is scoped by `tenant_id` from the JWT; `tests/test_tenant_isolation.py` proves company A can't see company B's data.
-2. **Real-time tracking** — the backend **simulates** buses moving along routes (no real GPS), streams positions over a **WebSocket** (`/ws/tracking`) fanned out via **Redis pub/sub**, and the frontend renders them live on a **Leaflet** map.
-3. **Analytics + branded PDF reports** — Redis-cached KPIs, **Recharts** graphs, and **jsPDF** reports carrying the tenant's own logo/name, localized to English or Kinyarwanda.
+1. **Real-time tracking** — the backend **simulates** buses moving along routes (standing in for GPS hardware), streams positions over a **WebSocket** (`/ws/tracking`) fanned out via **Redis pub/sub**, and the frontend renders them live on a **Leaflet** map.
+2. **Analytics + branded PDF reports** — Redis-cached KPIs, **Recharts** graphs, and **jsPDF** reports carrying EcoFleet's own logo/name, localized to English or Kinyarwanda.
+3. **Automated operations** — driver/vehicle status, ETAs, alerts (delay/breakdown/speeding/low-fuel/capacity), boardings and revenue are all **derived from operational data**, replacing manual radio check-ins and logbooks.
+
+**Architectural strength (explain, don't demo):** **multi-tenant data isolation** — every query is scoped by `tenant_id` from the JWT, and `tests/test_tenant_isolation.py` proves one operator can never see another's data. This is what makes the post-thesis SaaS commercialization safe.
 
 ---
 
