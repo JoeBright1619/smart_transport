@@ -120,10 +120,14 @@ async def create_vehicle(
     return vehicle
 
 
-async def _guard_deactivation(
+async def guard_deactivation(
     db: AsyncSession, vehicle_id: str, new_status: str
 ) -> None:
-    """Block idle/maintenance/offline transitions that would strand an open trip."""
+    """Block idle/maintenance/offline transitions that would strand an open trip.
+
+    Shared with maintenance_service so starting a maintenance job takes a vehicle off the
+    road under exactly the same rules as a Fleet-screen maintenance change.
+    """
     conflict_trip = (
         await db.execute(
             select(Trip).where(
@@ -173,7 +177,7 @@ async def _apply_status_change(
         )
         return
     if new_status in ("idle", "maintenance", "offline"):
-        await _guard_deactivation(db, vehicle.id, new_status)
+        await guard_deactivation(db, vehicle.id, new_status)
     vehicle.status = new_status
 
 

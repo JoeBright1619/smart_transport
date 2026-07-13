@@ -81,14 +81,111 @@ If the JWT is expired, the backend returns 401, and `api-client.ts` silently ref
 
 ## 6. How to run it (for a live demo)
 
-- **Everything via Docker:** `docker-compose up` (starts Postgres, Redis, backend).
-- **Backend alone:** `cd backend && uvicorn main:app --reload` → API docs at `http://localhost:8000/docs`.
+- **Everything via Docker:** `docker compose up` (starts Postgres, Redis, backend).
+- **Seed the EcoFleet demo data:** `docker compose exec backend python -m app.core.seed` (add `--reset` to wipe and reseed clean).
 - **Frontend:** `cd frontend && npm run dev`.
-- **Backend tests:** `cd backend && pytest`.
+- **Backend API docs (fallback demo surface):** `http://localhost:8000/docs`.
+- **Backend tests:** `docker compose exec backend pytest`.
+
+**Seeded logins** (password `Password123!`, except superadmin):
+
+| Role | Email | Password |
+|---|---|---|
+| Admin (EcoFleet) | `admin@ecofleet.rw` | `Password123!` |
+| Operator | `operator@ecofleet.rw` | `Password123!` |
+| Dispatcher | `dispatcher@ecofleet.rw` | `Password123!` |
+| Passenger | `passenger@ecofleet.rw` | `Password123!` |
+| Superadmin (only if asked) | `superadmin@platform.local` | `Admin@123456` |
+
+**Seed state to know** (so nothing surprises you): 3 buses are **already moving** on the map at startup — `veh-001` (Route 101 Nyabugogo–Kimironko), `veh-003` (Route 202 CBD–Gisozi), `veh-007` (Route 404). One trip is **scheduled** (`veh-006`, Route 303). **Idle & available** to dispatch: `veh-002`, `veh-005`, `veh-008`. **`veh-004` is in maintenance** (engine critical) — great for the maintenance/alerts story.
 
 ---
 
-## 7. Two-minute pre-exam checklist
+## 7. Full demo walkthrough (rehearse this end to end)
+
+Run it top to bottom. Each step is **Do → Say → ✅ Verify**. The ✅ boxes double as your "is everything working?" test. Unless noted, stay logged in as **`admin@ecofleet.rw`** so the whole thing reads as EcoFleet's own system.
+
+### Pre-flight
+- [ ] `docker compose up` is running; `docker compose ps` shows db, redis, backend healthy.
+- [ ] Seed data loaded (`... python -m app.core.seed`).
+- [ ] `npm run dev` up; open the printed URL; set the app language to **English** to start.
+
+### Act 1 — Login & Dashboard
+- **Do:** Log in as `admin@ecofleet.rw`.
+- **Say:** *"This is EcoFleet's management system. The dashboard gives the operator a live overview — fleet status, active trips, alerts, KPIs."*
+- **✅ Verify:** Redirected to the dashboard; the **EcoFleet name/logo** shows in the sidebar/header; KPI cards and any charts render with numbers (not spinners/errors).
+
+### Act 2 — Fleet Management (`/fleet`)
+- **Do:** Open Fleet. Point out the 8 vehicles and their statuses (idle / active / maintenance). Click **Add Vehicle**, create one (e.g. reg `RAD 010 X`, capacity 50), save.
+- **Say:** *"Operators manage the whole fleet here — capacity, fuel, engine status, current occupancy. Notice `RAD 004 D` is in maintenance with a critical engine."*
+- **✅ Verify:** New vehicle appears in the table; a success toast shows; refresh keeps it (persisted).
+
+### Act 3 — Routes & Stops (`/routes`)
+- **Do:** Open Routes. Show Route 101 (Nyabugogo–Kimironko) and its **ordered stops**. Open the stops editor to show the stop sequence.
+- **Say:** *"Each route is an ordered list of stops. That ordering is what powers ETA calculation and the map polyline."*
+- **✅ Verify:** Routes list loads; opening a route shows its stops in order.
+
+### Act 4 — Drivers (`/drivers`)
+- **Do:** Open Drivers. Show statuses (available / on-trip / off-duty). Point out that on-trip drivers are the ones tied to the moving buses.
+- **Say:** *"Driver status is derived automatically from the trip lifecycle — nobody types it in. An assigned, running driver shows on-trip; when the trip ends they return to available."*
+- **✅ Verify:** Drivers list loads; at least one shows **on-trip** (matching the 3 active buses).
+
+### Act 5 — Dispatch a trip (`/dispatch`) — *the automation centerpiece*
+- **Do:** Open Dispatch. Show the **active trips** (3) and **scheduled** (1). Click **Schedule Trip**, pick an idle vehicle (`veh-002`), an available driver, and a route → save (toast **"Trip scheduled"**). Then **Start** that trip (status → active; toast **"Trip status updated"**).
+- **Say:** *"The dispatcher schedules and runs trips. Starting a trip flips the vehicle to active and the driver to on-trip, and reserves both so they can't be double-booked."*
+- **✅ Verify:** New trip appears as scheduled, then moves to active; the chosen vehicle/driver disappear from the "available" lists.
+
+### Act 6 — Live Tracking (`/tracking`) — *the real-time centerpiece*
+- **Do:** Open Tracking. Watch buses **move** on the Leaflet map. Click a vehicle marker to open its popup (occupancy, speed, fuel, engine, next stop). Find the bus you just dispatched.
+- **Say:** *"Positions stream over a WebSocket, fanned out via Redis so it scales across servers. In production this is where real GPS feeds in; here a simulation stands in for the hardware."*
+- **✅ Verify:** Markers move every few seconds; the popup shows live occupancy/speed; the **connection badge shows connected** (not "disconnected"); your newly dispatched bus appears and starts moving within ~10s.
+
+### Act 7 — Arrival Times / ETAs (`/arrivals`)
+- **Do:** Select a stop on an active route (e.g. a stop on Route 101). Show the estimated arrivals.
+- **Say:** *"ETA is computed by walking the ordered stops from the bus's current position, summing the real (haversine) distances, and dividing by live speed."*
+- **✅ Verify:** Picking a stop returns one or more ETAs with a bus and minutes.
+
+### Act 8 — Alerts (`/alerts`)
+- **Do:** Open Alerts. Show auto-generated alerts (e.g. low-fuel, maintenance/critical engine, delay/speeding). Acknowledge one.
+- **Say:** *"Alerts are generated automatically from operational data — breakdowns from engine status, delays from schedule, low fuel from telemetry — no human has to report them."*
+- **✅ Verify:** Alerts list loads; acknowledging one updates its state (and the toast/counter).
+
+### Act 9 — Maintenance (`/maintenance`)
+- **Do:** Open Maintenance. Show records; click **Schedule Maintenance** for `veh-004`, save.
+- **Say:** *"Operators track routine service, repairs and inspections; a vehicle in maintenance is automatically excluded from dispatch."*
+- **✅ Verify:** New maintenance record appears; toast confirms.
+
+### Act 10 — Analytics + PDF export (`/analytics`)
+- **Do:** Open Analytics. Show the trend charts (revenue, passengers, fuel), route/fleet tabs. Change the date range. Click **Export PDF**.
+- **Say:** *"KPIs are cached in Redis for speed. Reports export as branded PDFs carrying EcoFleet's logo and name, in the selected language."*
+- **✅ Verify:** Charts render; date-range change updates them; the PDF downloads and shows **EcoFleet branding** + real numbers.
+
+### Act 11 — Bilingual UI (i18n)
+- **Do:** In the header, switch language **English → Kinyarwanda**. Navigate a page or two.
+- **Say:** *"The whole UI is internationalized — English and Kinyarwanda — including dates, numbers, and the PDF reports."*
+- **✅ Verify:** Labels switch to Kinyarwanda immediately; refresh keeps the choice (persisted). **Switch back to English** before continuing.
+
+### Act 12 — Administration & Security
+- **Do:** Open Administration (`/admin`) → show users; **Invite** a new staff user (enter an email, pick a role) → send. Open Security (`/security`) → show the **audit log** (your recent actions — login, trip create, invite).
+- **Say:** *"Admins manage their team via email invitations, and every sensitive action is written to an immutable audit log."*
+- **✅ Verify:** Invite succeeds (toast); the invited user appears as invited; the audit log shows your recent actions.
+
+### Act 13 — Passenger app (log out → `passenger@ecofleet.rw`)
+- **Do:** Log out, log in as the passenger. Show **live tracking**, **arrival times** for a favourite stop, **trip history**, **notifications** (approaching bus), and **profile / operators** directory.
+- **Say:** *"Passengers get their own focused app — track buses, see ETAs, get notified when their bus is near, and view their trip history."*
+- **✅ Verify:** Passenger home loads; tracking/arrivals show data; notifications page loads; profile is editable.
+
+### Act 14 — Superadmin (ONLY if asked; see §0)
+- **Do:** Log in as `superadmin@platform.local`. Show the tenants list, platform analytics.
+- **Say:** *"This is the commercialization layer — the SaaS platform-operator that onboards and oversees operator companies. EcoFleet is one tenant. Each tenant's data is fully isolated, proven by our tenant-isolation test."*
+- **✅ Verify:** Superadmin portal loads tenants + platform metrics.
+
+### Fallback if the UI misbehaves
+Open `http://localhost:8000/docs` and demo the same flows via the API (login → get token → call `/api/v1/vehicles`, `/api/v1/trips`, etc.). Good insurance to mention you have.
+
+---
+
+## 8. Two-minute pre-exam checklist
 
 - [ ] I can name the 5 roles and the role hierarchy.
 - [ ] I can explain the access/refresh token split and *why* (§ auth).

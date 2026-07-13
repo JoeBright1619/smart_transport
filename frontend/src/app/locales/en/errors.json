@@ -13,6 +13,9 @@
   "DRIVER_ON_ACTIVE_JOURNEY": "This driver is on an active journey — end it before reassigning them",
   "VEHICLE_ON_ACTIVE_JOURNEY": "This vehicle is on an active journey — end the journey first",
   "CANNOT_CREATE_ACTIVE": "A new vehicle can't be created as active — add it, then start a journey",
+  "STOP_IN_USE": "This stop is used by one or more routes — remove it from them first",
+  "STOP_NAME_CONFLICT": "A stop with this name already exists",
+  "STOP_COORDINATE_CONFLICT": "A stop already exists within 10 meters of these coordinates",
   "DEFAULT": "Something went wrong. Please try again",
   "validation": {
     "emailRequired": "Email is required",

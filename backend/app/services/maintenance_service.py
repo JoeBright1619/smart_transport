@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.maintenance import MaintenanceRecord
 from app.models.vehicle import Vehicle
 from app.schemas.maintenance import MaintenanceCreate, MaintenanceUpdate
-from app.services import audit_service
+from app.services import audit_service, vehicle_service
 
 
 def _error_detail(code: str, message: str) -> dict:
@@ -105,6 +105,39 @@ async def create_maintenance_record(
     return record
 
 
+async def _sync_vehicle_status(
+    db: AsyncSession, record: MaintenanceRecord, new_status: str
+) -> None:
+    """Keep the vehicle's status in step with its maintenance record.
+
+    Starting a job (``in-progress``) takes the vehicle off the road, guarded exactly like a
+    Fleet-screen maintenance change (can't strand an active/scheduled trip). Leaving
+    ``in-progress`` (completed or back to scheduled) returns the vehicle to ``idle`` — but
+    only once no other job on it is still open.
+    """
+    vehicle = await db.get(Vehicle, record.vehicle_id)
+    if vehicle is None:
+        return
+
+    if new_status == "in-progress":
+        await vehicle_service.guard_deactivation(db, vehicle.id, "maintenance")
+        vehicle.status = "maintenance"
+        return
+
+    if vehicle.status != "maintenance":
+        return
+    other_open = await db.scalar(
+        select(MaintenanceRecord.id).where(
+            MaintenanceRecord.vehicle_id == vehicle.id,
+            MaintenanceRecord.id != record.id,
+            MaintenanceRecord.status == "in-progress",
+            MaintenanceRecord.is_deleted.is_(False),
+        )
+    )
+    if other_open is None:
+        vehicle.status = "idle"
+
+
 async def update_maintenance_record(
     db: AsyncSession,
     record_id: str,
@@ -120,6 +153,9 @@ async def update_maintenance_record(
         record.cost = update_data["cost"]
 
     if "status" in update_data:
+        # Sync the vehicle first: the guard may reject starting maintenance, and that must
+        # happen before the record's own status is mutated.
+        await _sync_vehicle_status(db, record, update_data["status"])
         record.status = update_data["status"]
 
     if "completed_date" in update_data:

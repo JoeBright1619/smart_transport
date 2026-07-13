@@ -29,33 +29,43 @@ export function useAlertsManagement() {
   const setSeverity = (s: AlertFilterValue<AlertSeverity>) => { setPage(1); setSeverityState(s); };
   const setType = (t: AlertFilterValue<AlertType>) => { setPage(1); setTypeState(t); };
 
-  const loadAlerts = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  // `silent` refreshes (the 10s poll) update data without the loading spinner or wiping
+  // the view on a transient fetch error.
+  const loadAlerts = useCallback(
+    async (options?: { silent?: boolean }) => {
+      if (!options?.silent) setLoading(true);
 
-    try {
-      const [filteredResult, summaryResult] = await Promise.all([
-        alertsService.listAlerts({
-          page,
-          pageSize: PAGE_SIZE,
-          isAcknowledged: tabAcknowledgedValue(activeTab),
-          severity: severity === 'all' ? undefined : severity,
-          type: type === 'all' ? undefined : type,
-        }),
-        alertsService.listAlerts({ pageSize: 100 }),
-      ]);
-      setAlerts(filteredResult.items);
-      setTotal(filteredResult.total);
-      setSummaryAlerts(summaryResult.items);
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to load alerts');
-    } finally {
-      setLoading(false);
-    }
-  }, [activeTab, severity, type, page]);
+      try {
+        const [filteredResult, summaryResult] = await Promise.all([
+          alertsService.listAlerts({
+            page,
+            pageSize: PAGE_SIZE,
+            isAcknowledged: tabAcknowledgedValue(activeTab),
+            severity: severity === 'all' ? undefined : severity,
+            type: type === 'all' ? undefined : type,
+          }),
+          alertsService.listAlerts({ pageSize: 100 }),
+        ]);
+        setAlerts(filteredResult.items);
+        setTotal(filteredResult.total);
+        setSummaryAlerts(summaryResult.items);
+        setError(null);
+      } catch (loadError) {
+        if (!options?.silent) {
+          setError(loadError instanceof Error ? loadError.message : 'Unable to load alerts');
+        }
+      } finally {
+        if (!options?.silent) setLoading(false);
+      }
+    },
+    [activeTab, severity, type, page],
+  );
 
+  // Poll so alerts raised by the backend (low fuel, capacity, ...) surface without a reload.
   useEffect(() => {
     void loadAlerts();
+    const interval = setInterval(() => void loadAlerts({ silent: true }), 10000);
+    return () => clearInterval(interval);
   }, [loadAlerts]);
 
   const stats = useMemo(() => calculateAlertStats(summaryAlerts), [summaryAlerts]);

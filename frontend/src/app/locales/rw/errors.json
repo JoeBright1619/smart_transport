@@ -13,6 +13,9 @@
   "DRIVER_ON_ACTIVE_JOURNEY": "Uyu mushoferi ari mu rugendo rukora — banza urangize mbere yo kumuhindura [TODO]",
   "VEHICLE_ON_ACTIVE_JOURNEY": "Iyi modoka iri mu rugendo rukora — banza urangize urugendo [TODO]",
   "CANNOT_CREATE_ACTIVE": "Imodoka nshya ntishobora gushyirwaho nk'ikora — banza uyongereho, hanyuma utangire urugendo [TODO]",
+  "STOP_IN_USE": "Iri hagarariro rikoreshwa n'umuhanda umwe cyangwa myinshi — banza urikure kuri yo [TODO]",
+  "STOP_NAME_CONFLICT": "Hari ihagarariro rifite iri zina risanzweho [TODO]",
+  "STOP_COORDINATE_CONFLICT": "Hari ihagarariro risanzweho mu ntera ya metero 10 uhereye aha hantu [TODO]",
   "DEFAULT": "Habaye ikibazo. Nyamuneka ongera ugerageze",
   "validation": {
     "emailRequired": "Imeyili irakenewe",
