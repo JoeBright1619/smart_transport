@@ -206,6 +206,34 @@ async def simulate_active_vehicles() -> None:
                     )
                 )
 
+            # A vehicle stuck in traffic long enough raises a delay alert (once per
+            # journey; suppressed if one is already open for the vehicle).
+            if updates.get("delay_crossed"):
+                open_delay = await db.scalar(
+                    select(Alert.id).where(
+                        Alert.tenant_id == vehicle.tenant_id,
+                        Alert.type == "delay",
+                        Alert.vehicle_id == vehicle.id,
+                        Alert.is_acknowledged.is_(False),
+                    )
+                )
+                if open_delay is None:
+                    db.add(
+                        Alert(
+                            tenant_id=vehicle.tenant_id,
+                            type="delay",
+                            severity="medium",
+                            title=f"Delay: {vehicle.registration_number}",
+                            message=(
+                                f"{vehicle.registration_number} is caught in traffic and "
+                                "running behind schedule."
+                            ),
+                            vehicle_id=vehicle.id,
+                            driver_id=vehicle.driver_id,
+                            is_acknowledged=False,
+                        )
+                    )
+
         for tenant_id, total_drop in fuel_drops_by_tenant.items():
             if total_drop > 0:
                 await upsert_daily_analytics(

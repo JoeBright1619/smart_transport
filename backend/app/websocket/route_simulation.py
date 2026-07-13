@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from random import uniform
+from random import randint, random, uniform
 from typing import Any
 
 from sqlalchemy import select
@@ -23,6 +23,15 @@ DECEL_START_DIST = 250
 FUEL_CONSUMPTION_PCT_PER_KM = 2.5
 LOW_FUEL_THRESHOLD = 15
 DWELL_TICKS = 2
+
+# Traffic congestion: a moving vehicle occasionally gets stuck crawling for a while, which
+# accrues real delay. If a single jam lasts past DELAY_ALERT_MINUTES the runner raises a
+# delay alert (once per journey). Tunable — raise the chance to see delays sooner.
+CONGESTION_CHANCE = 0.015
+CONGESTION_MIN_TICKS = 24
+CONGESTION_MAX_TICKS = 48
+CONGESTION_SPEED = 7
+DELAY_ALERT_MINUTES = 2
 
 _state: dict[str, dict[str, Any]] = {}
 _route_stops_cache: dict[str, list["StopPoint"]] = {}
@@ -105,7 +114,12 @@ async def advance_vehicle(
     dist_m = haversine_distance(vehicle.lat, vehicle.lng, target.lat, target.lng)
     current_speed = vehicle.speed or 0
 
-    if current_speed == 0:
+    # Traffic congestion crawls the vehicle and accrues delay; a long jam raises an alert.
+    in_congestion, delay_crossed = _update_congestion(state)
+
+    if in_congestion:
+        new_speed = CONGESTION_SPEED
+    elif current_speed == 0:
         new_speed = min(OPEN_ROAD_SPEED, current_speed + 8)
     elif dist_m < DECEL_START_DIST:
         ratio = dist_m / DECEL_START_DIST
@@ -177,7 +191,35 @@ async def advance_vehicle(
         "heading": heading,
         "fuel": round(new_fuel),
         "fuel_drop": fuel_drop,
+        "delay_crossed": delay_crossed,
     }
+
+
+def _update_congestion(state: dict[str, Any]) -> tuple[bool, bool]:
+    """Advance the vehicle's congestion state one tick.
+
+    Returns ``(in_congestion, delay_crossed)``: whether the vehicle is crawling in traffic
+    this tick, and whether the current jam has just passed DELAY_ALERT_MINUTES (fires once
+    per journey — the flag resets when the sim state is cleared on journey start/end).
+    """
+    remaining = int(state.get("congestion_ticks", 0))
+    if remaining <= 0 and random() < CONGESTION_CHANCE:  # nosec B311
+        remaining = randint(CONGESTION_MIN_TICKS, CONGESTION_MAX_TICKS)  # nosec B311
+
+    if remaining <= 0:
+        state["congestion_ticks"] = 0
+        state["congestion_run_min"] = 0.0
+        return (False, False)
+
+    state["congestion_ticks"] = remaining - 1
+    run_min = float(state.get("congestion_run_min", 0.0)) + TICK_SECONDS / 60
+    state["congestion_run_min"] = run_min
+
+    delay_crossed = False
+    if run_min >= DELAY_ALERT_MINUTES and not state.get("delay_alerted"):
+        state["delay_alerted"] = True
+        delay_crossed = True
+    return (True, delay_crossed)
 
 
 def _journey_is_done(vehicle: Vehicle) -> bool:

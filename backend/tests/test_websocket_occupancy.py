@@ -74,10 +74,11 @@ async def test_simulate_passengers_updates_current_occupancy(db: AsyncSession, v
     assert state["current_occupancy"] == len(state["passengers"])
 
 
-async def test_simulate_passengers_occupancy_does_not_exceed_capacity(
+async def test_simulate_passengers_occupancy_does_not_exceed_crush_capacity(
     db: AsyncSession, vehicle
 ):
     from app.websocket.passenger_simulation import (
+        CRUSH_CAPACITY_FACTOR,
         simulate_passengers_at_stop as _simulate_passengers_at_stop,
     )
 
@@ -92,7 +93,10 @@ async def test_simulate_passengers_occupancy_does_not_exceed_capacity(
         for stop_idx in range(len(stops) - 1):
             await _simulate_passengers_at_stop(db, vehicle, stops, stop_idx, state, now)
 
-    assert state["current_occupancy"] <= vehicle.seating_capacity
+    # Terminals may overcrowd, but never beyond the crush ceiling.
+    assert state["current_occupancy"] <= int(
+        vehicle.seating_capacity * CRUSH_CAPACITY_FACTOR
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -116,8 +120,14 @@ async def test_simulate_passengers_publishes_occupancy_event(db: AsyncSession, v
         await _simulate_passengers_at_stop(db, vehicle, stops, 0, state, now)
 
     assert mock_publish.called
-    call_args = mock_publish.call_args
-    tenant_id_arg, payload = call_args[0]
+    # A stop can also publish a capacity 'new_alert', so pick the occupancy event.
+    occupancy_calls = [
+        c
+        for c in mock_publish.call_args_list
+        if c[0][1].get("type") == "vehicle_occupancy_updated"
+    ]
+    assert occupancy_calls
+    tenant_id_arg, payload = occupancy_calls[-1][0]
     assert tenant_id_arg == vehicle.tenant_id
     assert payload["type"] == "vehicle_occupancy_updated"
     assert payload["vehicleId"] == vehicle.id
@@ -125,9 +135,9 @@ async def test_simulate_passengers_publishes_occupancy_event(db: AsyncSession, v
     assert isinstance(payload["seatingCapacity"], int)
     assert isinstance(payload["remainingSeats"], int)
     assert payload["seatingCapacity"] == vehicle.seating_capacity
-    assert (
-        payload["remainingSeats"]
-        == payload["seatingCapacity"] - payload["currentOccupancy"]
+    # Remaining seats floor at zero — an overcrowded bus reports 0, not a negative.
+    assert payload["remainingSeats"] == max(
+        0, payload["seatingCapacity"] - payload["currentOccupancy"]
     )
 
 
@@ -148,7 +158,12 @@ async def test_simulate_passengers_publishes_correct_remaining_seats(
     ) as mock_publish:
         await _simulate_passengers_at_stop(db, vehicle, stops, 0, state, now)
 
-    payload = mock_publish.call_args[0][1]
+    occupancy_calls = [
+        c
+        for c in mock_publish.call_args_list
+        if c[0][1].get("type") == "vehicle_occupancy_updated"
+    ]
+    payload = occupancy_calls[-1][0][1]
     expected_remaining = max(
         0, payload["seatingCapacity"] - payload["currentOccupancy"]
     )
@@ -215,9 +230,10 @@ async def test_build_vehicle_update_includes_occupancy_fields(
 # ---------------------------------------------------------------------------
 
 
-async def test_boarding_count_never_exceeds_seating_capacity(db: AsyncSession, vehicle):
-    """After many stops, on-board passenger count must stay within seating capacity."""
+async def test_boarding_count_never_exceeds_crush_capacity(db: AsyncSession, vehicle):
+    """After many stops, on-board count stays within the crush ceiling (overcrowd allowed)."""
     from app.websocket.passenger_simulation import (
+        CRUSH_CAPACITY_FACTOR,
         simulate_passengers_at_stop as _simulate_passengers_at_stop,
     )
 
@@ -237,7 +253,7 @@ async def test_boarding_count_never_exceeds_seating_capacity(db: AsyncSession, v
 
     on_board = len(state["passengers"])
     assert on_board >= 0
-    assert on_board <= vehicle.seating_capacity
+    assert on_board <= int(vehicle.seating_capacity * CRUSH_CAPACITY_FACTOR)
 
 
 async def test_alighting_never_makes_occupancy_negative(db: AsyncSession, vehicle):

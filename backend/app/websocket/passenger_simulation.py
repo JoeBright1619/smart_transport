@@ -21,6 +21,10 @@ from app.websocket.manager import manager
 # Prevents the same real passenger from being assigned to two buses simultaneously.
 _globally_on_board: set[str] = set()
 
+# A terminal can load beyond seated capacity up to this multiple (standing/overcrowding),
+# which is what lets occupancy reach and exceed capacity to trip the capacity alert.
+CRUSH_CAPACITY_FACTOR = 1.15
+
 
 async def load_passenger_pool(db: AsyncSession, state: dict[str, Any]) -> list[str]:
     """Load real passenger IDs once into vehicle state; no-op on repeat calls."""
@@ -110,9 +114,14 @@ async def simulate_passengers_at_stop(
     available_seats = capacity - len(remaining_passengers)
     new_entries: list[dict[str, Any]] = []
 
-    if is_terminal and len(stops) > 1 and available_seats > 0:
-        target = randint(int(capacity * 0.70), int(capacity * 0.85))  # nosec B311
-        boarded_count = min(target, available_seats)
+    if is_terminal and len(stops) > 1:
+        # A busy terminal usually loads most seats, but can overcrowd (standing
+        # passengers) up to a crush level — which is what trips the capacity alert. Board
+        # against the crush headroom, not just seated capacity.
+        crush_capacity = int(capacity * CRUSH_CAPACITY_FACTOR)
+        headroom = crush_capacity - len(remaining_passengers)
+        target = randint(int(capacity * 0.75), int(capacity * 1.10))  # nosec B311
+        boarded_count = max(0, min(target, headroom))
         for _ in range(boarded_count):
             dest_index = randint(1, len(stops) - 1)  # nosec B311
             dist_m = sum(
