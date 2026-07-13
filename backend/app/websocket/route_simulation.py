@@ -17,7 +17,10 @@ from app.websocket.route_trip_records import complete_trip, end_journey, start_t
 TICK_SECONDS = 5
 OPEN_ROAD_SPEED = 35
 DECEL_START_DIST = 250
-FUEL_CONSUMPTION_PCT_PER_KM = 1.0
+# Fuel is drawn down over the whole journey (no per-loop top-up) and only refilled at the
+# depot when the journey ends. The rate is deliberately higher than real life so a
+# multi-round journey visibly depletes and can cross LOW_FUEL_THRESHOLD.
+FUEL_CONSUMPTION_PCT_PER_KM = 2.5
 LOW_FUEL_THRESHOLD = 15
 DWELL_TICKS = 2
 
@@ -160,10 +163,9 @@ async def advance_vehicle(
     fuel_pct = float(
         state.get("fuel_pct", vehicle.fuel if vehicle.fuel is not None else 100)
     )
+    # Fuel only ever draws down here; the tank is refilled at the depot when the journey
+    # ends (see end_journey / trip completion), not every loop.
     new_fuel = max(0, fuel_pct - fuel_drop)
-
-    if state["next_stop_index"] == 0 and state["loop_count"] > 0:
-        new_fuel = 100.0
 
     state["fuel_pct"] = new_fuel
     vehicle.fuel = round(new_fuel)

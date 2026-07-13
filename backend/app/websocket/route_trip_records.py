@@ -154,4 +154,6 @@ async def end_journey(
     vehicle.current_occupancy = 0
     vehicle.planned_loops = None
     vehicle.completed_loops = 0
+    # Back at the depot — refuel for the next journey.
+    vehicle.fuel = 100
     await db.flush()
