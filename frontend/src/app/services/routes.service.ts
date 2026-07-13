@@ -3,6 +3,7 @@ import type {
   ApiResponse,
   GlobalStopCreate,
   GlobalStopRead,
+  GlobalStopUpdate,
   PaginatedResponse,
   RouteCreate,
   RouteRead,
@@ -67,4 +68,14 @@ export async function createStop(data: GlobalStopCreate): Promise<GlobalStopRead
   const response = await apiClient.post<ApiResponse<GlobalStopRead>>('/api/v1/stops', data);
 
   return response.data.data;
+}
+
+export async function updateStop(id: string, data: GlobalStopUpdate): Promise<GlobalStopRead> {
+  const response = await apiClient.patch<ApiResponse<GlobalStopRead>>(`/api/v1/stops/${id}`, data);
+
+  return response.data.data;
+}
+
+export async function deleteStop(id: string): Promise<void> {
+  await apiClient.delete(`/api/v1/stops/${id}`);
 }

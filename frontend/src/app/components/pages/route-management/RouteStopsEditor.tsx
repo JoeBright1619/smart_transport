@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapPin, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { MapPin, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import type { Dispatch, SetStateAction } from 'react';
 import { MapContainer, Marker, Popup, TileLayer, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { GlobalStopRead } from '../../../lib/api-types';
+import { messageForError } from '../../../lib/error-messages';
 import * as routesService from '../../../services/routes.service';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
@@ -81,6 +82,10 @@ export function RouteStopsEditor({ stops, setForm }: RouteStopsEditorProps) {
   const [search, setSearch] = useState('');
   const [creating, setCreating] = useState(false);
   const [newStop, setNewStop] = useState<NewStopForm>({ name: '', lat: '', lng: '' });
+  const [editingStopId, setEditingStopId] = useState<string | null>(null);
+  const [editStop, setEditStop] = useState<NewStopForm>({ name: '', lat: '', lng: '' });
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [deletingStopId, setDeletingStopId] = useState<string | null>(null);
 
   const selectedStopIds = useMemo(() => new Set(stops.map((stop) => stop.stopId)), [stops]);
 
@@ -130,6 +135,58 @@ export function RouteStopsEditor({ stops, setForm }: RouteStopsEditorProps) {
         .filter((stop) => stop.key !== key)
         .map((stop, index) => ({ ...stop, order: index + 1 })),
     }));
+  };
+
+  const openEditStop = (stop: { id: string; name: string; lat: number; lng: number }) => {
+    setEditingStopId(stop.id);
+    setEditStop({ name: stop.name, lat: String(stop.lat), lng: String(stop.lng) });
+    setStopError(null);
+  };
+
+  const handleSaveEditStop = async () => {
+    if (!editingStopId) return;
+    setSavingEdit(true);
+    setStopError(null);
+
+    try {
+      const updated = await routesService.updateStop(editingStopId, {
+        name: editStop.name.trim(),
+        lat: Number(editStop.lat),
+        lng: Number(editStop.lng),
+      });
+
+      setGlobalStops((current) =>
+        current.map((stop) => (stop.id === updated.id ? updated : stop)).sort((a, b) => a.name.localeCompare(b.name)),
+      );
+      // Keep the route's copy of the stop in sync if it's currently on the route.
+      setForm((current) => ({
+        ...current,
+        stops: current.stops.map((stop) =>
+          stop.stopId === updated.id ? { ...stop, name: updated.name, lat: updated.lat, lng: updated.lng } : stop,
+        ),
+      }));
+      setEditingStopId(null);
+    } catch (error) {
+      setStopError(messageForError(error));
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDeleteStop = async (stop: GlobalStopRead) => {
+    if (!globalThis.confirm(t('confirmDeleteStop', { name: stop.name }))) return;
+    setDeletingStopId(stop.id);
+    setStopError(null);
+
+    try {
+      await routesService.deleteStop(stop.id);
+      setGlobalStops((current) => current.filter((item) => item.id !== stop.id));
+      if (editingStopId === stop.id) setEditingStopId(null);
+    } catch (error) {
+      setStopError(messageForError(error));
+    } finally {
+      setDeletingStopId(null);
+    }
   };
 
   const handleCreateStop = async () => {
@@ -200,15 +257,30 @@ export function RouteStopsEditor({ stops, setForm }: RouteStopsEditorProps) {
                       {stop.lat.toFixed(6)}, {stop.lng.toFixed(6)}
                     </p>
                   </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 shrink-0"
-                    onClick={() => removeStop(stop.key)}
-                  >
-                    <Trash2 className="size-4 text-red-500" />
-                  </Button>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-8"
+                      title={t('editStop')}
+                      onClick={() =>
+                        openEditStop({ id: stop.stopId, name: stop.name, lat: stop.lat, lng: stop.lng })
+                      }
+                    >
+                      <Pencil className="size-4 text-slate-500" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-8"
+                      title={t('removeFromRoute')}
+                      onClick={() => removeStop(stop.key)}
+                    >
+                      <Trash2 className="size-4 text-red-500" />
+                    </Button>
+                  </div>
                 </div>
               ))
             )}
@@ -230,19 +302,90 @@ export function RouteStopsEditor({ stops, setForm }: RouteStopsEditorProps) {
               <p className="p-3 text-sm text-slate-500">{t('noAvailableStops')}</p>
             ) : (
               filteredStops.map((stop) => (
-                <button
+                <div
                   key={stop.id}
-                  type="button"
-                  className="flex w-full items-center justify-between gap-3 border-b px-3 py-2 text-left text-sm last:border-b-0 hover:bg-slate-50"
-                  onClick={() => addStopToRoute(stop)}
+                  className="flex w-full items-center justify-between gap-2 border-b px-3 py-2 text-sm last:border-b-0"
                 >
-                  <span className="truncate">{stop.name}</span>
-                  <Plus className="size-4 shrink-0 text-slate-500" />
-                </button>
+                  <button
+                    type="button"
+                    className="flex min-w-0 flex-1 items-center gap-2 text-left hover:text-blue-600"
+                    title={t('addToRoute')}
+                    onClick={() => addStopToRoute(stop)}
+                  >
+                    <Plus className="size-4 shrink-0 text-slate-500" />
+                    <span className="truncate">{stop.name}</span>
+                  </button>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-7"
+                      title={t('editStop')}
+                      onClick={() => openEditStop(stop)}
+                    >
+                      <Pencil className="size-3.5 text-slate-500" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-7"
+                      title={t('deleteStop')}
+                      disabled={deletingStopId === stop.id}
+                      onClick={() => void handleDeleteStop(stop)}
+                    >
+                      <Trash2 className="size-3.5 text-red-500" />
+                    </Button>
+                  </div>
+                </div>
               ))
             )}
           </div>
         </div>
+
+        {editingStopId && (
+          <div className="space-y-3 rounded-md border border-blue-300 bg-blue-50/60 p-3">
+            <div className="flex items-center gap-2">
+              <Pencil className="size-4 text-blue-600" />
+              <Label>{t('editStop')}</Label>
+            </div>
+            <Input
+              placeholder={t('stopName')}
+              value={editStop.name}
+              onChange={(event) => setEditStop((current) => ({ ...current, name: event.target.value }))}
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <Input
+                type="number"
+                step="0.000001"
+                placeholder={t('latitude')}
+                value={editStop.lat}
+                onChange={(event) => setEditStop((current) => ({ ...current, lat: event.target.value }))}
+              />
+              <Input
+                type="number"
+                step="0.000001"
+                placeholder={t('longitude')}
+                value={editStop.lng}
+                onChange={(event) => setEditStop((current) => ({ ...current, lng: event.target.value }))}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                className="flex-1"
+                disabled={savingEdit || !editStop.name.trim() || !editStop.lat || !editStop.lng}
+                onClick={() => void handleSaveEditStop()}
+              >
+                {savingEdit ? t('saving') : t('saveStop')}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setEditingStopId(null)}>
+                {t('cancelEdit')}
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-3 rounded-md border p-3">
           <div className="flex items-center gap-2">

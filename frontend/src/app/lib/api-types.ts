@@ -163,6 +163,12 @@ export interface GlobalStopCreate {
   lng: number;
 }
 
+export interface GlobalStopUpdate {
+  name?: string;
+  lat?: number;
+  lng?: number;
+}
+
 export interface RouteRead {
   id: string;
   name: string;

@@ -14,6 +14,21 @@ class StopCreate(APIModel):
     lng: float = Field(ge=-180, le=180, json_schema_extra={"example": 30.0585})
 
 
+class StopUpdate(APIModel):
+    name: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=100,
+        json_schema_extra={"example": "Nyabugogo"},
+    )
+    lat: float | None = Field(
+        default=None, ge=-90, le=90, json_schema_extra={"example": -1.9396}
+    )
+    lng: float | None = Field(
+        default=None, ge=-180, le=180, json_schema_extra={"example": 30.0585}
+    )
+
+
 class GlobalStopRead(APIModel):
     id: str = Field(json_schema_extra={"example": "stop-uuid"})
     name: str = Field(json_schema_extra={"example": "Nyabugogo"})

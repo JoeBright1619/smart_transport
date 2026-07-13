@@ -6,7 +6,7 @@ from app.core.dependencies import get_current_tenant, get_current_user, require_
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.schemas.common import APIResponse
-from app.schemas.route import GlobalStopRead, StopCreate
+from app.schemas.route import GlobalStopRead, StopCreate, StopUpdate
 from app.services import route_service
 
 router = APIRouter(prefix="/api/v1/stops", tags=["routes"])
@@ -55,3 +55,39 @@ async def create_stop(
     stop = await route_service.create_stop(db, data, tenant.id)
     await db.commit()
     return APIResponse(data=GlobalStopRead.model_validate(stop))
+
+
+@router.patch(
+    "/{id}",
+    response_model=APIResponse[GlobalStopRead],
+    dependencies=[Depends(require_role("admin", "operator"))],
+    summary="Update a global stop",
+    description="Renames or moves a stop. Rejects name/coordinate clashes with other stops.",
+)
+async def update_stop(
+    id: str,
+    data: StopUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant: Tenant = Depends(get_current_tenant),
+):
+    stop = await route_service.update_stop(db, id, data, tenant.id)
+    await db.commit()
+    return APIResponse(data=GlobalStopRead.model_validate(stop))
+
+
+@router.delete(
+    "/{id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_role("admin", "operator"))],
+    summary="Delete a global stop",
+    description="Soft-deletes a stop. Rejected while the stop is still used by any route.",
+)
+async def delete_stop(
+    id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    tenant: Tenant = Depends(get_current_tenant),
+):
+    await route_service.delete_stop(db, id, tenant.id)
+    await db.commit()

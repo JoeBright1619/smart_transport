@@ -58,11 +58,20 @@ async def list_all_stops(db: AsyncSession) -> Sequence[Stop]:
     return result.scalars().all()
 
 
-async def create_stop(db: AsyncSession, data, tenant_id: str) -> Stop:
-    existing_stops = await list_stops(db, tenant_id)
-    normalized_name = data.name.strip().casefold()
-
-    for stop in existing_stops:
+async def _assert_stop_unique(
+    db: AsyncSession,
+    tenant_id: str,
+    *,
+    name: str,
+    lat: float,
+    lng: float,
+    exclude_stop_id: str | None = None,
+) -> None:
+    """Reject a name clash or a coordinate clash against other tenant stops."""
+    normalized_name = name.strip().casefold()
+    for stop in await list_stops(db, tenant_id):
+        if stop.id == exclude_stop_id:
+            continue
         if stop.name.casefold() == normalized_name:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -70,10 +79,8 @@ async def create_stop(db: AsyncSession, data, tenant_id: str) -> Stop:
                     "STOP_NAME_CONFLICT", "A stop with this name already exists"
                 ),
             )
-
-        if (
-            _distance_meters(data.lat, data.lng, stop.lat, stop.lng)
-            <= STOP_COORDINATE_CONFLICT_METERS
+        if _distance_meters(lat, lng, stop.lat, stop.lng) <= (
+            STOP_COORDINATE_CONFLICT_METERS
         ):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -83,10 +90,78 @@ async def create_stop(db: AsyncSession, data, tenant_id: str) -> Stop:
                 ),
             )
 
+
+async def get_stop_by_id(db: AsyncSession, stop_id: str, tenant_id: str) -> Stop:
+    stop = await db.scalar(
+        select(Stop).where(
+            Stop.id == stop_id,
+            Stop.tenant_id == tenant_id,
+            Stop.is_deleted.is_(False),
+        )
+    )
+    if stop is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=_error_detail("NOT_FOUND", "Stop not found"),
+        )
+    return stop
+
+
+async def create_stop(db: AsyncSession, data, tenant_id: str) -> Stop:
+    await _assert_stop_unique(db, tenant_id, name=data.name, lat=data.lat, lng=data.lng)
     stop = Stop(tenant_id=tenant_id, name=data.name.strip(), lat=data.lat, lng=data.lng)
     db.add(stop)
     await db.flush()
     return stop
+
+
+async def update_stop(db: AsyncSession, stop_id: str, data, tenant_id: str) -> Stop:
+    stop = await get_stop_by_id(db, stop_id, tenant_id)
+
+    update_data = data.model_dump(exclude_unset=True)
+    new_name = update_data.get("name", stop.name)
+    new_lat = update_data.get("lat", stop.lat)
+    new_lng = update_data.get("lng", stop.lng)
+
+    await _assert_stop_unique(
+        db,
+        tenant_id,
+        name=new_name,
+        lat=new_lat,
+        lng=new_lng,
+        exclude_stop_id=stop.id,
+    )
+
+    if "name" in update_data:
+        stop.name = new_name.strip()
+    if "lat" in update_data:
+        stop.lat = new_lat
+    if "lng" in update_data:
+        stop.lng = new_lng
+
+    await db.flush()
+    return stop
+
+
+async def delete_stop(db: AsyncSession, stop_id: str, tenant_id: str) -> None:
+    stop = await get_stop_by_id(db, stop_id, tenant_id)
+
+    # A stop still wired into a route would break that route's geometry, so require it to
+    # be removed from all routes first (mirrors the add/remove-to-route flow).
+    in_use = await db.scalar(
+        select(RouteStop.route_id).where(RouteStop.stop_id == stop_id).limit(1)
+    )
+    if in_use is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=_error_detail(
+                "STOP_IN_USE",
+                "This stop is used by one or more routes — remove it from them first",
+            ),
+        )
+
+    stop.is_deleted = True
+    await db.flush()
 
 
 async def _get_route_stops_by_id(
