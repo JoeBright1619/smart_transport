@@ -41,10 +41,6 @@ export function ScheduleTripDialog({ vehicles, drivers, routes, onCreateTrip }: 
       toast.error(t('schedule.startInFuture'));
       return;
     }
-    if (new Date(form.scheduledEnd) <= new Date(form.scheduledStart)) {
-      toast.error(t('schedule.endAfterStart'));
-      return;
-    }
     setSubmitting(true);
 
     try {
@@ -95,29 +91,16 @@ export function ScheduleTripDialog({ vehicles, drivers, routes, onCreateTrip }: 
             ))}
           </TripSelect>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="scheduledStart">{t('schedule.scheduledStart')}</Label>
-              <Input
-                id="scheduledStart"
-                type="datetime-local"
-                value={form.scheduledStart}
-                min={nowMin}
-                onChange={(event) => setForm((current) => ({ ...current, scheduledStart: event.target.value }))}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="scheduledEnd">{t('schedule.scheduledEnd')}</Label>
-              <Input
-                id="scheduledEnd"
-                type="datetime-local"
-                value={form.scheduledEnd}
-                min={form.scheduledStart || nowMin}
-                onChange={(event) => setForm((current) => ({ ...current, scheduledEnd: event.target.value }))}
-                required
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="scheduledStart">{t('schedule.scheduledStart')}</Label>
+            <Input
+              id="scheduledStart"
+              type="datetime-local"
+              value={form.scheduledStart}
+              min={nowMin}
+              onChange={(event) => setForm((current) => ({ ...current, scheduledStart: event.target.value }))}
+              required
+            />
           </div>
 
           <div className="space-y-2">

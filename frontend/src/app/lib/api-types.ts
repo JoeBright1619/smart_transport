@@ -260,9 +260,10 @@ export interface TripCreate {
   routeId: string;
   driverId: string;
   scheduledStart: string;
-  scheduledEnd: string;
   /** How many times the driver runs the route before the journey auto-ends. */
   plannedLoops?: number;
+  /** Optional — omit to derive from route duration x rounds on the server. */
+  scheduledEnd?: string;
 }
 
 export interface TripUpdate {

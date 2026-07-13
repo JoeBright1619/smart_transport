@@ -35,8 +35,11 @@ class TripCreate(APIModel):
     scheduled_start: datetime = Field(
         json_schema_extra={"example": "2026-04-09T08:00:00Z"}
     )
-    scheduled_end: datetime = Field(
-        json_schema_extra={"example": "2026-04-09T08:35:00Z"}
+    scheduled_end: datetime | None = Field(
+        default=None,
+        description="Optional — when omitted it's derived from the route's duration and "
+        "the rounds count (scheduled_start + route.duration * planned_loops).",
+        json_schema_extra={"example": "2026-04-09T08:35:00Z"},
     )
     planned_loops: int = Field(
         default=DEFAULT_JOURNEY_LOOPS,

@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.route import RouteStop, Stop
+from app.models.route import Route, RouteStop, Stop
 from app.models.trip import Trip
 from app.models.driver import Driver
 from app.models.vehicle import Vehicle
@@ -141,13 +141,23 @@ async def create_trip(
             ),
         )
 
+    # The end is derived from the route and rounds unless the caller pins it explicitly:
+    # scheduled_start + route.duration * planned_loops (the whole journey's expected end).
+    scheduled_end = data.scheduled_end
+    if scheduled_end is None:
+        route_duration = await db.scalar(
+            select(Route.duration).where(Route.id == data.route_id)
+        )
+        journey_minutes = (route_duration or 30) * data.planned_loops
+        scheduled_end = data.scheduled_start + timedelta(minutes=journey_minutes)
+
     trip = Trip(
         tenant_id=tenant_id,
         vehicle_id=data.vehicle_id,
         route_id=data.route_id,
         driver_id=data.driver_id,
         scheduled_start=data.scheduled_start,
-        scheduled_end=data.scheduled_end,
+        scheduled_end=scheduled_end,
         status="scheduled",
     )
     db.add(trip)
@@ -330,7 +340,7 @@ async def start_journey(
             driver_id=vehicle.driver_id,
             route_id=vehicle.route_id,
             scheduled_start=now,
-            scheduled_end=now + timedelta(hours=1),
+            # scheduled_end derived from the route + rounds by create_trip.
         ),
         tenant_id,
         current_user_id,

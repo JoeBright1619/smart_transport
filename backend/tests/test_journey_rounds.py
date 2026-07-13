@@ -103,6 +103,34 @@ async def test_dispatch_uses_custom_rounds(
     assert vehicle.planned_loops == 3
 
 
+async def test_dispatch_derives_scheduled_end_from_route_and_rounds(
+    db, admin, make_route, make_driver, make_vehicle, tenant
+):
+    # make_route sets a 30-minute duration; 3 rounds -> a 90-minute journey window.
+    route = await make_route(tenant_id=tenant.id)
+    driver = await make_driver(tenant_id=tenant.id)
+    vehicle = await make_vehicle(
+        tenant_id=tenant.id, status="idle", lat=-1.95, lng=30.06
+    )
+    now = datetime.now(timezone.utc)
+
+    trip = await trip_service.create_trip(
+        db,
+        TripCreate(
+            vehicle_id=vehicle.id,
+            route_id=route.id,
+            driver_id=driver.id,
+            scheduled_start=now,
+            planned_loops=3,
+        ),
+        tenant.id,
+        admin.id,
+    )
+
+    expected_end = now + timedelta(minutes=30 * 3)
+    assert abs((trip.scheduled_end - expected_end).total_seconds()) < 5
+
+
 async def test_fleet_quick_start_defaults_to_five_rounds(
     db, admin, make_route, make_driver, make_vehicle, tenant
 ):
