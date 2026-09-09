@@ -23,7 +23,6 @@ async def list_routes(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
 ):
     routes, total = await route_service.get_routes(
@@ -63,7 +62,6 @@ async def create_route(
 async def get_route(
     id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
     tenant: Tenant = Depends(get_current_tenant),
 ):
     route = await route_service.get_route_by_id(db, id, tenant.id)

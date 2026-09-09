@@ -43,7 +43,6 @@ async def get_arrivals(
     stop_id: str = Query(alias="stopId"),
     db: AsyncSession = Depends(get_db),
     tenant: Tenant = Depends(get_current_tenant),
-    _current_user=Depends(get_current_user),
 ) -> APIResponse[list[ArrivalRead]]:
     arrivals = await arrival_service.get_arrivals_for_stop(db, tenant.id, stop_id)
     return APIResponse(data=arrivals)
