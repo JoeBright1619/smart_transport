@@ -7,7 +7,6 @@ from external GPS devices or the GPS service simulator.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -72,7 +71,7 @@ async def process_gps_update(
         lng=gps_data.lng,
         speed=gps_data.speed,
         heading=gps_data.heading,
-        timestamp=gps_data.timestamp or datetime.now(timezone.utc),
+        timestamp=gps_data.timestamp,
     )
     db.add(telemetry)
 
