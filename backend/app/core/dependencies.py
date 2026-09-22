@@ -8,11 +8,36 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.models.gps_device import GPSDevice
 from app.core.security import decode_access_token
 from app.models.tenant import Tenant
 from app.models.user import User
 
 security = HTTPBearer(auto_error=False)
+
+
+async def authenticate_gps_device(
+    token: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> GPSDevice:
+    """Authenticate an external GPS device using its device token."""
+
+    result = await db.execute(
+        select(GPSDevice).where(
+            GPSDevice.token == token,
+            GPSDevice.is_active.is_(True),
+        )
+    )
+    device = result.scalar_one_or_none()
+
+    if device is None:
+        _raise_error(
+            status.HTTP_401_UNAUTHORIZED,
+            "UNAUTHORIZED",
+            "Invalid or inactive GPS device",
+        )
+
+    return device
 
 
 def _error_detail(code: str, message: str) -> dict[str, Any]:
