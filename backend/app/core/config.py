@@ -17,6 +17,13 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     REDIS_URL: str
 
+    # MQTT
+    MQTT_BROKER_URL: str = "localhost"
+    MQTT_BROKER_PORT: int = 1883
+    MQTT_USERNAME: str = ""
+    MQTT_PASSWORD: str = ""
+    MQTT_CLIENT_ID: str = "smart-transport-backend"
+
     # Email (Gmail SMTP — use an App Password, not your account password)
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
