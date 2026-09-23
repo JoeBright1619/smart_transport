@@ -5,6 +5,10 @@ from pydantic import Field
 
 from app.schemas.base import APIModel
 
+
+from typing import Optional
+
+
 EngineStatus = Literal["good", "warning", "critical"]
 
 
@@ -20,7 +24,8 @@ class GPSPositionUpdate(APIModel):
         description="ID of the vehicle being tracked",
         json_schema_extra={"example": "veh-123"},
     )
-    registration_number: str = Field(
+    registration_number: Optional[str] = Field(
+        default=None,
         description="Vehicle registration number for display/logging",
         json_schema_extra={"example": "RAD 001 A"},
     )
@@ -63,11 +68,13 @@ class GPSPositionUpdate(APIModel):
         description="Timestamp when the position was recorded",
         json_schema_extra={"example": "2026-09-18T17:56:15Z"},
     )
-    source: str = Field(
+    source: Optional[str] = Field(
+        default="gps_service",
         description="Source of the GPS data (gps_service, calamp, samsara, etc.)",
         json_schema_extra={"example": "gps_service"},
     )
-    device_id: str = Field(
+    device_id: Optional[str] = Field(
+        default=None,
         description="ID of the GPS device sending the update",
         json_schema_extra={"example": "gps-sim-001"},
     )
