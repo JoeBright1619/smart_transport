@@ -19,7 +19,9 @@ class MQTTClient:
     def connect(self) -> None:
         """Connect to the configured MQTT broker."""
         self.client.connect(self.broker_host, self.broker_port)
+        self.client.loop_start()
 
     def disconnect(self) -> None:
         """Disconnect from the MQTT broker."""
+        self.client.loop_stop()
         self.client.disconnect()

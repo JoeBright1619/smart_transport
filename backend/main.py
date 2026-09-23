@@ -12,6 +12,8 @@ from sqlalchemy import text
 
 from app.core.config import settings
 from app.core.database import engine
+from app.core.mqtt_client import MQTTClient
+from app.services.gps_mqtt_subscriber import GPSMQTTSubscriber
 from app.services.simulation_runner import (
     start_vehicle_simulation,
     stop_vehicle_simulation,
@@ -129,6 +131,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     async with engine.connect() as conn:
         await conn.execute(text("SELECT 1"))
 
+    mqtt_client = MQTTClient()
+    subscriber = GPSMQTTSubscriber(mqtt_client)
+
+    mqtt_client.connect()
+    subscriber.start()
+
     await _warn_if_db_behind_head()
     await _reconcile_orphaned_trips_on_startup()
 
@@ -137,9 +145,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     try:
         yield
     finally:
+        mqtt_client.disconnect()
         await stop_vehicle_simulation()
-
-    await engine.dispose()
+        await engine.dispose()
 
 
 _TAGS_METADATA = [
