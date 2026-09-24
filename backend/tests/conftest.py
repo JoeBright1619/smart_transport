@@ -281,3 +281,31 @@ def make_driver(db: AsyncSession):
         return driver
 
     return _create
+
+
+@pytest.fixture
+def make_gps_device(db: AsyncSession):
+    """Factory fixture to create GPSDevice instances for testing."""
+    from app.models.gps_device import GPSDevice
+
+    async def _create(
+        *,
+        tenant_id: str,
+        name: str = "Test GPS Device",
+        token: str | None = None,
+        device_type: str = "gps_service",
+        is_active: bool = True,
+    ) -> GPSDevice:
+        device = GPSDevice(
+            id=f"gps-{uuid.uuid4()}",
+            tenant_id=tenant_id,
+            name=name,
+            token=token or f"token-{uuid.uuid4().hex[:16]}",
+            device_type=device_type,
+            is_active=is_active,
+        )
+        db.add(device)
+        await db.commit()
+        return device
+
+    return _create
