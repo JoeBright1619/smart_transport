@@ -174,10 +174,15 @@ def make_vehicle(db: AsyncSession):
             is_deleted=False,
         )
         db.add(vehicle)
-        await db.commit()
+        await db.flush()
         return vehicle
 
     return _create
+
+
+@pytest.fixture
+async def vehicle(make_vehicle, tenant):
+    return await make_vehicle(tenant_id=tenant.id)
 
 
 @pytest.fixture
@@ -323,6 +328,21 @@ async def admin_user(make_user, tenant) -> User:
 @pytest.fixture
 async def passenger_user(make_user, tenant) -> User:
     return await make_user(tenant_id=None, role="passenger")
+
+
+@pytest.fixture
+async def operator_user(make_user, tenant):
+    return await make_user(tenant_id=tenant.id, role="operator")
+
+
+@pytest.fixture
+async def dispatcher_user(make_user, tenant):
+    return await make_user(tenant_id=tenant.id, role="dispatcher")
+
+
+@pytest.fixture
+async def driver_user(make_driver, tenant):
+    return await make_driver(tenant_id=tenant.id)
 
 
 @pytest.fixture

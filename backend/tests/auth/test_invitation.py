@@ -25,11 +25,6 @@ from tests.conftest import auth_headers
 
 
 @pytest.fixture
-async def operator(make_user, tenant):
-    return await make_user(tenant_id=tenant.id, role="operator")
-
-
-@pytest.fixture
 def make_invited_user(make_user, db: AsyncSession):
     """Create a user with status='invited' and a matching invite token.
 
@@ -102,11 +97,11 @@ async def test_admin_cannot_invite_superadmin(client, admin_user):
     assert r.status_code == 422
 
 
-async def test_operator_cannot_invite_anyone(client, operator):
+async def test_operator_cannot_invite_anyone(client, operator_user):
     r = await client.post(
         "/api/v1/users",
         json={"full_name": "X", "email": "x@test.local", "role": "dispatcher"},
-        headers=auth_headers(operator),
+        headers=auth_headers(operator_user),
     )
     assert r.status_code == 403
 

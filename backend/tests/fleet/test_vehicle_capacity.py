@@ -10,7 +10,6 @@ Covers:
 
 from __future__ import annotations
 
-import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.conftest import auth_headers
@@ -22,30 +21,17 @@ _VEHICLE_BASE = {
 
 
 # ---------------------------------------------------------------------------
-# Fixtures
-# ---------------------------------------------------------------------------
-
-
-@pytest.fixture
-async def admin(make_user, tenant):
-    return await make_user(tenant_id=tenant.id, role="admin")
-
-
-@pytest.fixture
-async def vehicle(make_vehicle, tenant):
-    return await make_vehicle(tenant_id=tenant.id)
-
-
-# ---------------------------------------------------------------------------
 # CREATE tests
 # ---------------------------------------------------------------------------
 
 
-async def test_create_vehicle_with_explicit_seating_capacity(client, admin, tenant):
+async def test_create_vehicle_with_explicit_seating_capacity(
+    client, admin_user, tenant
+):
     r = await client.post(
         "/api/v1/vehicles",
         json={**_VEHICLE_BASE, "seating_capacity": 55},
-        headers=auth_headers(admin),
+        headers=auth_headers(admin_user),
     )
     assert r.status_code == 201
     data = r.json()["data"]
@@ -54,11 +40,13 @@ async def test_create_vehicle_with_explicit_seating_capacity(client, admin, tena
     assert data["remainingSeats"] == 55
 
 
-async def test_create_vehicle_defaults_seating_capacity_to_45(client, admin, tenant):
+async def test_create_vehicle_defaults_seating_capacity_to_45(
+    client, admin_user, tenant
+):
     r = await client.post(
         "/api/v1/vehicles",
         json={**_VEHICLE_BASE, "registration_number": "CAP 002 A"},
-        headers=auth_headers(admin),
+        headers=auth_headers(admin_user),
     )
     assert r.status_code == 201
     assert r.json()["data"]["seatingCapacity"] == 45
@@ -69,8 +57,8 @@ async def test_create_vehicle_defaults_seating_capacity_to_45(client, admin, ten
 # ---------------------------------------------------------------------------
 
 
-async def test_list_vehicles_includes_capacity_fields(client, admin, vehicle):
-    r = await client.get("/api/v1/vehicles", headers=auth_headers(admin))
+async def test_list_vehicles_includes_capacity_fields(client, admin_user, vehicle):
+    r = await client.get("/api/v1/vehicles", headers=auth_headers(admin_user))
     assert r.status_code == 200
     items = r.json()["data"]
     assert len(items) >= 1
@@ -81,7 +69,7 @@ async def test_list_vehicles_includes_capacity_fields(client, admin, vehicle):
 
 
 async def test_remaining_seats_computed_correctly(
-    client, admin, tenant, db: AsyncSession
+    client, admin_user, tenant, db: AsyncSession
 ):
     from app.models.vehicle import Vehicle
     from sqlalchemy import select
@@ -93,7 +81,7 @@ async def test_remaining_seats_computed_correctly(
             "registration_number": "CAP 003 A",
             "seating_capacity": 30,
         },
-        headers=auth_headers(admin),
+        headers=auth_headers(admin_user),
     )
     assert r.status_code == 201
     vid = r.json()["data"]["id"]
@@ -104,7 +92,7 @@ async def test_remaining_seats_computed_correctly(
     v.current_occupancy = 12
     await db.commit()
 
-    r2 = await client.get(f"/api/v1/vehicles/{vid}", headers=auth_headers(admin))
+    r2 = await client.get(f"/api/v1/vehicles/{vid}", headers=auth_headers(admin_user))
     assert r2.status_code == 200
     data = r2.json()["data"]
     assert data["currentOccupancy"] == 12
@@ -116,18 +104,18 @@ async def test_remaining_seats_computed_correctly(
 # ---------------------------------------------------------------------------
 
 
-async def test_patch_seating_capacity(client, admin, vehicle):
+async def test_patch_seating_capacity(client, admin_user, vehicle):
     r = await client.patch(
         f"/api/v1/vehicles/{vehicle.id}",
         json={"seating_capacity": 50},
-        headers=auth_headers(admin),
+        headers=auth_headers(admin_user),
     )
     assert r.status_code == 200
     assert r.json()["data"]["seatingCapacity"] == 50
 
 
 async def test_patch_current_occupancy_is_ignored(
-    client, admin, vehicle, db: AsyncSession
+    client, admin_user, vehicle, db: AsyncSession
 ):
     from app.models.vehicle import Vehicle
     from sqlalchemy import select
@@ -136,7 +124,7 @@ async def test_patch_current_occupancy_is_ignored(
     r = await client.patch(
         f"/api/v1/vehicles/{vehicle.id}",
         json={"current_occupancy": 99},
-        headers=auth_headers(admin),
+        headers=auth_headers(admin_user),
     )
     assert r.status_code == 200
 
