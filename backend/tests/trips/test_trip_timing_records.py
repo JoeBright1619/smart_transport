@@ -19,40 +19,19 @@ from app.schemas.trip import ON_TIME_TOLERANCE_MIN, classify_delay
 from app.websocket.route_trip_records import complete_trip
 
 
-@pytest.fixture
-async def route(make_route, tenant):
-    # 30-minute planned duration — the delay baseline.
-    return await make_route(tenant_id=tenant.id)
-
-
-@pytest.fixture
-async def driver(make_driver, tenant):
-    return await make_driver(tenant_id=tenant.id, status="on-trip")
-
-
-@pytest.fixture
-async def vehicle(make_vehicle, driver, route, tenant):
-    return await make_vehicle(
-        tenant_id=tenant.id,
-        status="active",
-        driver_id=driver.id,
-        route_id=route.id,
-        lat=-1.95,
-        lng=30.06,
-    )
-
-
 def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-async def _active_trip(make_trip, tenant, vehicle, route, driver, *, started_ago_min):
+async def _active_trip(
+    make_trip, tenant, vehicle, route, driver_user, *, started_ago_min
+):
     now = _now()
     trip = await make_trip(
         tenant_id=tenant.id,
         vehicle_id=vehicle.id,
         route_id=route.id,
-        driver_id=driver.id,
+        driver_id=driver_user.id,
         status="active",
     )
     trip.actual_start = now - timedelta(minutes=started_ago_min)
@@ -65,10 +44,10 @@ async def _active_trip(make_trip, tenant, vehicle, route, driver, *, started_ago
 
 
 async def test_passengers_sum_actual_boardings(
-    db: AsyncSession, make_trip, tenant, vehicle, route, driver
+    db: AsyncSession, make_trip, tenant, vehicle, route, driver_user
 ):
     trip, now = await _active_trip(
-        make_trip, tenant, vehicle, route, driver, started_ago_min=30
+        make_trip, tenant, vehicle, route, driver_user, started_ago_min=30
     )
     db.add_all(
         [
@@ -112,10 +91,10 @@ async def test_passengers_sum_actual_boardings(
 
 
 async def test_passengers_zero_when_no_boardings(
-    db: AsyncSession, make_trip, tenant, vehicle, route, driver
+    db: AsyncSession, make_trip, tenant, vehicle, route, driver_user
 ):
     trip, now = await _active_trip(
-        make_trip, tenant, vehicle, route, driver, started_ago_min=30
+        make_trip, tenant, vehicle, route, driver_user, started_ago_min=30
     )
     await complete_trip(db, vehicle, {"current_trip_id": trip.id}, now)
     await db.refresh(trip)
@@ -128,11 +107,11 @@ async def test_passengers_zero_when_no_boardings(
 
 
 async def test_delay_positive_when_slower_than_route(
-    db: AsyncSession, make_trip, tenant, vehicle, route, driver
+    db: AsyncSession, make_trip, tenant, vehicle, route, driver_user
 ):
     # Ran 42 min against a 30-min route → ~12 min late.
     trip, now = await _active_trip(
-        make_trip, tenant, vehicle, route, driver, started_ago_min=42
+        make_trip, tenant, vehicle, route, driver_user, started_ago_min=42
     )
     await complete_trip(db, vehicle, {"current_trip_id": trip.id}, now)
     await db.refresh(trip)
@@ -141,11 +120,11 @@ async def test_delay_positive_when_slower_than_route(
 
 
 async def test_delay_negative_when_faster_than_route(
-    db: AsyncSession, make_trip, tenant, vehicle, route, driver
+    db: AsyncSession, make_trip, tenant, vehicle, route, driver_user
 ):
     # Ran 18 min against a 30-min route → ~12 min early.
     trip, now = await _active_trip(
-        make_trip, tenant, vehicle, route, driver, started_ago_min=18
+        make_trip, tenant, vehicle, route, driver_user, started_ago_min=18
     )
     await complete_trip(db, vehicle, {"current_trip_id": trip.id}, now)
     await db.refresh(trip)
@@ -154,11 +133,11 @@ async def test_delay_negative_when_faster_than_route(
 
 
 async def test_delay_within_tolerance_is_on_time(
-    db: AsyncSession, make_trip, tenant, vehicle, route, driver
+    db: AsyncSession, make_trip, tenant, vehicle, route, driver_user
 ):
     # Ran 32 min against a 30-min route → +2, inside the tolerance band.
     trip, now = await _active_trip(
-        make_trip, tenant, vehicle, route, driver, started_ago_min=32
+        make_trip, tenant, vehicle, route, driver_user, started_ago_min=32
     )
     await complete_trip(db, vehicle, {"current_trip_id": trip.id}, now)
     await db.refresh(trip)

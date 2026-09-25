@@ -11,7 +11,6 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,11 +21,6 @@ from app.services import trip_service
 from app.websocket import route_simulation
 
 _PUBLISH = "app.websocket.passenger_simulation.manager.publish_to_tenant"
-
-
-@pytest.fixture
-async def admin(make_user, tenant):
-    return await make_user(tenant_id=tenant.id, role="admin")
 
 
 def _now() -> datetime:
@@ -71,7 +65,7 @@ async def _route_with_two_stops(db: AsyncSession, make_route, tenant):
 
 
 async def test_dispatch_uses_custom_rounds(
-    db, admin, make_route, make_driver, make_vehicle, tenant
+    db, admin_user, make_route, make_driver, make_vehicle, tenant
 ):
     route = await make_route(tenant_id=tenant.id)
     driver = await make_driver(tenant_id=tenant.id)
@@ -91,7 +85,7 @@ async def test_dispatch_uses_custom_rounds(
             planned_loops=3,
         ),
         tenant.id,
-        admin.id,
+        admin_user.id,
     )
 
     # The dispatch decision rides on the vehicle (the journey's home).
@@ -99,7 +93,7 @@ async def test_dispatch_uses_custom_rounds(
 
 
 async def test_dispatch_derives_scheduled_end_from_route_and_rounds(
-    db, admin, make_route, make_driver, make_vehicle, tenant
+    db, admin_user, make_route, make_driver, make_vehicle, tenant
 ):
     # make_route sets a 30-minute duration; 3 rounds -> a 90-minute journey window.
     route = await make_route(tenant_id=tenant.id)
@@ -119,7 +113,7 @@ async def test_dispatch_derives_scheduled_end_from_route_and_rounds(
             planned_loops=3,
         ),
         tenant.id,
-        admin.id,
+        admin_user.id,
     )
 
     expected_end = now + timedelta(minutes=30 * 3)
@@ -127,7 +121,7 @@ async def test_dispatch_derives_scheduled_end_from_route_and_rounds(
 
 
 async def test_fleet_quick_start_defaults_to_five_rounds(
-    db, admin, make_route, make_driver, make_vehicle, tenant
+    db, admin_user, make_route, make_driver, make_vehicle, tenant
 ):
     # Fleet "Start" doesn't pick a count, so it falls back to the dispatch default.
     route = await make_route(tenant_id=tenant.id)
@@ -142,7 +136,7 @@ async def test_fleet_quick_start_defaults_to_five_rounds(
     )
 
     await trip_service.start_journey(
-        db, vehicle=vehicle, tenant_id=tenant.id, current_user_id=admin.id
+        db, vehicle=vehicle, tenant_id=tenant.id, current_user_id=admin_user.id
     )
 
     assert vehicle.planned_loops == trip_service.DEFAULT_JOURNEY_LOOPS
@@ -150,7 +144,7 @@ async def test_fleet_quick_start_defaults_to_five_rounds(
 
 
 async def test_completing_trip_clears_rounds_counter(
-    db, admin, make_route, make_driver, make_vehicle, tenant
+    db, admin_user, make_route, make_driver, make_vehicle, tenant
 ):
     route = await make_route(tenant_id=tenant.id)
     driver = await make_driver(tenant_id=tenant.id)
@@ -163,13 +157,13 @@ async def test_completing_trip_clears_rounds_counter(
         lng=30.06,
     )
     trip = await trip_service.start_journey(
-        db, vehicle=vehicle, tenant_id=tenant.id, current_user_id=admin.id
+        db, vehicle=vehicle, tenant_id=tenant.id, current_user_id=admin_user.id
     )
     vehicle.completed_loops = 2  # pretend two loops already ran
     await db.flush()
 
     await trip_service.update_trip(
-        db, trip.id, TripUpdate(status="completed"), tenant.id, admin.id
+        db, trip.id, TripUpdate(status="completed"), tenant.id, admin_user.id
     )
 
     assert vehicle.status == "idle"

@@ -211,6 +211,11 @@ def make_route(db: AsyncSession):
 
 
 @pytest.fixture
+async def route(make_route, tenant):
+    return await make_route(tenant_id=tenant.id)
+
+
+@pytest.fixture
 def make_stop(db: AsyncSession):
     async def _create(*, tenant_id, name="Test Stop", lat=-1.9536, lng=30.0606) -> Stop:
         stop = Stop(
