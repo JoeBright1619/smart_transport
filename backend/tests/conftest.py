@@ -16,7 +16,7 @@ from app.core.config import settings as _settings
 from app.core.database import Base, get_db
 from app.core.security import create_access_token, hash_password
 from app.models.driver import Driver
-from app.models.route import Route, Stop
+from app.models.route import Route, RouteStop, Stop
 from app.models.tenant import Tenant
 from app.models.trip import Trip
 from app.models.user import User
@@ -118,6 +118,11 @@ def make_tenant(db: AsyncSession):
 
 
 @pytest.fixture
+async def tenant(make_tenant):
+    return await make_tenant()
+
+
+@pytest.fixture
 def make_user(db: AsyncSession):
     async def _create(
         *,
@@ -202,13 +207,7 @@ def make_route(db: AsyncSession):
 
 @pytest.fixture
 def make_stop(db: AsyncSession):
-    async def _create(
-        *,
-        tenant_id: str,
-        name: str = "Test Stop",
-        lat: float = -1.9536,
-        lng: float = 30.0606,
-    ) -> Stop:
+    async def _create(*, tenant_id, name="Test Stop", lat=-1.9536, lng=30.0606) -> Stop:
         stop = Stop(
             id=f"stop-{uuid.uuid4()}",
             tenant_id=tenant_id,
@@ -218,10 +217,15 @@ def make_stop(db: AsyncSession):
             is_deleted=False,
         )
         db.add(stop)
-        await db.commit()
+        await db.flush()  # not commit
         return stop
 
     return _create
+
+
+@pytest.fixture
+async def stop(make_stop, tenant):
+    return await make_stop(tenant_id=tenant.id)
 
 
 @pytest.fixture
@@ -309,3 +313,37 @@ def make_gps_device(db: AsyncSession):
         return device
 
     return _create
+
+
+@pytest.fixture
+async def admin_user(make_user, tenant) -> User:
+    return await make_user(tenant_id=tenant.id, role="admin")
+
+
+@pytest.fixture
+async def passenger_user(make_user, tenant) -> User:
+    return await make_user(tenant_id=None, role="passenger")
+
+
+@pytest.fixture
+async def active_vehicle_at_stop(
+    db: AsyncSession, make_vehicle, make_route, tenant, stop
+):
+    route = await make_route(tenant_id=tenant.id)
+    db.add(RouteStop(route_id=route.id, stop_id=stop.id, stop_order=1))
+    await db.commit()
+    vehicle = await make_vehicle(
+        tenant_id=tenant.id,
+        status="active",
+        route_id=route.id,
+        lat=-1.9396,
+        lng=30.0585,
+    )
+    vehicle.speed = 30
+    await db.commit()
+    return vehicle
+
+
+@pytest.fixture
+async def superadmin(make_user):
+    return await make_user(tenant_id=None, role="superadmin")

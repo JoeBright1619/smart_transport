@@ -13,11 +13,6 @@ async def superadmin(make_user):
 
 
 @pytest.fixture
-async def tenant(make_tenant):
-    return await make_tenant()
-
-
-@pytest.fixture
 async def passenger_a(make_user):
     return await make_user(tenant_id=None, role="passenger")
 

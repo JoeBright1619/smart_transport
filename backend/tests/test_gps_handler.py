@@ -16,11 +16,6 @@ from typing import Any
 
 
 @pytest.fixture
-async def tenant(db, make_tenant):
-    return await make_tenant()
-
-
-@pytest.fixture
 async def vehicle(db, make_vehicle, tenant) -> Vehicle:
     return await make_vehicle(tenant_id=tenant.id, lat=0.0, lng=0.0)
 

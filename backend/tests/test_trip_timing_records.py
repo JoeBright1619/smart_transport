@@ -20,11 +20,6 @@ from app.websocket.route_trip_records import complete_trip
 
 
 @pytest.fixture
-async def tenant(make_tenant):
-    return await make_tenant()
-
-
-@pytest.fixture
 async def route(make_route, tenant):
     # 30-minute planned duration — the delay baseline.
     return await make_route(tenant_id=tenant.id)

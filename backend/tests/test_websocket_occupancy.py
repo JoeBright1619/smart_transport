@@ -21,11 +21,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.fixture
-async def tenant(make_tenant):
-    return await make_tenant()
-
-
-@pytest.fixture
 async def vehicle(make_vehicle, tenant):
     return await make_vehicle(
         tenant_id=tenant.id,

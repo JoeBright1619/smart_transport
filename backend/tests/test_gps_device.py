@@ -19,12 +19,11 @@ class TestGPSDeviceModel:
         uuid_str = device_id.replace("gps-", "")
         uuid.UUID(uuid_str)  # Will raise if invalid
 
-    def test_gps_device_creation(self, db, make_tenant):
+    def test_gps_device_creation(self, db, make_tenant, tenant):
         """Test basic GPS device creation."""
         import asyncio
 
         async def _test():
-            tenant = await make_tenant()
             device = GPSDevice(
                 id="gps-test-001",
                 tenant_id=tenant.id,
@@ -46,12 +45,11 @@ class TestGPSDeviceModel:
 
         asyncio.get_event_loop().run_until_complete(_test())
 
-    def test_gps_device_default_values(self, db, make_tenant):
+    def test_gps_device_default_values(self, db, make_tenant, tenant):
         """Test default values for GPS device fields."""
         import asyncio
 
         async def _test():
-            tenant = await make_tenant()
             device = GPSDevice(
                 id=f"gps-{uuid.uuid4()}",
                 tenant_id=tenant.id,
@@ -68,12 +66,11 @@ class TestGPSDeviceModel:
 
         asyncio.get_event_loop().run_until_complete(_test())
 
-    def test_gps_device_inactive_status(self, db, make_tenant):
+    def test_gps_device_inactive_status(self, db, make_tenant, tenant):
         """Test GPS device with inactive status."""
         import asyncio
 
         async def _test():
-            tenant = await make_tenant()
             device = GPSDevice(
                 id=f"gps-{uuid.uuid4()}",
                 tenant_id=tenant.id,
@@ -94,12 +91,11 @@ class TestGPSDeviceModel:
 class TestGPSDeviceSerialization:
     """Tests for GPS device serialization."""
 
-    def test_to_dict(self, db, make_tenant):
+    def test_to_dict(self, db, make_tenant, tenant):
         """Test GPS device can be serialized to dictionary."""
         import asyncio
 
         async def _test():
-            tenant = await make_tenant()
             device = GPSDevice(
                 id="gps-serialize-001",
                 tenant_id=tenant.id,

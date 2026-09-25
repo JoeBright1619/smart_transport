@@ -22,35 +22,10 @@ from tests.conftest import auth_headers
 
 
 @pytest.fixture
-async def passenger(make_user):
-    return await make_user(tenant_id=None, role="passenger", email="stats@test.local")
-
-
-@pytest.fixture
-async def admin(make_user, tenant):
-    return await make_user(tenant_id=tenant.id, role="admin")
-
-
-@pytest.fixture
-async def tenant(make_tenant):
-    return await make_tenant()
-
-
-@pytest.fixture
-async def stop(tenant, db: AsyncSession):
-    from app.models.route import Stop
-
-    s = Stop(
-        id="stop-stats-test",
-        tenant_id=tenant.id,
-        name="Central Station",
-        lat=0.0,
-        lng=0.0,
-        is_deleted=False,
+async def stop(make_stop, tenant):
+    return await make_stop(
+        tenant_id=tenant.id, name="Central Station", lat=0.0, lng=0.0
     )
-    db.add(s)
-    await db.commit()
-    return s
 
 
 async def _add_boardings(
@@ -85,13 +60,17 @@ async def test_stats_requires_auth(client):
     assert r.status_code == 401
 
 
-async def test_stats_forbidden_for_admin(client, admin):
-    r = await client.get("/api/v1/passengers/me/stats", headers=auth_headers(admin))
+async def test_stats_forbidden_for_admin(client, admin_user):
+    r = await client.get(
+        "/api/v1/passengers/me/stats", headers=auth_headers(admin_user)
+    )
     assert r.status_code == 403
 
 
-async def test_stats_empty_when_no_boardings(client, passenger):
-    r = await client.get("/api/v1/passengers/me/stats", headers=auth_headers(passenger))
+async def test_stats_empty_when_no_boardings(client, passenger_user):
+    r = await client.get(
+        "/api/v1/passengers/me/stats", headers=auth_headers(passenger_user)
+    )
     assert r.status_code == 200
     data = r.json()["data"]
     assert data["totalTrips"] == 0
@@ -100,10 +79,12 @@ async def test_stats_empty_when_no_boardings(client, passenger):
 
 
 async def test_stats_has_enough_data_false_below_threshold(
-    client, passenger, stop, tenant, db: AsyncSession
+    client, passenger_user, stop, tenant, db: AsyncSession
 ):
-    await _add_boardings(db, passenger.id, stop.id, tenant.id, 2)
-    r = await client.get("/api/v1/passengers/me/stats", headers=auth_headers(passenger))
+    await _add_boardings(db, passenger_user.id, stop.id, tenant.id, 2)
+    r = await client.get(
+        "/api/v1/passengers/me/stats", headers=auth_headers(passenger_user)
+    )
     assert r.status_code == 200
     data = r.json()["data"]
     assert data["totalTrips"] == 2
@@ -111,10 +92,12 @@ async def test_stats_has_enough_data_false_below_threshold(
 
 
 async def test_stats_has_enough_data_true_at_threshold(
-    client, passenger, stop, tenant, db: AsyncSession
+    client, passenger_user, stop, tenant, db: AsyncSession
 ):
-    await _add_boardings(db, passenger.id, stop.id, tenant.id, 3)
-    r = await client.get("/api/v1/passengers/me/stats", headers=auth_headers(passenger))
+    await _add_boardings(db, passenger_user.id, stop.id, tenant.id, 3)
+    r = await client.get(
+        "/api/v1/passengers/me/stats", headers=auth_headers(passenger_user)
+    )
     assert r.status_code == 200
     data = r.json()["data"]
     assert data["totalTrips"] == 3
@@ -122,19 +105,21 @@ async def test_stats_has_enough_data_true_at_threshold(
 
 
 async def test_stats_counts_only_own_boardings(
-    client, passenger, make_user, stop, tenant, db: AsyncSession
+    client, passenger_user, make_user, stop, tenant, db: AsyncSession
 ):
     other = await make_user(tenant_id=None, role="passenger", email="other@stats.local")
     await _add_boardings(db, other.id, stop.id, tenant.id, 5)
-    await _add_boardings(db, passenger.id, stop.id, tenant.id, 3)
+    await _add_boardings(db, passenger_user.id, stop.id, tenant.id, 3)
 
-    r = await client.get("/api/v1/passengers/me/stats", headers=auth_headers(passenger))
+    r = await client.get(
+        "/api/v1/passengers/me/stats", headers=auth_headers(passenger_user)
+    )
     assert r.status_code == 200
     assert r.json()["data"]["totalTrips"] == 3
 
 
 async def test_stats_favourite_stop_identified(
-    client, passenger, stop, tenant, db: AsyncSession
+    client, passenger_user, stop, tenant, db: AsyncSession
 ):
     from app.models.route import Stop
 
@@ -150,20 +135,24 @@ async def test_stats_favourite_stop_identified(
     await db.commit()
 
     # 4 boardings at Central Station, 2 at Bus Terminal
-    await _add_boardings(db, passenger.id, stop.id, tenant.id, 4)
-    await _add_boardings(db, passenger.id, stop2.id, tenant.id, 2)
+    await _add_boardings(db, passenger_user.id, stop.id, tenant.id, 4)
+    await _add_boardings(db, passenger_user.id, stop2.id, tenant.id, 2)
 
-    r = await client.get("/api/v1/passengers/me/stats", headers=auth_headers(passenger))
+    r = await client.get(
+        "/api/v1/passengers/me/stats", headers=auth_headers(passenger_user)
+    )
     assert r.status_code == 200
     assert r.json()["data"]["favouriteStop"] == "Central Station"
 
 
 async def test_stats_weekly_trips_this_week(
-    client, passenger, stop, tenant, db: AsyncSession
+    client, passenger_user, stop, tenant, db: AsyncSession
 ):
-    await _add_boardings(db, passenger.id, stop.id, tenant.id, 3)
+    await _add_boardings(db, passenger_user.id, stop.id, tenant.id, 3)
 
-    r = await client.get("/api/v1/passengers/me/stats", headers=auth_headers(passenger))
+    r = await client.get(
+        "/api/v1/passengers/me/stats", headers=auth_headers(passenger_user)
+    )
     assert r.status_code == 200
     data = r.json()["data"]
     assert data["thisWeekTrips"] == 3
@@ -171,7 +160,7 @@ async def test_stats_weekly_trips_this_week(
 
 
 async def test_stats_increments_profile_on_boarding(
-    db: AsyncSession, passenger, stop, tenant
+    db: AsyncSession, passenger_user, stop, tenant
 ):
     """record_stop_events should increment total_trips_recorded when passenger_id is set."""
     from datetime import datetime, timezone
@@ -190,19 +179,19 @@ async def test_stats_increments_profile_on_boarding(
         is_deleted=False,
     )
     db.add(vehicle)
-    db.add(PassengerProfile(user_id=passenger.id, total_trips_recorded=0))
+    db.add(PassengerProfile(user_id=passenger_user.id, total_trips_recorded=0))
     await db.commit()
 
     from sqlalchemy import select
 
     now = datetime.now(timezone.utc)
     await record_stop_events(
-        db, vehicle, stop.id, 1, 0, 1, now, passenger_id=passenger.id
+        db, vehicle, stop.id, 1, 0, 1, now, passenger_id=passenger_user.id
     )
     await db.commit()
 
     profile = await db.scalar(
-        select(PassengerProfile).where(PassengerProfile.user_id == passenger.id)
+        select(PassengerProfile).where(PassengerProfile.user_id == passenger_user.id)
     )
     assert profile is not None
     assert profile.total_trips_recorded == 1

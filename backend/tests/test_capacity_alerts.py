@@ -27,11 +27,6 @@ _PATCH = "app.websocket.manager.manager.publish_to_tenant"
 
 
 @pytest.fixture
-async def tenant(make_tenant):
-    return await make_tenant()
-
-
-@pytest.fixture
 async def admin(make_user, tenant):
     return await make_user(tenant_id=tenant.id, role="admin")
 

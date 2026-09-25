@@ -14,25 +14,10 @@ from app.websocket.passenger_simulation import simulate_passengers_at_stop
 
 
 @pytest.fixture
-async def tenant(make_tenant):
-    return await make_tenant()
-
-
-@pytest.fixture
-async def stop(tenant, db: AsyncSession):
-    from app.models.route import Stop
-
-    s = Stop(
-        id="stop-sim-test-01",
-        tenant_id=tenant.id,
-        name="Simulation Test Stop",
-        lat=0.0,
-        lng=0.0,
-        is_deleted=False,
+async def sim_stop(make_stop, tenant):
+    return await make_stop(
+        tenant_id=tenant.id, name="Simulation Test Stop", lat=0.0, lng=0.0
     )
-    db.add(s)
-    await db.commit()
-    return s
 
 
 @pytest.fixture
@@ -59,7 +44,7 @@ async def sim_stops(tenant, db: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_record_single_boarding_creates_linked_pair(
-    db: AsyncSession, tenant, stop
+    db: AsyncSession, tenant, sim_stop
 ):
     """Board then alight a passenger through the helper; exactly 2 linked rows exist."""
     passenger_id = "user-sim-passenger-01"
@@ -68,7 +53,7 @@ async def test_record_single_boarding_creates_linked_pair(
     await record_single_boarding(
         db,
         trip_id=None,
-        stop_id=stop.id,
+        stop_id=sim_stop.id,
         passenger_id=passenger_id,
         event_type="boarded",
         tenant_id=tenant.id,
@@ -78,7 +63,7 @@ async def test_record_single_boarding_creates_linked_pair(
     await record_single_boarding(
         db,
         trip_id=None,
-        stop_id=stop.id,
+        stop_id=sim_stop.id,
         passenger_id=passenger_id,
         event_type="alighted",
         tenant_id=tenant.id,

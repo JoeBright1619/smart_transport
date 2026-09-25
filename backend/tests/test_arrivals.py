@@ -4,13 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.models.route import RouteStop, Stop
 from tests.conftest import auth_headers
-
-
-@pytest.fixture
-async def tenant(make_tenant):
-    return await make_tenant()
 
 
 @pytest.fixture
@@ -21,38 +15,6 @@ async def admin(make_user, tenant):
 @pytest.fixture
 async def passenger(make_user, tenant):
     return await make_user(tenant_id=tenant.id, role="passenger")
-
-
-@pytest.fixture
-async def stop(db, tenant):
-    s = Stop(
-        tenant_id=tenant.id,
-        name="Test Stop",
-        lat=-1.9500,
-        lng=30.0588,
-        is_deleted=False,
-    )
-    db.add(s)
-    await db.commit()
-    return s
-
-
-@pytest.fixture
-async def active_vehicle_at_stop(db, make_vehicle, make_route, tenant, stop):
-    route = await make_route(tenant_id=tenant.id)
-    db.add(RouteStop(route_id=route.id, stop_id=stop.id, stop_order=1))
-    await db.commit()
-    vehicle = await make_vehicle(
-        tenant_id=tenant.id,
-        status="active",
-        route_id=route.id,
-        lat=-1.9396,
-        lng=30.0585,
-    )
-    # Give the vehicle a speed so ETA can be calculated
-    vehicle.speed = 30
-    await db.commit()
-    return vehicle
 
 
 # ---------------------------------------------------------------------------

@@ -9,7 +9,6 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from sqlalchemy import select
 
 from app.models.alert import Alert
@@ -18,11 +17,6 @@ from app.websocket import route_simulation as rs
 from app.websocket.route_simulation import StopPoint
 
 _MGR = "app.websocket.manager.manager.publish_to_tenant"
-
-
-@pytest.fixture
-async def tenant(make_tenant):
-    return await make_tenant()
 
 
 def _now() -> datetime:

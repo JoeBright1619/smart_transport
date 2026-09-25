@@ -18,11 +18,6 @@ from app.websocket.route_trip_records import complete_trip, start_trip
 
 
 @pytest.fixture
-async def tenant(make_tenant):
-    return await make_tenant()
-
-
-@pytest.fixture
 async def route(make_route, tenant):
     return await make_route(tenant_id=tenant.id)
 
