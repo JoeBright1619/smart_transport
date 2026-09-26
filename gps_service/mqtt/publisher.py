@@ -47,7 +47,7 @@ class MQTTPublisher:
         reason_code: ReasonCode,
         properties: Properties | None,
     ) -> None:
-        if reason_code == 0:
+        if not reason_code.is_failure:
             self._connected = True
         else:
             self._connected = False
