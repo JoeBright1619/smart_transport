@@ -68,15 +68,25 @@ class MQTTPublisher:
                 self.client.connect(self.broker_url, self.broker_port)
                 self.client.loop_start()
 
-                if self.client.is_connected():
-                    return
+                # Give the network loop time to establish the connection.
+                deadline = time.monotonic() + self.retry_delay
+
+                while not self.client.is_connected():
+                    if time.monotonic() >= deadline:
+                        raise ConnectionError("Timed out waiting for MQTT connection")
+
+                    time.sleep(0.1)
+
+                return
 
             except Exception:
+                self._connected = False
+
                 if attempt == self.retry_attempts - 1:
                     raise
 
-            delay = self.retry_delay * (2**attempt)
-            time.sleep(delay)
+                delay = self.retry_delay * (2**attempt)
+                time.sleep(delay)
 
         raise ConnectionError("Unable to connect to MQTT broker")
 
