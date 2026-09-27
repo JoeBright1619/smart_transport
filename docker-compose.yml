@@ -54,12 +54,19 @@ services:
       REDIS_URL: redis://redis:6379/0
       SUPERADMIN_PASSWORD: Admin@123456
       SEED_PASSWORD: Password123!
+      MQTT_BROKER_URL: mqtt
+      MQTT_BROKER_PORT: "1883"
+      MQTT_CLIENT_ID: smart-transport-backend
+      MQTT_USERNAME: ""
+      MQTT_PASSWORD: ""
 
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
+      mqtt:
+        condition: service_started
 
 volumes:
   pgdata:
