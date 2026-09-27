@@ -23,6 +23,7 @@ from app.models.trip import Trip
 from app.models.user import User
 from app.models.vehicle import Vehicle
 from app.services import trip_service
+from app.models.gps_device import GPSDevice
 
 logger = logging.getLogger(__name__)
 
@@ -543,6 +544,32 @@ async def _seed_vehicles(db: AsyncSession) -> None:
             is_deleted=False,
         )
         _log(f"vehicle {veh_id} {'created' if created else 'already exists'}")
+
+
+async def _seed_gps_devices(db: AsyncSession) -> None:
+    devices_data = [
+        # id, name, token, device_type, is_active
+        (
+            "gps-device-008",
+            "Vehicle 008 GPS",
+            "dev-gps-token-008",
+            "simulator",
+            True,
+        ),
+    ]
+
+    for device_id, name, token, device_type, is_active in devices_data:
+        _, created = await _get_or_create(
+            db,
+            GPSDevice,
+            device_id,
+            tenant_id=_TENANT_ID,
+            name=name,
+            token=token,
+            device_type=device_type,
+            is_active=is_active,
+        )
+        _log(f"gps device {device_id} {'created' if created else 'already exists'}")
 
 
 async def _seed_live_trips(db: AsyncSession) -> None:
@@ -1073,6 +1100,9 @@ async def seed(reset: bool = False) -> None:
         await db.flush()
 
         await _seed_vehicles(db)
+        await db.flush()
+
+        await _seed_gps_devices(db)
         await db.flush()
 
         # Seed live trips — activates vehicles and links drivers properly
