@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -15,7 +16,6 @@ from app.core.database import engine
 from app.core.mqtt_client import MQTTClient
 from app.services.gps_mqtt_subscriber import GPSMQTTSubscriber
 from app.services.simulation_runner import (
-    start_vehicle_simulation,
     stop_vehicle_simulation,
 )
 from app.routers import (
@@ -131,8 +131,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     async with engine.connect() as conn:
         await conn.execute(text("SELECT 1"))
 
+    loop = asyncio.get_running_loop()
+
     mqtt_client = MQTTClient()
-    subscriber = GPSMQTTSubscriber(mqtt_client)
+    subscriber = GPSMQTTSubscriber(mqtt_client, loop)
 
     mqtt_client.connect()
     subscriber.start()
@@ -140,7 +142,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await _warn_if_db_behind_head()
     await _reconcile_orphaned_trips_on_startup()
 
-    start_vehicle_simulation()
+    # start_vehicle_simulation()
 
     try:
         yield
