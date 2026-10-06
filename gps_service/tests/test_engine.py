@@ -9,6 +9,7 @@ from gps_service.simulator.engine import (
     SimulationEngine,
 )
 from gps_service.simulator.state_manager import SimulationState
+from gps_service.simulator.congestion import update_congestion
 
 
 @pytest.fixture
@@ -210,7 +211,7 @@ def test_congestion_reduces_speed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        "gps_service.simulator.engine.random",
+        "gps_service.simulator.congestion.random",
         lambda: 0.0,
     )
 
@@ -237,7 +238,7 @@ def test_congestion_delay_alert_triggers(
         delay_alerted=False,
     )
 
-    in_congestion, delay_crossed = engine._update_congestion(
+    in_congestion, delay_crossed = update_congestion(
         simulation_state,
     )
 
@@ -255,7 +256,7 @@ def test_congestion_delay_alert_only_triggers_once(
         delay_alerted=True,
     )
 
-    _, delay_crossed = engine._update_congestion(
+    _, delay_crossed = update_congestion(
         simulation_state,
     )
 

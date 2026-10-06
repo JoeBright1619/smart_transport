@@ -258,7 +258,7 @@ Before marking any task complete:
 
 ### Tasks
 
-- [ ] **Task 3.1: Extract advance_vehicle logic**
+- [x] **Task 3.1: Extract advance_vehicle logic**
   - Copy `advance_vehicle()` from `backend/app/websocket/route_simulation.py` to `gps_service/simulator/engine.py`
   - Remove database dependencies, adapt to use cached route data
   - Keep physics: position calculation, speed simulation, fuel depletion

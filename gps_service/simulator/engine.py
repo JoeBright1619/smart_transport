@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from random import randint, random, uniform
-
+from random import uniform
 from gps_service.geo.math import bearing, haversine_distance, move_along_bearing
 from gps_service.models.gps_data import RouteStop, VehicleState
 from gps_service.simulator.state_manager import SimulationState
+from gps_service.simulator.congestion import update_congestion
 
 
 TICK_SECONDS = 5
@@ -63,7 +63,7 @@ class SimulationEngine:
 
         current_speed = vehicle.speed
 
-        in_congestion, _delay_crossed = self._update_congestion(state)
+        in_congestion, _delay_crossed = update_congestion(state)
 
         if in_congestion:
             new_speed = CONGESTION_SPEED
@@ -123,35 +123,3 @@ class SimulationEngine:
         vehicle.fuel = new_fuel
 
         return vehicle
-
-    def _update_congestion(
-        self,
-        state: SimulationState,
-    ) -> tuple[bool, bool]:
-        """Advance congestion state by one simulation tick."""
-
-        remaining = state.congestion_ticks
-
-        if remaining <= 0 and random() < CONGESTION_CHANCE:  # nosec B311
-            remaining = randint(
-                CONGESTION_MIN_TICKS,
-                CONGESTION_MAX_TICKS,
-            )  # nosec B311
-
-        if remaining <= 0:
-            state.congestion_ticks = 0
-            state.congestion_run_min = 0.0
-
-            return False, False
-
-        state.congestion_ticks = remaining - 1
-
-        state.congestion_run_min += TICK_SECONDS / 60
-
-        delay_crossed = False
-
-        if state.congestion_run_min >= DELAY_ALERT_MINUTES and not state.delay_alerted:
-            state.delay_alerted = True
-            delay_crossed = True
-
-        return True, delay_crossed
