@@ -1,8 +1,18 @@
+from dataclasses import dataclass
 import json
 from pathlib import Path
 from typing import Any
 
 from gps_service.models.gps_data import VehicleState
+
+
+@dataclass
+class SimulationState:
+    next_stop_index: int = 1
+    dwell_remaining: int = 0
+    congestion_ticks: int = 0
+    congestion_run_min: float = 0.0
+    delay_alerted: bool = False
 
 
 class VehicleStateManager:
@@ -11,7 +21,7 @@ class VehicleStateManager:
     def __init__(self, state_file: str = "gps_service/state/vehicles.json") -> None:
         self.state_file = Path(state_file)
         self.states: dict[str, VehicleState] = {}
-
+        self.simulation_states: dict[str, SimulationState] = {}
         self._load()
 
     def get(self, vehicle_id: str) -> VehicleState | None:
@@ -41,6 +51,7 @@ class VehicleStateManager:
     def remove(self, vehicle_id: str) -> None:
         """Remove a vehicle from the state manager."""
         self.states.pop(vehicle_id, None)
+        self.simulation_states.pop(vehicle_id, None)
 
     def all(self) -> list[VehicleState]:
         """Return all tracked vehicle states."""
@@ -75,3 +86,12 @@ class VehicleStateManager:
 
         except (json.JSONDecodeError, ValueError):
             self.states = {}
+
+    def get_simulation_state(self, vehicle_id: str) -> SimulationState:
+        state = self.simulation_states.get(vehicle_id)
+
+        if state is None:
+            state = SimulationState()
+            self.simulation_states[vehicle_id] = state
+
+        return state
