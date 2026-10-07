@@ -264,18 +264,18 @@ Before marking any task complete:
   - Keep physics: position calculation, speed simulation, fuel depletion
   - **Commit:** `feat(gps-service): extract advance_vehicle core logic`
 
-- [ ] **Task 3.2: Adapt congestion simulation**
+- [x] **Task 3.2: Adapt congestion simulation**
   - Copy `_handle_congestion()` logic to `gps_service/simulator/congestion.py`
   - Make configurable (enable/disable, probability)
   - **Commit:** `feat(gps-service): add congestion simulation module`
 
-- [ ] **Task 3.3: Create simulator orchestrator**
+- [x] **Task 3.3: Create simulator orchestrator**
   - Create `gps_service/simulator/orchestrator.py`
   - Implement main tick loop: for each active vehicle, advance and publish
   - Coordinate state manager, route cache, MQTT publisher
   - **Commit:** `feat(gps-service): add simulator orchestrator`
 
-- [ ] **Task 3.4: Implement position publishing**
+- [x] **Task 3.4: Implement position publishing**
   - In orchestrator, after advancing vehicle, publish to MQTT
   - Topic: `gps/{tenant_id}/{vehicle_id}/position`
   - Payload: GPSPosition model as JSON

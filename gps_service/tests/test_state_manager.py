@@ -8,6 +8,8 @@ def create_vehicle_state() -> VehicleState:
     return VehicleState(
         vehicle_id="vehicle-001",
         device_id="device-001",
+        tenant_id="tenant-001",
+        route_id="route-001",
         latitude=-1.9441,
         longitude=30.0585,
         speed=30.0,

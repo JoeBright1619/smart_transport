@@ -19,16 +19,14 @@ class GPSPosition(BaseModel):
 class VehicleState(BaseModel):
     vehicle_id: str
     device_id: str
-
+    tenant_id: str
+    route_id: str
     latitude: float
     longitude: float
-
     speed: float = 0.0
     heading: float = 0.0
-
     engine_status: bool = True
     fuel: float = Field(default=100.0, ge=0, le=100)
-
     last_updated: datetime
 
 

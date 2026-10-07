@@ -46,6 +46,8 @@ def vehicle() -> VehicleState:
     return VehicleState(
         vehicle_id="vehicle-1",
         device_id="device-1",
+        route_id="route-1",
+        tenant_id="tenant-1",
         latitude=-1.9500,
         longitude=30.0600,
         speed=0,
