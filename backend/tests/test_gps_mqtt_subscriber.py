@@ -14,7 +14,7 @@ class TestGPSMQTTSubscriber:
         mock_mqtt_client = MagicMock()
         from app.services.gps_mqtt_subscriber import GPSMQTTSubscriber
 
-        subscriber = GPSMQTTSubscriber(mock_mqtt_client)
+        subscriber = GPSMQTTSubscriber(mock_mqtt_client, loop=MagicMock())
         assert subscriber.mqtt_client == mock_mqtt_client
 
     def test_subscriber_topic_pattern(self):
@@ -32,7 +32,7 @@ class TestGPSMQTTSubscriber:
 
         from app.services.gps_mqtt_subscriber import GPSMQTTSubscriber
 
-        subscriber = GPSMQTTSubscriber(mock_mqtt_client)
+        subscriber = GPSMQTTSubscriber(mock_mqtt_client, loop=MagicMock())
 
         payload = {
             "vehicle_id": "veh-123",
@@ -71,7 +71,7 @@ class TestGPSMQTTSubscriber:
 
         from app.services.gps_mqtt_subscriber import GPSMQTTSubscriber
 
-        subscriber = GPSMQTTSubscriber(mock_mqtt_client)
+        subscriber = GPSMQTTSubscriber(mock_mqtt_client, loop=MagicMock())
 
         mock_message = MagicMock()
         mock_message.topic = "gps/tenant-1/veh-123/position"
@@ -90,7 +90,7 @@ class TestGPSMQTTSubscriber:
 
         from app.services.gps_mqtt_subscriber import GPSMQTTSubscriber
 
-        subscriber = GPSMQTTSubscriber(mock_mqtt_client)
+        subscriber = GPSMQTTSubscriber(mock_mqtt_client, loop=MagicMock())
 
         payload = {"vehicle_id": "veh-123"}
 
