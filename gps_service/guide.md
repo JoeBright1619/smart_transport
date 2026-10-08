@@ -281,7 +281,7 @@ Before marking any task complete:
   - Payload: GPSPosition model as JSON
   - **Commit:** `feat(gps-service): implement position publishing to MQTT`
 
-- [ ] **Task 3.5: Add error handling and recovery**
+- [x] **Task 3.5: Add error handling and recovery**
   - Handle MQTT publish failures with retry
   - Handle route fetch failures gracefully
   - Log errors, continue processing other vehicles

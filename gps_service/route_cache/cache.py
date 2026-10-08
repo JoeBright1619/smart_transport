@@ -37,7 +37,7 @@ class RouteCache:
     async def get_route_stops(
         self,
         route_id: str,
-        token: str,
+        token: str | None,
     ) -> list[RouteStop]:
         """Return cached stops or fetch fresh stops when the cache expires."""
 
@@ -58,7 +58,7 @@ class RouteCache:
     async def _fetch_route_stops(
         self,
         route_id: str,
-        token: str,
+        token: str | None,
     ) -> list[RouteStop]:
         """Fetch route stops from the backend API."""
 

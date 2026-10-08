@@ -13,6 +13,8 @@ from gps_service.simulator.state_manager import VehicleStateManager
 logger = logging.getLogger(__name__)
 
 TICK_SECONDS = 5
+MQTT_MAX_RETRIES = 3
+MQTT_RETRY_DELAY_SECONDS = 1.0
 
 
 class SimulatorOrchestrator:
@@ -89,10 +91,18 @@ class SimulatorOrchestrator:
         if vehicle is None:
             return
 
-        stops = await self.route_cache.get_route_stops(
-            vehicle.route_id,
-            self.backend_token,
-        )
+        try:
+            stops = await self.route_cache.get_route_stops(
+                vehicle.route_id,
+                self.backend_token,
+            )
+        except Exception:
+            logger.exception(
+                "Failed to fetch route %s for vehicle %s",
+                vehicle.route_id,
+                vehicle_id,
+            )
+            return
 
         if len(stops) < 2:
             logger.warning(
@@ -132,8 +142,38 @@ class SimulatorOrchestrator:
         topic = (
             f"gps/{updated_vehicle.tenant_id}/" f"{updated_vehicle.vehicle_id}/position"
         )
-        self.publisher.publish(
+        await self._publish_with_retry(
             topic=topic,
             payload=position.model_dump(mode="json"),
-            qos=1,
         )
+
+    async def _publish_with_retry(
+        self,
+        topic: str,
+        payload: dict,
+    ) -> None:
+        for attempt in range(1, MQTT_MAX_RETRIES + 1):
+            try:
+                self.publisher.publish(
+                    topic=topic,
+                    payload=payload,
+                    qos=1,
+                )
+                return
+            except Exception:
+                if attempt == MQTT_MAX_RETRIES:
+                    logger.exception(
+                        "MQTT publish failed after %s attempts: %s",
+                        MQTT_MAX_RETRIES,
+                        topic,
+                    )
+                    raise
+
+                logger.warning(
+                    "MQTT publish failed for %s " "(attempt %s/%s), retrying",
+                    topic,
+                    attempt,
+                    MQTT_MAX_RETRIES,
+                )
+
+                await asyncio.sleep(MQTT_RETRY_DELAY_SECONDS)

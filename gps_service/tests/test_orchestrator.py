@@ -1,3 +1,4 @@
+from __future__ import annotations
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, Mock
 
@@ -307,3 +308,131 @@ async def test_tick_continues_when_one_vehicle_fails(
 
     assert publisher.publish.call_count == 1
     state_manager.set.assert_called_once_with(second_vehicle)
+
+
+@pytest.mark.asyncio
+async def test_mqtt_publish_retries_after_failure(
+    vehicle: VehicleState,
+    stops: list[RouteStop],
+) -> None:
+    state_manager = Mock()
+    state_manager.all.return_value = [vehicle]
+    state_manager.get.return_value = vehicle
+    state_manager.get_simulation_state.return_value = SimulationState(
+        next_stop_index=1,
+    )
+
+    route_cache = Mock()
+    route_cache.get_route_stops = AsyncMock(return_value=stops)
+
+    publisher = Mock()
+    publisher.publish.side_effect = [
+        RuntimeError("broker unavailable"),
+        None,
+    ]
+
+    engine = Mock(spec=SimulationEngine)
+    engine.advance_vehicle.return_value = vehicle
+
+    orchestrator = SimulatorOrchestrator(
+        state_manager=state_manager,
+        route_cache=route_cache,
+        publisher=publisher,
+        engine=engine,
+        backend_token="test-token",
+    )
+
+    await orchestrator.tick()
+
+    assert publisher.publish.call_count == 2
+
+    final_call = publisher.publish.call_args
+    assert final_call.kwargs["topic"] == "gps/tenant-1/vehicle-1/position"
+    assert final_call.kwargs["qos"] == 1
+
+
+@pytest.mark.asyncio
+async def test_mqtt_publish_stops_after_max_retries(
+    vehicle: VehicleState,
+    stops: list[RouteStop],
+) -> None:
+    state_manager = Mock()
+    state_manager.all.return_value = [vehicle]
+    state_manager.get.return_value = vehicle
+    state_manager.get_simulation_state.return_value = SimulationState(
+        next_stop_index=1,
+    )
+
+    route_cache = Mock()
+    route_cache.get_route_stops = AsyncMock(return_value=stops)
+
+    publisher = Mock()
+    publisher.publish.side_effect = RuntimeError("broker unavailable")
+
+    engine = Mock(spec=SimulationEngine)
+    engine.advance_vehicle.return_value = vehicle
+
+    orchestrator = SimulatorOrchestrator(
+        state_manager=state_manager,
+        route_cache=route_cache,
+        publisher=publisher,
+        engine=engine,
+        backend_token="test-token",
+    )
+
+    await orchestrator.tick()
+
+    assert publisher.publish.call_count == 3
+
+
+@pytest.mark.asyncio
+async def test_route_fetch_failure_skips_vehicle(
+    vehicle: VehicleState,
+    stops: list[RouteStop],
+) -> None:
+    second_vehicle = vehicle.model_copy(
+        update={"vehicle_id": "vehicle-2"},
+    )
+
+    state_manager = Mock()
+    state_manager.all.return_value = [
+        vehicle,
+        second_vehicle,
+    ]
+    state_manager.get.side_effect = [
+        vehicle,
+        second_vehicle,
+    ]
+    state_manager.get_simulation_state.return_value = SimulationState(
+        next_stop_index=1,
+    )
+
+    route_cache = Mock()
+    route_cache.get_route_stops = AsyncMock(
+        side_effect=[
+            RuntimeError("backend unavailable"),
+            stops,
+        ],
+    )
+
+    publisher = Mock()
+
+    engine = Mock(spec=SimulationEngine)
+    engine.advance_vehicle.return_value = second_vehicle
+
+    orchestrator = SimulatorOrchestrator(
+        state_manager=state_manager,
+        route_cache=route_cache,
+        publisher=publisher,
+        engine=engine,
+        backend_token="test-token",
+    )
+
+    await orchestrator.tick()
+
+    assert route_cache.get_route_stops.await_count == 2
+    assert engine.advance_vehicle.call_count == 1
+    assert publisher.publish.call_count == 1
+
+    engine.advance_vehicle.assert_called_once()
+    publisher.publish.assert_called_once()
