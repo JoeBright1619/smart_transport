@@ -21,7 +21,8 @@ def vehicle() -> VehicleState:
         longitude=30.0600,
         speed=0,
         heading=0,
-        engine_status=True,
+        status="active",
+        engine_status="good",
         fuel=100,
         last_updated=datetime.now(UTC),
     )
@@ -202,7 +203,7 @@ async def test_tick_publishes_with_qos_1(
 async def test_tick_skips_inactive_vehicle(
     vehicle: VehicleState,
 ) -> None:
-    vehicle.engine_status = False
+    vehicle.status = "idle"
 
     state_manager = Mock()
     state_manager.all.return_value = [vehicle]

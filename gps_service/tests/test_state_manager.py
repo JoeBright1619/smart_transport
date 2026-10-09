@@ -14,7 +14,8 @@ def create_vehicle_state() -> VehicleState:
         longitude=30.0585,
         speed=30.0,
         heading=90.0,
-        engine_status=True,
+        status="active",
+        engine_status="good",
         fuel=85.0,
         last_updated=datetime.now(timezone.utc),
     )

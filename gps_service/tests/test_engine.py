@@ -52,7 +52,8 @@ def vehicle() -> VehicleState:
         longitude=30.0600,
         speed=0,
         heading=0,
-        engine_status=True,
+        engine_status="good",
+        status="active",
         fuel=100,
         last_updated=datetime.now(UTC),
     )
@@ -160,12 +161,12 @@ def test_vehicle_dwells_at_stop(
     assert simulation_state.dwell_remaining == 1
 
 
-def test_vehicle_does_not_move_when_engine_is_off(
+def test_vehicle_does_not_move_when_status_is_not_active(
     engine: SimulationEngine,
     vehicle: VehicleState,
     stops: list[RouteStop],
 ) -> None:
-    vehicle.engine_status = False
+    vehicle.status = "idle"
 
     simulation_state = SimulationState(next_stop_index=1)
 

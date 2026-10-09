@@ -70,7 +70,7 @@ class SimulatorOrchestrator:
         vehicles = self.state_manager.all()
 
         for vehicle in vehicles:
-            if not vehicle.engine_status:
+            if vehicle.status != "active":
                 continue
 
             try:

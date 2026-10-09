@@ -11,7 +11,7 @@
 
 # GPS Service Extraction Guide
 
-**Current Task:** Phase 2, Task 2.1: Create GPS service directory structure
+**Current Task:** Phase 3, Task 3.6: Create GPS service directory structure
 
 ---
 
@@ -287,7 +287,7 @@ Before marking any task complete:
   - Log errors, continue processing other vehicles
   - **Commit:** `feat(gps-service): add error handling and recovery`
 
-- [ ] **Task 3.6: Write simulator integration tests**
+- [x] **Task 3.6: Write simulator integration tests**
   - Test full tick loop with mock backend
   - Test position calculation accuracy
   - Test MQTT publish success/failure scenarios

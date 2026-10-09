@@ -36,7 +36,10 @@ class SimulationEngine:
         if len(stops) < 2:
             return None
 
-        if not vehicle.engine_status:
+        # Only advance vehicles whose operational status allows movement.
+        # Engine health (`engine_status`) is metadata and does not gate
+        # simulation (policy B).
+        if vehicle.status != "active":
             return vehicle
 
         next_stop_index = max(
