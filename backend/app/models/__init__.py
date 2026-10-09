@@ -32,4 +32,5 @@ __all__ = [
     "Trip",
     "User",
     "Vehicle",
+    "ServiceToken",
 ]

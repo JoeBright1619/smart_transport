@@ -34,6 +34,7 @@ from app.routers import (
     trips,
     users,
     vehicles,
+    service,
 )
 from app.websocket import tracking
 
@@ -237,6 +238,7 @@ def create_app() -> FastAPI:
     app.include_router(audit.router)
     app.include_router(superadmin.router, prefix="/superadmin")
     app.include_router(tracking.router)
+    app.include_router(service.router)
 
     @app.exception_handler(HTTPException)
     async def http_exception_handler(

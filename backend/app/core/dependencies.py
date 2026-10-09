@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from typing import Annotated, Any, NoReturn, Awaitable
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Header, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
 from sqlalchemy import select
@@ -10,8 +10,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.models.gps_device import GPSDevice
 from app.core.security import decode_access_token
+from app.core.config import settings
 from app.models.tenant import Tenant
 from app.models.user import User
+
+import hmac
+
+from app.services.service_token_service import has_scope, verify_token
 
 security = HTTPBearer(auto_error=False)
 
@@ -164,3 +169,93 @@ def require_role(*roles: str) -> Callable[[User], Awaitable[User]]:
         return current_user
 
     return dependency
+
+
+async def get_tenant_or_service(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    x_service_token: Annotated[str | None, Header(alias="X-Service-Token")] = None,
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None, Depends(security)
+    ] = None,
+) -> Tenant:
+    """Resolve the current tenant via service token OR user JWT.
+
+    Service token path (header present) takes precedence.
+    Falls back to normal user authentication when no service token is sent.
+    """
+    if x_service_token:
+        tenant = await _resolve_service_token(
+            db, x_service_token, required_scope="vehicles:read"
+        )
+        if tenant is not None:
+            return tenant
+        # If a service token was sent but invalid, don't silently fall back to JWT.
+        _raise_error(
+            status.HTTP_401_UNAUTHORIZED,
+            "UNAUTHORIZED",
+            "Invalid or inactive service token",
+        )
+
+    user = await get_current_user(credentials=credentials, db=db)
+    if user.role not in {"admin", "operator", "dispatcher"}:
+        _raise_error(
+            status.HTTP_403_FORBIDDEN,
+            "FORBIDDEN",
+            "User does not have permission to access this resource",
+        )
+    return await get_current_tenant(current_user=user, db=db)
+
+
+async def _resolve_service_token(
+    db: AsyncSession,
+    plaintext: str,
+    required_scope: str | None = None,
+) -> Tenant | None:
+    """Try DB-backed tokens first, then the dev-only bootstrap token."""
+
+    # 1) DB-backed tokens
+    row = await verify_token(db, plaintext)
+    if row is not None:
+        if required_scope and not has_scope(row, required_scope):
+            _raise_error(
+                status.HTTP_403_FORBIDDEN,
+                "FORBIDDEN",
+                f"Service token missing required scope: {required_scope}",
+            )
+        tenant = await _load_active_tenant(db, row.tenant_id)
+        if tenant is None:
+            _raise_error(
+                status.HTTP_403_FORBIDDEN,
+                "TENANT_INACTIVE",
+                "Service token tenant is inactive or missing",
+            )
+        return tenant
+
+    # 2) Dev-only bootstrap
+    if settings.GPS_SERVICE_TOKEN and hmac.compare_digest(
+        plaintext, settings.GPS_SERVICE_TOKEN
+    ):
+        if not settings.GPS_SERVICE_TENANT_ID:
+            _raise_error(
+                status.HTTP_401_UNAUTHORIZED,
+                "UNAUTHORIZED",
+                "GPS_SERVICE_TENANT_ID is not configured for the bootstrap token",
+            )
+        tenant = await _load_active_tenant(db, settings.GPS_SERVICE_TENANT_ID)
+        if tenant is None:
+            _raise_error(
+                status.HTTP_403_FORBIDDEN,
+                "TENANT_INACTIVE",
+                "Bootstrap tenant is inactive or missing",
+            )
+        return tenant
+
+    return None
+
+
+async def _load_active_tenant(db: AsyncSession, tenant_id: str) -> Tenant | None:
+    result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
+    tenant = result.scalar_one_or_none()
+    if tenant is None or not tenant.is_active:
+        return None
+    return tenant

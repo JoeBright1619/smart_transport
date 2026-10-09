@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     MQTT_PASSWORD: str = ""
     MQTT_CLIENT_ID: str = "smart-transport-backend"
 
+    # Dev-only bootstrap service token. Prefer real rows in `service_tokens`.
+    # If set, this token is accepted and maps to GPS_SERVICE_TENANT_ID.
+    GPS_SERVICE_TOKEN: str = ""
+    GPS_SERVICE_TENANT_ID: str = ""
+
     # Email (Gmail SMTP — use an App Password, not your account password)
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587

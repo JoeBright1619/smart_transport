@@ -2,7 +2,12 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import get_current_tenant, get_current_user, require_role
+from app.core.dependencies import (
+    get_current_tenant,
+    get_current_user,
+    get_tenant_or_service,
+    require_role,
+)
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, APIResponse, Meta
@@ -20,7 +25,6 @@ router = APIRouter(prefix="/api/v1/vehicles", tags=["vehicles"])
 @router.get(
     "",
     response_model=PaginatedResponse[VehicleRead],
-    dependencies=[Depends(require_role("admin", "operator", "dispatcher"))],
     summary="List vehicles",
     description="Returns a paginated list of fleet vehicles. Filter by `status` or `routeId`.",
 )
@@ -30,7 +34,7 @@ async def list_vehicles(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
-    tenant: Tenant = Depends(get_current_tenant),
+    tenant: Tenant = Depends(get_tenant_or_service),
 ):
     vehicles, total = await vehicle_service.get_vehicles(
         db, tenant.id, status_filter, route_id, page, page_size
