@@ -171,39 +171,47 @@ def require_role(*roles: str) -> Callable[[User], Awaitable[User]]:
     return dependency
 
 
-async def get_tenant_or_service(
-    db: Annotated[AsyncSession, Depends(get_db)],
-    x_service_token: Annotated[str | None, Header(alias="X-Service-Token")] = None,
-    credentials: Annotated[
-        HTTPAuthorizationCredentials | None, Depends(security)
-    ] = None,
-) -> Tenant:
-    """Resolve the current tenant via service token OR user JWT.
+# backend/app/core/dependencies.py
 
-    Service token path (header present) takes precedence.
-    Falls back to normal user authentication when no service token is sent.
+
+def get_tenant_or_service(
+    *,
+    required_scope: str = "vehicles:read",
+) -> Callable[..., Awaitable[Tenant]]:
+    """Dependency factory: authenticate as a tenant via service token or JWT.
+
+    Service-token path enforces `required_scope`; user path enforces role.
     """
-    if x_service_token:
-        tenant = await _resolve_service_token(
-            db, x_service_token, required_scope="vehicles:read"
-        )
-        if tenant is not None:
-            return tenant
-        # If a service token was sent but invalid, don't silently fall back to JWT.
-        _raise_error(
-            status.HTTP_401_UNAUTHORIZED,
-            "UNAUTHORIZED",
-            "Invalid or inactive service token",
-        )
 
-    user = await get_current_user(credentials=credentials, db=db)
-    if user.role not in {"admin", "operator", "dispatcher"}:
-        _raise_error(
-            status.HTTP_403_FORBIDDEN,
-            "FORBIDDEN",
-            "User does not have permission to access this resource",
-        )
-    return await get_current_tenant(current_user=user, db=db)
+    async def dependency(
+        db: Annotated[AsyncSession, Depends(get_db)],
+        x_service_token: Annotated[str | None, Header(alias="X-Service-Token")] = None,
+        credentials: Annotated[
+            HTTPAuthorizationCredentials | None, Depends(security)
+        ] = None,
+    ) -> Tenant:
+        if x_service_token:
+            tenant = await _resolve_service_token(
+                db, x_service_token, required_scope=required_scope
+            )
+            if tenant is not None:
+                return tenant
+            _raise_error(
+                status.HTTP_401_UNAUTHORIZED,
+                "UNAUTHORIZED",
+                "Invalid or inactive service token",
+            )
+
+        user = await get_current_user(credentials=credentials, db=db)
+        if user.role not in {"admin", "operator", "dispatcher"}:
+            _raise_error(
+                status.HTTP_403_FORBIDDEN,
+                "FORBIDDEN",
+                "User does not have permission to access this resource",
+            )
+        return await get_current_tenant(current_user=user, db=db)
+
+    return dependency
 
 
 async def _resolve_service_token(

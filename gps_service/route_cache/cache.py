@@ -66,9 +66,7 @@ class RouteCache:
 
         url = f"{self.backend_url}/api/v1/routes/{route_id}"
 
-        headers = {
-            "Authorization": f"Bearer {token}",
-        }
+        headers = {"X-Service-Token": token} if token else {}
 
         async with session.get(url, headers=headers) as response:
             response.raise_for_status()

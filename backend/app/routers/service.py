@@ -18,7 +18,7 @@ router = APIRouter(prefix="/api/v1/service", tags=["service"])
     ),
 )
 async def whoami(
-    tenant: Tenant = Depends(get_tenant_or_service),
+    tenant: Tenant = Depends(get_tenant_or_service()),
 ) -> APIResponse[WhoAmIResponse]:
     return APIResponse(
         data=WhoAmIResponse(tenant_id=tenant.id, tenant_name=tenant.name)

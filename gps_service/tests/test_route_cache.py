@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -147,3 +147,45 @@ async def test_invalidate_removes_cached_route():
     assert cache._fetch_route_stops.await_count == 2
 
     await cache.close()
+
+
+@pytest.mark.asyncio
+async def test_fetch_route_stops_sends_service_token_header_and_parses():
+    payload = {
+        "data": {
+            "id": "route-001",
+            "stops": [
+                {"id": "stop-a", "name": "A", "lat": -1.9, "lng": 30.0, "order": 1},
+                {"id": "stop-b", "name": "B", "lat": -1.95, "lng": 30.1, "order": 2},
+            ],
+        }
+    }
+
+    # Fake aiohttp session / response.
+    response = MagicMock()
+    response.raise_for_status = MagicMock()
+    response.json = AsyncMock(return_value=payload)
+
+    ctx = MagicMock()
+    ctx.__aenter__ = AsyncMock(return_value=response)
+    ctx.__aexit__ = AsyncMock(return_value=None)
+
+    session = MagicMock()
+    session.closed = False
+    session.get = MagicMock(return_value=ctx)
+
+    cache = RouteCache(backend_url="http://localhost:8000")
+    cache._session = session  # bypass _get_session
+
+    stops = await cache.get_route_stops("route-001", token="stk_live_xxx")
+
+    # Assert URL + header.
+    args, kwargs = session.get.call_args
+    url = args[0] if args else kwargs["url"]
+    assert url == "http://localhost:8000/api/v1/routes/route-001"
+    assert kwargs["headers"] == {"X-Service-Token": "stk_live_xxx"}
+
+    # Assert parsing.
+    assert [s.stop_id for s in stops] == ["stop-a", "stop-b"]
+    assert [s.sequence for s in stops] == [1, 2]
+    assert stops[0].latitude == -1.9

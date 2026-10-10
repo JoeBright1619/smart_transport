@@ -2,7 +2,12 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import get_current_tenant, get_current_user, require_role
+from app.core.dependencies import (
+    get_current_tenant,
+    get_current_user,
+    get_tenant_or_service,
+    require_role,
+)
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, APIResponse, Meta
@@ -62,7 +67,7 @@ async def create_route(
 async def get_route(
     id: str,
     db: AsyncSession = Depends(get_db),
-    tenant: Tenant = Depends(get_current_tenant),
+    tenant: Tenant = Depends(get_tenant_or_service()),
 ):
     route = await route_service.get_route_by_id(db, id, tenant.id)
     return APIResponse(data=RouteRead.model_validate(route))

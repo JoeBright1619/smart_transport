@@ -34,7 +34,7 @@ async def list_vehicles(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
-    tenant: Tenant = Depends(get_tenant_or_service),
+    tenant: Tenant = Depends(get_tenant_or_service()),
 ):
     vehicles, total = await vehicle_service.get_vehicles(
         db, tenant.id, status_filter, route_id, page, page_size
