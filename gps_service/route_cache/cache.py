@@ -64,7 +64,7 @@ class RouteCache:
 
         session = await self._get_session()
 
-        url = f"{self.backend_url}/routes/{route_id}"
+        url = f"{self.backend_url}/api/v1/routes/{route_id}"
 
         headers = {
             "Authorization": f"Bearer {token}",

@@ -4,7 +4,7 @@ import asyncio
 import logging
 from datetime import UTC, datetime
 
-from gps_service.models.gps_data import GPSPosition
+from gps_service.models.gps_data import GPSPosition, VehicleState
 from gps_service.mqtt.publisher import MQTTPublisher
 from gps_service.route_cache.cache import RouteCache
 from gps_service.simulator.engine import SimulationEngine
@@ -177,3 +177,20 @@ class SimulatorOrchestrator:
                 )
 
                 await asyncio.sleep(MQTT_RETRY_DELAY_SECONDS)
+
+    def sync_vehicles(self, vehicles: list[VehicleState]) -> None:
+        """Reconcile the state manager against a fresh vehicle list.
+
+        Adds vehicles that are new, removes vehicles that disappeared.
+        Existing vehicles are left untouched (their simulation state must
+        survive across refreshes).
+        """
+        incoming = {v.vehicle_id: v for v in vehicles}
+        existing = {v.vehicle_id for v in self.state_manager.all()}
+
+        for vehicle_id, vehicle in incoming.items():
+            if vehicle_id not in existing:
+                self.state_manager.set(vehicle)
+
+        for vehicle_id in existing - incoming.keys():
+            self.state_manager.remove(vehicle_id)

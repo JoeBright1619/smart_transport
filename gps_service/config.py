@@ -27,6 +27,8 @@ class GPSServiceSettings(BaseSettings):
     # Synthetic device id assigned to each tracked vehicle
     DEVICE_ID_PREFIX: str = "sim"
 
+    VEHICLE_REFRESH_INTERVAL: float = 30.0
+
     model_config = SettingsConfigDict(
         env_file=_ENV_PATH,
         env_file_encoding="utf-8",
