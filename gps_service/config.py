@@ -5,6 +5,8 @@ _ENV_PATH = Path(__file__).resolve().parent / ".env"
 
 
 class GPSServiceSettings(BaseSettings):
+    API_HOST: str = "0.0.0.0"  # nosec B104
+    API_PORT: int = 8001
     MQTT_BROKER_URL: str = "localhost"
     MQTT_BROKER_PORT: int = 1883
     MQTT_USERNAME: str = ""

@@ -119,3 +119,7 @@ class MQTTPublisher:
 
         if result.rc != mqtt.MQTT_ERR_SUCCESS:
             raise RuntimeError(f"MQTT publish failed with return code {result.rc}")
+
+    @property
+    def connected(self) -> bool:
+        return self._connected

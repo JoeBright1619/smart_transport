@@ -11,7 +11,7 @@
 
 # GPS Service Extraction Guide
 
-**Current Task:** Phase 3, Task 3.6: Create GPS service directory structure
+**Current Task:** Phase 4, Task 4.3: Add vehicle management endpoints
 
 ---
 
@@ -301,13 +301,13 @@ Before marking any task complete:
 
 ### Tasks
 
-- [ ] **Task 4.1: Create main.py entry point**
+- [x] **Task 4.1: Create main.py entry point**
   - Create `gps_service/main.py`
   - Initialize config, MQTT client, state manager
   - Start main simulation loop
   - **Commit:** `feat(gps-service): add main entry point`
 
-- [ ] **Task 4.2: Create FastAPI app for GPS service**
+- [x] **Task 4.2: Create FastAPI app for GPS service**
   - Create `gps_service/api/app.py`
   - Add health check endpoint: `GET /health`
   - Add status endpoint: `GET /status`
