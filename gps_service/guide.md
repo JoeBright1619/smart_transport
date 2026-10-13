@@ -319,7 +319,7 @@ Before marking any task complete:
   - `DELETE /vehicles/{vehicle_id}` - Remove vehicle
   - **Commit:** `feat(gps-service): add vehicle management endpoints`
 
-- [ ] **Task 4.4: Implement graceful shutdown**
+- [x] **Task 4.4: Implement graceful shutdown**
   - Handle SIGTERM, SIGINT signals
   - Disconnect MQTT client
   - Save state if needed

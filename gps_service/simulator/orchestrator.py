@@ -146,6 +146,14 @@ class SimulatorOrchestrator:
             topic=topic,
             payload=position.model_dump(mode="json"),
         )
+        logger.debug(
+            "Published position for %s: lat=%.5f lng=%.5f speed=%.1f heading=%.1f",
+            position.vehicle_id,
+            position.latitude,
+            position.longitude,
+            position.speed,
+            position.heading,
+        )
 
     async def _publish_with_retry(
         self,
@@ -159,6 +167,7 @@ class SimulatorOrchestrator:
                     payload=payload,
                     qos=1,
                 )
+
                 return
             except Exception:
                 if attempt == MQTT_MAX_RETRIES:
