@@ -39,10 +39,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
-
     volumes:
       - ./backend:/app
-
     environment:
       DEBUG: "true"
       SECRET_KEY: dev-secret-key-change-in-production-32chars
@@ -59,11 +57,49 @@ services:
       MQTT_CLIENT_ID: smart-transport-backend
       MQTT_USERNAME: ""
       MQTT_PASSWORD: ""
-
+      # Bootstrap service token — shared with gps_service.
+      GPS_SERVICE_TOKEN: ${GPS_SERVICE_TOKEN}
+      GPS_SERVICE_TENANT_ID: ${GPS_SERVICE_TENANT_ID:-ten-demo-001}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('localhost', 8000), timeout=2)"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 15s
     depends_on:
       db:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      mqtt:
+        condition: service_started
+
+  gps_service:
+    build:
+      context: .
+      dockerfile: gps_service/Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      BACKEND_BASE_URL: http://backend:8000
+      BACKEND_SERVICE_TOKEN: ${GPS_SERVICE_TOKEN}
+      BACKEND_REQUEST_TIMEOUT: "10"
+      BACKEND_PAGE_SIZE: "50"
+      DEVICE_ID_PREFIX: "sim-"
+      MQTT_BROKER_URL: mqtt
+      MQTT_BROKER_PORT: "1883"
+      MQTT_CLIENT_ID: gps-service
+      MQTT_USERNAME: ""
+      MQTT_PASSWORD: ""
+      MQTT_RETRY_ATTEMPTS: "3"
+      MQTT_RETRY_DELAY: "2"
+      POLL_INTERVAL: "5"
+      VEHICLE_REFRESH_INTERVAL: "30"
+      SIMULATION_MODE: "true"
+      API_HOST: "0.0.0.0"
+      API_PORT: "8001"
+    depends_on:
+      backend:
         condition: service_healthy
       mqtt:
         condition: service_started
