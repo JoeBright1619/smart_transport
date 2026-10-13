@@ -24,6 +24,20 @@ def _envelope(data: Any) -> dict[str, Any]:
     return {"data": data, "meta": None, "error": None}
 
 
+async def _retry(call, *, attempts=10, delay=2.0, what="operation"):
+    last_exc = None
+    for attempt in range(1, attempts + 1):
+        try:
+            return await call()
+        except Exception as exc:
+            last_exc = exc
+            logger.warning("%s attempt %d/%d failed: %s", what, attempt, attempts, exc)
+            await asyncio.sleep(delay)
+    if last_exc is None:
+        raise RuntimeError("Retry loop ended without recording an exception")
+    raise last_exc
+
+
 async def _sync_loop(
     orchestrator: SimulatorOrchestrator,
     fetcher: VehicleFetcher,
@@ -39,7 +53,12 @@ async def _sync_loop(
             pass
 
         try:
-            vehicles = await fetcher.fetch_active_vehicles()
+            vehicles = await _retry(
+                lambda: fetcher.fetch_active_vehicles(),
+                attempts=10,
+                delay=2.0,
+                what="fetch_active_vehicles",
+            )
             orchestrator.sync_vehicles(vehicles)
             logger.info("Reconciled %d active vehicles", len(vehicles))
         except Exception:
@@ -53,10 +72,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
 
-    tenant_id = await resolve_tenant_id(
-        base_url=settings.BACKEND_BASE_URL,
-        service_token=settings.BACKEND_SERVICE_TOKEN,
-        timeout=settings.BACKEND_REQUEST_TIMEOUT,
+    tenant_id = await _retry(
+        lambda: resolve_tenant_id(
+            base_url=settings.BACKEND_BASE_URL,
+            service_token=settings.BACKEND_SERVICE_TOKEN,
+            timeout=settings.BACKEND_REQUEST_TIMEOUT,
+        ),
+        what="resolve_tenant_id",
     )
     logger.info("Resolved tenant_id=%s", tenant_id)
 
@@ -77,7 +99,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await fetcher.__aenter__()
 
     try:
-        vehicles = await fetcher.fetch_active_vehicles()
+        vehicles = await _retry(
+            lambda: fetcher.fetch_active_vehicles(),
+            attempts=10,
+            delay=2.0,
+            what="fetch_active_vehicles",
+        )
         for vehicle in vehicles:
             state_manager.set(vehicle)
         logger.info("Seeded %d active vehicles", len(vehicles))
