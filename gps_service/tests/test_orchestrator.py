@@ -158,11 +158,16 @@ async def test_tick_publishes_gps_position_payload(
 
     assert payload["vehicle_id"] == "vehicle-1"
     assert payload["device_id"] == "device-1"
-    assert payload["latitude"] == vehicle.latitude
-    assert payload["longitude"] == vehicle.longitude
-    assert payload["speed"] == vehicle.speed
-    assert payload["heading"] == vehicle.heading
-    assert isinstance(payload["timestamp"], str)
+    assert payload["tenant_id"] == "tenant-1"
+    assert payload["lat"] == vehicle.latitude
+    assert payload["lng"] == vehicle.longitude
+    assert payload["speed"] == int(round(vehicle.speed))
+    assert payload["heading"] == int(round(vehicle.heading)) % 360
+    assert payload["fuel"] == int(round(vehicle.fuel))
+    assert payload["engine_status"] == vehicle.engine_status
+    assert "timestamp" in payload
+    assert "latitude" not in payload
+    assert "longitude" not in payload
 
 
 @pytest.mark.asyncio

@@ -4,7 +4,8 @@ import asyncio
 import logging
 from datetime import UTC, datetime
 
-from gps_service.models.gps_data import GPSPosition, VehicleState
+from gps_service.models.gps_data import VehicleState
+from gps_service.mqtt.payload import to_backend_payload
 from gps_service.mqtt.publisher import MQTTPublisher
 from gps_service.route_cache.cache import RouteCache
 from gps_service.simulator.engine import SimulationEngine
@@ -130,29 +131,18 @@ class SimulatorOrchestrator:
 
         self.state_manager.set(updated_vehicle)
 
-        position = GPSPosition(
-            vehicle_id=updated_vehicle.vehicle_id,
-            device_id=updated_vehicle.device_id,
-            latitude=updated_vehicle.latitude,
-            longitude=updated_vehicle.longitude,
-            speed=updated_vehicle.speed,
-            heading=updated_vehicle.heading,
-            timestamp=now,
-        )
+        payload = to_backend_payload(updated_vehicle, now)
         topic = (
             f"gps/{updated_vehicle.tenant_id}/" f"{updated_vehicle.vehicle_id}/position"
         )
-        await self._publish_with_retry(
-            topic=topic,
-            payload=position.model_dump(mode="json"),
-        )
+        await self._publish_with_retry(topic=topic, payload=payload)
         logger.debug(
             "Published position for %s: lat=%.5f lng=%.5f speed=%.1f heading=%.1f",
-            position.vehicle_id,
-            position.latitude,
-            position.longitude,
-            position.speed,
-            position.heading,
+            updated_vehicle.vehicle_id,
+            updated_vehicle.latitude,
+            updated_vehicle.longitude,
+            updated_vehicle.speed,
+            updated_vehicle.heading,
         )
 
     async def _publish_with_retry(
