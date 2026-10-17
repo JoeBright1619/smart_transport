@@ -6,4 +6,5 @@ strict = false
 exclude_dirs = [
     "tests",
     "gps_service/tests",
+    "passenger_service/tests"
 ]
