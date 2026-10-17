@@ -93,14 +93,14 @@ corresponding file in `gps_service/` and copy its shape.
 - [x] Create `passenger_service/requirements.txt` (mirror gps_service; drop
       anything not needed).
 - [x] Test: settings load from env with defaults.
-- [ ] Commit: `passenger_service: scaffold package and settings`
+- [x] Commit: `passenger_service: scaffold package and settings`
 
 ### Task 0.2 — Dockerfile and compose entry
-- [ ] Create `passenger_service/Dockerfile` (mirror `gps_service/Dockerfile`).
-- [ ] Add `passenger_service` service to root `docker-compose.yml`.
+- [x] Create `passenger_service/Dockerfile` (mirror `gps_service/Dockerfile`).
+- [x] Add `passenger_service` service to root `docker-compose.yml`.
       Reuse `GPS_SERVICE_TOKEN` bootstrap token for auth (see 5.1a).
-- [ ] Test: `docker compose build passenger_service` succeeds.
-- [ ] Commit: `passenger_service: add Dockerfile and compose service`
+- [x] Test: `docker compose build passenger_service` succeeds.
+- [x] Commit: `passenger_service: add Dockerfile and compose service`
 
 ---
 
