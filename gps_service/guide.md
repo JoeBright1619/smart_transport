@@ -330,7 +330,7 @@ Before marking any task complete:
   - Log vehicle tracking, position updates, errors
   - **Commit:** `feat(gps-service): add structured logging`
 
-- [ ] **Task 4.6: Create Docker configuration**
+- [x] **Task 4.6: Create Docker configuration**
   - Create `gps_service/docker/Dockerfile`
   - Create `docker-compose.yml` for GPS service + Mosquitto
   - **Commit:** `feat(gps-service): add Docker configuration`
