@@ -228,12 +228,12 @@ corresponding file in `gps_service/` and copy its shape.
 - [ ] Commit: `passenger_service: add passenger simulation engine`
 
 ### Task 4.4 — Occupancy event model
-- [ ] Create `passenger_service/models/occupancy.py` with `OccupancyEvent`
+- [x] Create `passenger_service/models/occupancy.py` with `OccupancyEvent`
       Pydantic model per design.md §6. Include `build_occupancy_event(...)`
       helper that constructs it with both timestamps and the derived
       `idempotency_key`.
-- [ ] Test: field validation, idempotency key format, timestamp serialisation.
-- [ ] Commit: `passenger_service: add occupancy event model`
+- [x] Test: field validation, idempotency key format, timestamp serialisation.
+- [x] Commit: `passenger_service: add occupancy event model`
 
 ---
 
