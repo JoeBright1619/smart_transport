@@ -107,21 +107,21 @@ corresponding file in `gps_service/` and copy its shape.
 ## Phase 1 — MQTT transport
 
 ### Task 1.1 — Publisher
-- [ ] Create `passenger_service/mqtt/publisher.py`, mirroring
+- [x] Create `passenger_service/mqtt/publisher.py`, mirroring
       `gps_service/mqtt/publisher.py`. Same API: `connect`, `disconnect`,
       `publish(topic, payload, qos, retain)`.
-- [ ] Test: mocked paho client; connect/publish/disconnect call the right
+- [x] Test: mocked paho client; connect/publish/disconnect call the right
       methods; publish retries on failure.
-- [ ] Commit: `passenger_service: add MQTT publisher`
+- [x] Commit: `passenger_service: add MQTT publisher`
 
 ### Task 1.2 — Subscriber
-- [ ] Create `passenger_service/mqtt/subscriber.py`. Wraps paho-mqtt with
+- [x] Create `passenger_service/mqtt/subscriber.py`. Wraps paho-mqtt with
       a background loop, accepts a `(topic, payload) -> Awaitable[None]`
       callback. Runs the callback on the asyncio loop via
       `run_coroutine_threadsafe`, mirroring the backend's existing subscriber.
-- [ ] Test: mocked client; a published message invokes the callback with
+- [x] Test: mocked client; a published message invokes the callback with
       the parsed JSON.
-- [ ] Commit: `passenger_service: add MQTT subscriber`
+- [x] Commit: `passenger_service: add MQTT subscriber`
 
 ---
 
