@@ -203,8 +203,7 @@ The route is fetched on demand. During the fetch, if the fetch fails (network er
 
 ### Inputs
 
-`PositionEvent` is the parsed position message. Field names below are the _snake_case_ names used by passenger_service internally; if the wire payload in `gps_service/mqtt/payload.py` is camelCase (`vehicleId`, `tenantId`, …), `PositionEvent` uses Pydantic field aliases to accept the wire names and expose the snake_case names. Fields: `vehicle_id`, `tenant_id`, `lat`, `lng`, `speed`, `timestamp`.
-`RouteStop` is imported from `gps_service.models.gps_data` (the `passenger_service` route cache re-exports it; do not duplicate the model).
+`PositionEvent` (passenger_service/models/position.py) is the parsed inbound MQTT position message published by gps_service. It is a Pydantic v2 BaseModel with exactly six fields, all named in snake_case to match both the design and the wire: `vehicle_id, tenant_id, lat, lng, speed, timestamp`. The wire contract is owned by `gps_service/mqtt/payload.py` (to_backend_payload), which mirrors the backend's GPSPositionUpdate schema; its field names are snake_case and require no aliases. lat and lng are constrained to [-90, 90] and [-180, 180]; speed is constrained to >= 0; timestamp is an ISO 8601 datetime. The wire carries additional fields (device_id, heading, fuel, engine_status, source) that PositionEvent intentionally does not model; they are ignored on parse (extra="ignore"). The two services mirror each other's conventions but do not share code — position.py imports nothing from gps_service.
 Its fields are:
     stop_id: str
     latitude: float     # -90..90

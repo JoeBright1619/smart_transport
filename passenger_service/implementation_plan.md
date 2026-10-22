@@ -161,15 +161,15 @@ on macOS/Linux use ./.venv/bin/python -m pytest -q.
 - [x] Commit: `passenger_service: add MQTT subscriber`
 
 ### Task 1.3 — Position event model
-- [ ] Create `passenger_service/models/position.py` with `PositionEvent`
+- [x] Create `passenger_service/models/position.py` with `PositionEvent`
       (Pydantic): `vehicle_id`, `tenant_id`, `lat`, `lng`, `speed`,
       `timestamp`. Mirror the fields of `gps_service/mqtt/payload.py`
       (confirm exact names there). If the wire names differ from the
       design's snake_case assumption, use Pydantic field aliases rather
       than renaming the internal fields — and update design §3 in the
       same commit.
-- [ ] Test: parses a representative payload; malformed payload raises.
-- [ ] Commit: `passenger_service: add position event model`
+- [x] Test: parses a representative payload; malformed payload raises.
+- [x] Commit: `passenger_service: add position event model`
 
 ---
 
