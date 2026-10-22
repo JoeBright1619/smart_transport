@@ -32,6 +32,7 @@ class PassengerServiceSettings(BaseSettings):
 
     # Passenger simulation (design doc §7)
     CRUSH_CAPACITY_FACTOR: float = 1.15
+    REVENUE_PER_KM: float = 60.0
 
     model_config = SettingsConfigDict(
         env_file=_ENV_PATH,
