@@ -176,14 +176,14 @@ on macOS/Linux use ./.venv/bin/python -m pytest -q.
 ## Phase 2 — Backend contract additions
 
 ### Task 2.1 — OccupancyEvent schema and models
-- [ ] `backend/app/schemas/occupancy.py` — `OccupancyEvent` Pydantic model.
+- [x] `backend/app/schemas/occupancy.py` — `OccupancyEvent` Pydantic model.
       Author it against **design §5** (not against the not-yet-written
       Task 4.4 model; Task 4.5 brings the wire model into line). It must
       match `passenger_service/models/occupancy.py` field-for-field once
       4.5 lands, including
       `boarded_passenger_ids: list[str] = []`, `alighted_passenger_ids: list[str] = []`,
       `revenue_delta: float = Field(default=0.0, ge=0.0)`.
-- [ ] `backend/app/models/occupancy_event.py` — `OccupancyEvent` SQLAlchemy model per
+- [x] `backend/app/models/occupancy_event.py` — `OccupancyEvent` SQLAlchemy model per
       design §8: `arrival_sequence` NOT NULL, `idempotency_key` UNIQUE,
       `revenue_delta NUMERIC(10,2) NOT NULL DEFAULT 0`. FKs: tenant → tenants
       (`ON DELETE RESTRICT`), vehicle → vehicles (`ON DELETE RESTRICT`). Column
@@ -191,16 +191,16 @@ on macOS/Linux use ./.venv/bin/python -m pytest -q.
       models, do not assume UUID vs. VARCHAR. Index on
       `(vehicle_id, arrival_sequence)` (for Task 2.2's query) and on
       `(tenant_id, position_timestamp)` (time-range queries).
-- [ ] `backend/app/models/boarding_passenger_event.py` — child model:
+- [x] `backend/app/models/boarding_passenger_event.py` — child model:
       `occupancy_event_id` FK (ON DELETE CASCADE), `passenger_id` FK → users
       (nullable, `ON DELETE SET NULL` — a deleted user must not delete the
       audit row), `event_type` ENUM('boarded','alighted').
-- [ ] Update `backend/app/models/__init__.py` — export both new models.
-- [ ] Alembic migration for both new tables.
-- [ ] Test: schema validates a representative payload and applies defaults for
+- [x] Update `backend/app/models/__init__.py` — export both new models.
+- [x] Alembic migration for both new tables.
+- [x] Test: schema validates a representative payload and applies defaults for
       the optional fields; migration applies; `boarding_passenger_events` rows
       cascade-delete with the parent.
-- [ ] Commit: `backend: add occupancy schema, models, and migration`
+- [x] Commit: `backend: add occupancy schema, models, and migration`
 
 ### Task 2.2 — Latest-arrival-sequence endpoint
 - [ ] Add `GET /api/v1/vehicles/{vehicle_id}/latest-arrival-sequence`
