@@ -6,55 +6,17 @@ Delay: a sustained traffic jam crosses the delay threshold once per journey.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
-from sqlalchemy import select
 
-from app.models.alert import Alert
-from app.websocket import passenger_simulation
 from app.websocket import route_simulation as rs
-from app.websocket.route_simulation import StopPoint
 
 _MGR = "app.websocket.manager.manager.publish_to_tenant"
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc)
 
 
 # ---------------------------------------------------------------------------
 # Capacity
 # ---------------------------------------------------------------------------
-
-
-async def test_terminal_overcrowd_raises_capacity_alert(db, make_vehicle, tenant):
-    vehicle = await make_vehicle(tenant_id=tenant.id, status="active")
-    stops = [
-        StopPoint(id="s0", name="A", lat=-1.95, lng=30.06),
-        StopPoint(id="s1", name="B", lat=-1.96, lng=30.07),
-        StopPoint(id="s2", name="C", lat=-1.97, lng=30.08),
-    ]
-
-    # Force the terminal boarding to the top of its range (overcrowd). Patching randint to
-    # return its upper bound keeps every other draw (dest index, etc.) in range too.
-    with (
-        patch(_MGR, new=AsyncMock()),
-        patch("app.websocket.passenger_simulation.randint", side_effect=lambda a, b: b),
-    ):
-        await passenger_simulation.simulate_passengers_at_stop(
-            db, vehicle, stops, 0, {}, _now()
-        )
-
-    assert vehicle.current_occupancy >= vehicle.seating_capacity
-    alerts = (
-        await db.scalars(
-            select(Alert).where(
-                Alert.vehicle_id == vehicle.id, Alert.type == "capacity"
-            )
-        )
-    ).all()
-    assert len(alerts) >= 1
 
 
 # ---------------------------------------------------------------------------

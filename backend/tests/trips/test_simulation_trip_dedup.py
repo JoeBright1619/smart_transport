@@ -157,7 +157,7 @@ async def test_advance_vehicle_ensures_active_trip(
             RouteStop(route_id=route.id, stop_id=s2.id, stop_order=1),
         ]
     )
-    await db.commit()
+    await db.flush()
 
     driver = await make_driver(tenant_id=tenant.id, status="on-trip")
     vehicle = await make_vehicle(

@@ -54,7 +54,7 @@ async def _route_with_two_stops(db: AsyncSession, make_route, tenant):
             RouteStop(route_id=route.id, stop_id=s2.id, stop_order=1),
         ]
     )
-    await db.commit()
+    await db.flush()
     route_simulation._route_stops_cache.pop(route.id, None)
     return route, s1, s2
 
@@ -191,7 +191,7 @@ async def test_journey_auto_ends_after_planned_loops(
     )
     vehicle.planned_loops = 1
     vehicle.completed_loops = 0
-    await db.commit()
+    await db.flush()
     route_simulation.clear_vehicle_state(vehicle.id)
 
     with patch(_PUBLISH, new=AsyncMock()):
@@ -240,7 +240,7 @@ async def test_uncapped_journey_keeps_running(
     )
     vehicle.planned_loops = None  # uncapped → loops indefinitely
     vehicle.completed_loops = 0
-    await db.commit()
+    await db.flush()
     route_simulation.clear_vehicle_state(vehicle.id)
 
     with patch(_PUBLISH, new=AsyncMock()):

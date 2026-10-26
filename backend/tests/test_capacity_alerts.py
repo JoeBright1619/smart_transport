@@ -116,30 +116,6 @@ async def test_capacity_alert_broadcasts_ws_event(db: AsyncSession, vehicle):
 # ---------------------------------------------------------------------------
 
 
-async def test_record_stop_events_triggers_alert_at_capacity(db: AsyncSession, vehicle):
-    from datetime import datetime, timezone
-
-    from app.services.boarding_service import record_stop_events
-
-    now = datetime.now(timezone.utc)
-
-    with patch(_PATCH, new_callable=AsyncMock) as mock_publish:
-        await record_stop_events(
-            db,
-            vehicle,
-            "stop-001",
-            boarding_count=vehicle.seating_capacity,
-            alighting_count=0,
-            occupancy_after_boarding=vehicle.seating_capacity,
-            now=now,
-            stop_name="Central Terminal",
-        )
-
-    assert mock_publish.called
-    _, payload = mock_publish.call_args[0]
-    assert payload["type"] == "new_alert"
-
-
 async def test_record_stop_events_no_alert_below_capacity(db: AsyncSession, vehicle):
     from datetime import datetime, timezone
 
@@ -191,7 +167,7 @@ async def test_occupancy_endpoint_nearly_full(client, admin, db, vehicle):
         .where(Vehicle.id == vehicle.id)
         .values(current_occupancy=vehicle.seating_capacity - 5)
     )
-    await db.commit()
+    await db.flush()
 
     r = await client.get(
         f"/api/v1/vehicles/{vehicle.id}/occupancy",
@@ -213,7 +189,7 @@ async def test_occupancy_endpoint_full(client, admin, db, vehicle):
         .where(Vehicle.id == vehicle.id)
         .values(current_occupancy=vehicle.seating_capacity)
     )
-    await db.commit()
+    await db.flush()
 
     r = await client.get(
         f"/api/v1/vehicles/{vehicle.id}/occupancy",

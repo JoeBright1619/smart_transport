@@ -43,7 +43,7 @@ async def alert(db, tenant, vehicle):
         is_acknowledged=False,
     )
     db.add(a)
-    await db.commit()
+    await db.flush()
     return a
 
 
@@ -106,8 +106,7 @@ async def test_acknowledge_returns_404_unknown(client, admin):
 # ---------------------------------------------------------------------------
 
 
-async def test_auto_generate_delay(db, tenant, vehicle, make_driver):
-    driver = await make_driver(tenant_id=tenant.id)
+async def test_auto_generate_delay(db, tenant, vehicle, driver_user, route):
     # Case 1: no active trip
     alert = await alert_service.auto_generate(db, tenant.id, "delay", vehicle.id)
     assert alert is None
@@ -117,8 +116,8 @@ async def test_auto_generate_delay(db, tenant, vehicle, make_driver):
         id="trip-1",
         tenant_id=tenant.id,
         vehicle_id=vehicle.id,
-        route_id="route-1",
-        driver_id=driver.id,
+        route_id=route.id,
+        driver_id=driver_user.id,
         scheduled_start=datetime.now(timezone.utc),
         scheduled_end=datetime.now(timezone.utc),
         status="active",
@@ -127,14 +126,14 @@ async def test_auto_generate_delay(db, tenant, vehicle, make_driver):
         is_deleted=False,
     )
     db.add(trip1)
-    await db.commit()
+    await db.flush()
 
     alert = await alert_service.auto_generate(db, tenant.id, "delay", vehicle.id)
     assert alert is None
 
     # Case 3: active trip with delay > 5
     trip1.delay = 10
-    await db.commit()
+    await db.flush()
     alert = await alert_service.auto_generate(db, tenant.id, "delay", vehicle.id)
     assert alert is not None
     assert alert.type == "delay"
@@ -149,13 +148,13 @@ async def test_auto_generate_delay(db, tenant, vehicle, make_driver):
 async def test_auto_generate_breakdown(db, tenant, vehicle):
     # Case 1: engine status not critical
     vehicle.engine_status = "good"
-    await db.commit()
+    await db.flush()
     alert = await alert_service.auto_generate(db, tenant.id, "breakdown", vehicle.id)
     assert alert is None
 
     # Case 2: engine status critical
     vehicle.engine_status = "critical"
-    await db.commit()
+    await db.flush()
     alert = await alert_service.auto_generate(db, tenant.id, "breakdown", vehicle.id)
     assert alert is not None
     assert alert.type == "breakdown"
@@ -165,13 +164,13 @@ async def test_auto_generate_breakdown(db, tenant, vehicle):
 async def test_auto_generate_speeding(db, tenant, vehicle):
     # Case 1: speed <= 80
     vehicle.speed = 75
-    await db.commit()
+    await db.flush()
     alert = await alert_service.auto_generate(db, tenant.id, "speeding", vehicle.id)
     assert alert is None
 
     # Case 2: speed > 80
     vehicle.speed = 85
-    await db.commit()
+    await db.flush()
     alert = await alert_service.auto_generate(db, tenant.id, "speeding", vehicle.id)
     assert alert is not None
     assert alert.type == "speeding"
@@ -229,7 +228,7 @@ async def test_get_alerts_filtering_logic(db, tenant):
         is_acknowledged=True,
     )
     db.add_all([a1, a2])
-    await db.commit()
+    await db.flush()
 
     # Filter by severity
     res, total = await alert_service.get_alerts(db, tenant.id, severity="high")
