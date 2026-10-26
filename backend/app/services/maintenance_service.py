@@ -84,7 +84,7 @@ async def create_maintenance_record(
     if not vehicle_res.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "Vehicle not found"),
+            detail=_error_detail("vehicle_not_found", "Vehicle not found"),
         )
 
     record = MaintenanceRecord(

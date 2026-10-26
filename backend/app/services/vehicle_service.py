@@ -9,6 +9,7 @@ from app.models.vehicle import Vehicle
 from app.schemas.vehicle import VehicleCreate, VehicleUpdate
 from app.services import audit_service, fleet_assignment, route_service, trip_service
 from app.services.fleet_position import ensure_vehicle_position
+from app.models.occupancy_event import OccupancyEvent
 
 
 def _error_detail(code: str, message: str) -> dict:
@@ -67,9 +68,38 @@ async def get_vehicle_by_id(
     if not vehicle:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "Vehicle not found"),
+            detail=_error_detail("vehicle_not_found", "Vehicle not found"),
         )
     return vehicle
+
+
+async def get_latest_arrival_sequence(
+    db: AsyncSession, vehicle_id: str, tenant_id: str
+) -> int:
+    """Return the highest occupancy-event arrival sequence for a vehicle.
+
+    Raises:
+        HTTPException(404, vehicle_not_found): unknown / cross-tenant vehicle.
+        HTTPException(404, no_arrival_records): vehicle exists, zero events.
+    """
+    # Validates existence and tenant ownership; raises vehicle_not_found.
+    await get_vehicle_by_id(db, vehicle_id, tenant_id)
+
+    result = await db.execute(
+        select(func.max(OccupancyEvent.arrival_sequence)).where(
+            OccupancyEvent.vehicle_id == vehicle_id,
+            OccupancyEvent.tenant_id == tenant_id,  # defense-in-depth
+        )
+    )
+    latest = result.scalar_one_or_none()
+    if latest is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=_error_detail(
+                "no_arrival_records", "No arrival records for vehicle"
+            ),
+        )
+    return latest
 
 
 async def create_vehicle(

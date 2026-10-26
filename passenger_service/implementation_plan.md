@@ -217,7 +217,7 @@ on macOS/Linux use ./.venv/bin/python -m pytest -q.
 The backend **already exposes a passengers endpoint**; this task confirms
 its contract and closes any gap, rather than adding a new route.
 
-- [ ] Read the existing endpoint in the backend (likely under
+- [x] Read the existing endpoint in the backend (likely under
       `backend/app/api/` — locate it before editing). Record in the task
       commit:
       - Exact path and HTTP method.
@@ -225,22 +225,50 @@ its contract and closes any gap, rather than adding a new route.
         `tenant_id`? If so, **the pool fetch must omit it** — see below).
       - Response shape (list of IDs vs. list of objects; field names).
       - Auth: what token/role it requires.
-- [ ] If the endpoint **requires** `tenant_id` and there is no tenant-agnostic
+- [x] If the endpoint **requires** `tenant_id` and there is no tenant-agnostic
       mode, add a query-parameter path (e.g. `tenant_id` optional; omitted
       = universal pool) — do **not** add a second endpoint. Document the
       new behaviour in the endpoint's docstring.
-- [ ] If the endpoint's response is not a flat list of passenger IDs
+- [x] If the endpoint's response is not a flat list of passenger IDs
       (`["u1", "u2", ...]`), add a thin projection in
       `passenger_service/passenger_pool/fetcher.py` (Task 3.4) that
       extracts IDs. Do **not** change the backend's response shape — other
       consumers may depend on it.
-- [ ] Confirm the endpoint returns **passengers** (`role=passenger`), not
+- [x] Confirm the endpoint returns **passengers** (`role=passenger`), not
       all users (drivers, admins). If it returns all users, add role
       filtering to the request in Task 3.4.
-- [ ] Test (backend): the endpoint returns the universal pool when no
+- [x] Test (backend): the endpoint returns the universal pool when no
       `tenant_id` is supplied, and the tenant-scoped subset when it is.
       The universal response is a superset of every tenant's response.
-- [ ] Commit: `backend: confirm/extend passenger pool endpoint for universal use`
+- [x] Commit: `backend: confirm/extend passenger pool endpoint for universal use`
+
+
+### Task 2.4 — Error-code consistency sweep across backend services
+**Scope.** Task 2.2 migrated the vehicle-not-found code from `"NOT_FOUND" → "vehicle_not_found"` in three services (vehicle_service, fleet_assignment, trip_service).
+ The remaining ~27 **"NOT_FOUND"** sites across 11 services and two error-body shapes remain. This task completes the sweep.
+
+- [ ] Decide whether the canonical error-body shape is `{"detail": {"code": ..., "message": ...}} (FastAPI default, ~28 sites) or {"error": {"code": ..., "message": ...}} (alert_service:55, tenant_service:83)`. Client-contract decision; confirm with the API consumer before proceeding.
+
+- [ ] Rename every **"NOT_FOUND"** in `backend/app/services/` to a specific snake_case code:
+      stop_not_found, driver_not_found, route_not_found, trip_not_found, user_not_found, tenant_not_found, tenant_admin_not_found, alert_not_found, maintenance_record_not_found, passenger_not_found, account_not_found, stops_not_found (for the plural case in route_service:186).
+
+- [ ] Unify the error-body shape per the decision above.
+
+- [ ] Add `backend/app/core/error_codes.py` with a named     constant per code, and reference constants rather than string literals in services (prevents recurrence).
+
+- [ ] Update every test asserting on **"NOT_FOUND"** — currently `tests/test_tenant_service.py:86`, plus any others surfaced by running the suite.
+
+- [ ] Verify no external client (frontend, API docs, integrations) matches on **"NOT_FOUND"** before merging. If any do, coordinate a compatible release or add a shim.
+
+- [ ] Update API docs (if docs/ exists) to enumerate codes per endpoint.
+
+- [ ] Commit: `backend: use resource-specific error codes for 404s.`
+
+**Constraints.** No HTTP status changes, no error-message changes, no changes to response models or router signatures, no renaming of non-404 codes (FORBIDDEN, CONFLICT, VALIDATION_ERROR) — those may warrant their own task.
+
+**Wire casing for error codes.** Error codes are snake_case in the body (`"vehicle_not_found"`, `"NOT_FOUND"`) even though response models serialize to camelCase (`arrivalSequence`, `pageSize`). Decide whether codes should follow the camelCase convention (`"vehicleNotFound"`) or stay snake_case (current). **Recommendation: stay snake_case** — error codes are identifiers, not display strings, and `gps_handler.py:54` already uses `"vehicle_not_found"` (snake_case). Snake_case codes are also easier to grep for in client code. Confirm and document; if camelCase is chosen, all codes and every test that asserts on them change together.
+
+**Risk.** Client compatibility (any consumer matching on "NOT_FOUND"); test surface (expect 5–20 stale assertions to update, all mechanical).
 
 ---
 

@@ -88,3 +88,7 @@ class VehicleOccupancyRead(APIModel):
     current_occupancy: int = Field(json_schema_extra={"example": 38})
     remaining_seats: int = Field(json_schema_extra={"example": 7})
     status: OccupancyStatus = Field(json_schema_extra={"example": "nearly_full"})
+
+
+class LatestArrivalSequenceRead(APIModel):
+    arrival_sequence: int

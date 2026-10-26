@@ -49,7 +49,7 @@ async def _get_vehicle(db: AsyncSession, vehicle_id: str, tenant_id: str) -> Veh
     if vehicle is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "Vehicle not found"),
+            detail=_error_detail("vehicle_not_found", "Vehicle not found"),
         )
     return vehicle
 

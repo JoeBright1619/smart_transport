@@ -12,6 +12,7 @@ from app.models.tenant import Tenant
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, APIResponse, Meta
 from app.schemas.vehicle import (
+    LatestArrivalSequenceRead,
     VehicleCreate,
     VehicleOccupancyRead,
     VehicleRead,
@@ -95,6 +96,26 @@ async def get_vehicle_occupancy(
             status=occ_status,
         )
     )
+
+
+@router.get(
+    "/{id}/latest-arrival-sequence",
+    response_model=APIResponse[LatestArrivalSequenceRead],
+    dependencies=[Depends(require_role("admin", "operator", "dispatcher"))],
+    summary="Get latest arrival sequence",
+    description=(
+        "Returns the highest arrival sequence recorded for this vehicle in "
+        "`occupancy_events`. Returns 404 with code `no_arrival_records` if "
+        "the vehicle has no events yet."
+    ),
+)
+async def get_vehicle_latest_arrival_sequence(
+    id: str,
+    db: AsyncSession = Depends(get_db),
+    tenant: Tenant = Depends(get_current_tenant),
+):
+    sequence = await vehicle_service.get_latest_arrival_sequence(db, id, tenant.id)
+    return APIResponse(data=LatestArrivalSequenceRead(arrival_sequence=sequence))
 
 
 @router.get(

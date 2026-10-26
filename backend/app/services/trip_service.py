@@ -90,7 +90,7 @@ async def create_trip(
     if not vehicle:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "Vehicle not found"),
+            detail=_error_detail("vehicle_not_found", "Vehicle not found"),
         )
     if vehicle.status in ("active", "maintenance", "offline"):
         raise HTTPException(

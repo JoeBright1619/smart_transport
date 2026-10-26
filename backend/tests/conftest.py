@@ -388,3 +388,42 @@ async def active_vehicle_at_stop(
 @pytest.fixture
 async def superadmin(make_user):
     return await make_user(tenant_id=None, role="superadmin")
+
+
+@pytest.fixture
+def make_occupancy_event(db: AsyncSession):
+    from datetime import UTC, datetime
+
+    from app.models.occupancy_event import OccupancyEvent
+
+    async def _create(
+        *,
+        tenant_id: str,
+        vehicle_id: str,
+        arrival_sequence: int,
+        stop_id: str = "stop-001",
+        route_id: str = "route-001",
+        onboard: int = 10,
+        boardings: int = 2,
+        alightings: int = 1,
+        revenue_delta: float = 0.0,
+    ) -> OccupancyEvent:
+        event = OccupancyEvent(
+            tenant_id=tenant_id,
+            vehicle_id=vehicle_id,
+            stop_id=stop_id,
+            route_id=route_id,
+            arrival_sequence=arrival_sequence,
+            boardings=boardings,
+            alightings=alightings,
+            onboard=onboard,
+            idempotency_key=f"{vehicle_id}:{stop_id}:{arrival_sequence}",
+            position_timestamp=datetime.now(UTC),
+            service_timestamp=datetime.now(UTC),
+            revenue_delta=revenue_delta,
+        )
+        db.add(event)
+        await db.commit()
+        return event
+
+    return _create
