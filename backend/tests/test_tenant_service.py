@@ -22,7 +22,7 @@ async def test_create_tenant_with_dict(db: AsyncSession):
     }
 
     tenant = await tenant_service.create_tenant(db, data)
-    await db.commit()
+    await db.flush()
     assert tenant.id is not None
     assert tenant.name == "Dict Transport"
     assert tenant.contact_email == "contact@dict.local"
@@ -53,7 +53,6 @@ async def test_create_tenant_duplicate_email(db: AsyncSession):
         "admin_full_name": "Admin One",
     }
     await tenant_service.create_tenant(db, data)
-    await db.commit()
 
     # Try creating with duplicate email
     data2 = {

@@ -52,7 +52,7 @@ async def _route_with_two_stops(db: AsyncSession, make_route, tenant):
             RouteStop(route_id=route.id, stop_id=s2.id, stop_order=1),
         ]
     )
-    await db.commit()
+    await db.flush()
     route_simulation._route_stops_cache.pop(route.id, None)
     return route, s1
 
@@ -73,7 +73,7 @@ async def test_fuel_does_not_refill_at_terminal(
     vehicle.planned_loops = None  # uncapped: keep looping, never auto-end/refuel
     vehicle.completed_loops = 0
     vehicle.fuel = 50
-    await db.commit()
+    await db.flush()
     route_simulation.clear_vehicle_state(vehicle.id)
 
     with patch(_PUBLISH, new=AsyncMock()):
@@ -127,7 +127,7 @@ async def test_auto_end_refuels_at_depot(
     vehicle.planned_loops = 1
     vehicle.completed_loops = 0
     vehicle.fuel = 30
-    await db.commit()
+    await db.flush()
     route_simulation.clear_vehicle_state(vehicle.id)
 
     with patch(_PUBLISH, new=AsyncMock()):

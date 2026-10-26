@@ -47,7 +47,7 @@ async def _add_boardings(
                 tenant_id=tenant_id,
             )
         )
-    await db.commit()
+    await db.flush()
 
 
 # ---------------------------------------------------------------------------
@@ -132,7 +132,7 @@ async def test_stats_favourite_stop_identified(
         is_deleted=False,
     )
     db.add(stop2)
-    await db.commit()
+    await db.flush()
 
     # 4 boardings at Central Station, 2 at Bus Terminal
     await _add_boardings(db, passenger_user.id, stop.id, tenant.id, 4)
@@ -180,7 +180,7 @@ async def test_stats_increments_profile_on_boarding(
     )
     db.add(vehicle)
     db.add(PassengerProfile(user_id=passenger_user.id, total_trips_recorded=0))
-    await db.commit()
+    await db.flush()
 
     from sqlalchemy import select
 
@@ -188,7 +188,7 @@ async def test_stats_increments_profile_on_boarding(
     await record_stop_events(
         db, vehicle, stop.id, 1, 0, 1, now, passenger_id=passenger_user.id
     )
-    await db.commit()
+    await db.flush()
 
     profile = await db.scalar(
         select(PassengerProfile).where(PassengerProfile.user_id == passenger_user.id)

@@ -71,7 +71,6 @@ async def create_tenant(db: AsyncSession, data: Any) -> Tenant:
         )
         db.add(admin_user)
 
-    await db.refresh(tenant)
     return tenant
 
 

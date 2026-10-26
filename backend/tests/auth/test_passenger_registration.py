@@ -182,7 +182,7 @@ async def pending_user(db: AsyncSession):
         otp_resent_at=_utc_now(),
     )
     db.add(user)
-    await db.commit()
+    await db.flush()
     return user, otp
 
 
@@ -234,7 +234,7 @@ async def test_verify_email_expired_otp_returns_400(client, db: AsyncSession):
         otp_resent_at=_utc_now() - timedelta(minutes=20),
     )
     db.add(user)
-    await db.commit()
+    await db.flush()
 
     r = await client.post(
         "/auth/verify-email",
@@ -288,7 +288,7 @@ async def test_resend_otp_happy_path_returns_200(client, db: AsyncSession):
         otp_resent_at=_utc_now() - timedelta(seconds=61),
     )
     db.add(user)
-    await db.commit()
+    await db.flush()
 
     r = await client.post("/auth/resend-otp", json={"email": "resend@test.local"})
     assert r.status_code == 200
@@ -309,7 +309,7 @@ async def test_resend_otp_rate_limit_returns_429(client, db: AsyncSession):
         otp_resent_at=_utc_now() - timedelta(seconds=10),
     )
     db.add(user)
-    await db.commit()
+    await db.flush()
 
     r = await client.post("/auth/resend-otp", json={"email": "ratelimit@test.local"})
     assert r.status_code == 429
@@ -332,7 +332,7 @@ async def test_resend_otp_already_verified_returns_409(client, db: AsyncSession)
             email_verified=True,
         )
     )
-    await db.commit()
+    await db.flush()
 
     r = await client.post("/auth/resend-otp", json={"email": "verified@test.local"})
     assert r.status_code == 409
@@ -355,7 +355,7 @@ async def test_login_blocked_for_pending_verification(client, db: AsyncSession):
         email_verified=False,
     )
     db.add(user)
-    await db.commit()
+    await db.flush()
 
     r = await client.post(
         "/auth/login",

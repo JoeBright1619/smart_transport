@@ -166,7 +166,7 @@ async def test_reassign_blocked_when_old_vehicle_active(
     )
     driver = await make_driver(tenant_id=tenant.id, vehicle_id=veh_a.id)
     veh_a.driver_id = driver.id
-    await db.commit()
+    await db.flush()
     veh_b = await make_vehicle(tenant_id=tenant.id)
 
     r = await client.patch(
@@ -190,7 +190,7 @@ async def test_swap_blocked_when_target_vehicle_active(
         lng=30.06,
     )
     driver_a.vehicle_id = veh.id
-    await db.commit()
+    await db.flush()
     driver_b = await make_driver(tenant_id=tenant.id)
 
     r = await client.patch(
@@ -236,7 +236,7 @@ async def test_unassign_blocked_when_vehicle_active(
         lng=30.06,
     )
     driver_user.vehicle_id = veh.id
-    await db.commit()
+    await db.flush()
 
     r = await client.patch(
         f"/api/v1/vehicles/{veh.id}",
@@ -258,7 +258,7 @@ async def test_driver_path_unassign_blocked_when_active(
         lng=30.06,
     )
     driver_user.vehicle_id = veh.id
-    await db.commit()
+    await db.flush()
 
     r = await client.patch(
         f"/api/v1/drivers/{driver_user.id}",

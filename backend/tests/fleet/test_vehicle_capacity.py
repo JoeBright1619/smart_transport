@@ -90,7 +90,7 @@ async def test_remaining_seats_computed_correctly(
     v = await db.scalar(select(Vehicle).where(Vehicle.id == vid))
     assert v is not None
     v.current_occupancy = 12
-    await db.commit()
+    await db.flush()
 
     r2 = await client.get(f"/api/v1/vehicles/{vid}", headers=auth_headers(admin_user))
     assert r2.status_code == 200
@@ -139,7 +139,7 @@ async def test_patch_current_occupancy_is_ignored(
 
 
 async def test_trip_completion_resets_current_occupancy(
-    db: AsyncSession, tenant, make_vehicle, make_driver, make_route
+    db: AsyncSession, tenant, make_vehicle, make_driver, make_route, dispatcher_user
 ):
     from datetime import datetime, timedelta, timezone
 
@@ -164,29 +164,29 @@ async def test_trip_completion_resets_current_occupancy(
             scheduled_end=now + timedelta(hours=1),
         ),
         tenant.id,
-        "user-test",
+        dispatcher_user.id,
     )
-    await db.commit()
+    await db.flush()
 
     # Activate trip
     from app.schemas.trip import TripUpdate
 
     await trip_service.update_trip(
-        db, trip.id, TripUpdate(status="active"), tenant.id, "user-test"
+        db, trip.id, TripUpdate(status="active"), tenant.id, dispatcher_user.id
     )
-    await db.commit()
+    await db.flush()
 
     # Set occupancy to simulate passengers on board
     v = await db.scalar(select(Vehicle).where(Vehicle.id == vehicle.id))
     assert v is not None
     v.current_occupancy = 15
-    await db.commit()
+    await db.flush()
 
     # Complete the trip
     await trip_service.update_trip(
-        db, trip.id, TripUpdate(status="completed"), tenant.id, "user-test"
+        db, trip.id, TripUpdate(status="completed"), tenant.id, dispatcher_user.id
     )
-    await db.commit()
+    await db.flush()
 
     await db.refresh(v)
     assert v.current_occupancy == 0

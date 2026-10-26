@@ -145,7 +145,7 @@ async def test_process_gps_update_triggers_low_fuel_alert(
     """Test that low fuel alert is triggered when fuel drops below threshold."""
     vehicle.fuel = 20
     db.add(vehicle)
-    await db.commit()
+    await db.flush()
 
     gps_data = make_gps_payload(vehicle, fuel=10)
 
@@ -211,7 +211,7 @@ async def test_no_low_fuel_alert_when_already_low(db, vehicle, make_gps_payload)
     """Test that low fuel alert is not triggered when already below threshold."""
     vehicle.fuel = 10
     db.add(vehicle)
-    await db.commit()
+    await db.flush()
 
     gps_data = make_gps_payload(vehicle, fuel=5)
 
@@ -281,7 +281,7 @@ async def test_process_gps_update_handles_deleted_vehicle(db, tenant, make_gps_p
         is_deleted=True,
     )
     db.add(vehicle)
-    await db.commit()
+    await db.flush()
 
     gps_data = make_gps_payload(vehicle)
 

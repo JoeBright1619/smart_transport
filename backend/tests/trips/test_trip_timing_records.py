@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.boarding_record import BoardingRecord
 from app.schemas.trip import ON_TIME_TOLERANCE_MIN, classify_delay
 from app.websocket.route_trip_records import complete_trip
+from sqlalchemy import text
 
 
 def _now() -> datetime:
@@ -44,16 +45,25 @@ async def _active_trip(
 
 
 async def test_passengers_sum_actual_boardings(
-    db: AsyncSession, make_trip, tenant, vehicle, route, driver_user
+    db: AsyncSession, make_trip, tenant, vehicle, route, make_stop, driver_user
 ):
     trip, now = await _active_trip(
         make_trip, tenant, vehicle, route, driver_user, started_ago_min=30
+    )
+
+    stop1 = await make_stop(
+        tenant_id=tenant.id,
+        name="Stop 1",
+    )
+    stop2 = await make_stop(
+        tenant_id=tenant.id,
+        name="Stop 2",
     )
     db.add_all(
         [
             BoardingRecord(
                 trip_id=trip.id,
-                stop_id="s1",
+                stop_id=stop1.id,
                 event_type="boarded",
                 count=8,
                 recorded_at=now,
@@ -62,7 +72,7 @@ async def test_passengers_sum_actual_boardings(
             ),
             BoardingRecord(
                 trip_id=trip.id,
-                stop_id="s2",
+                stop_id=stop2.id,
                 event_type="boarded",
                 count=5,
                 recorded_at=now,
@@ -72,7 +82,7 @@ async def test_passengers_sum_actual_boardings(
             # Alightings must not count toward ridership.
             BoardingRecord(
                 trip_id=trip.id,
-                stop_id="s2",
+                stop_id=stop2.id,
                 event_type="alighted",
                 count=4,
                 recorded_at=now,
@@ -81,6 +91,16 @@ async def test_passengers_sum_actual_boardings(
             ),
         ]
     )
+    for table, ids in [
+        ("stops", ["s1", "s2"]),
+        ("trips", [trip.id]),
+        ("tenants", [tenant.id]),
+    ]:
+        result = await db.execute(text(f"SELECT id FROM {table}"))
+        existing_ids = {row[0] for row in result.fetchall()}
+
+        missing = set(ids) - existing_ids
+        print(f"{table}: missing IDs = {missing}")
     await db.flush()
 
     await complete_trip(db, vehicle, {"current_trip_id": trip.id}, now)

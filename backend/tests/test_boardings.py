@@ -44,7 +44,7 @@ async def stop(tenant, db: AsyncSession):
         is_deleted=False,
     )
     db.add(s)
-    await db.commit()
+    await db.flush()
     return s
 
 
@@ -59,7 +59,7 @@ async def boarding(tenant, stop, db: AsyncSession):
         tenant_id=tenant.id,
     )
     db.add(rec)
-    await db.commit()
+    await db.flush()
     return rec
 
 
@@ -114,7 +114,7 @@ async def test_list_boardings_pagination(client, admin, stop, tenant, db: AsyncS
                 tenant_id=tenant.id,
             )
         )
-    await db.commit()
+    await db.flush()
 
     r = await client.get(
         "/api/v1/boardings?page=1&pageSize=2", headers=auth_headers(admin)
@@ -137,7 +137,7 @@ async def test_my_boardings_empty_for_anonymous(client, passenger):
 
 
 async def test_my_boardings_returns_own_records(
-    client, passenger, stop, db: AsyncSession
+    client, passenger, stop, db: AsyncSession, tenant
 ):
     rec = BoardingRecord(
         stop_id=stop.id,
@@ -146,10 +146,10 @@ async def test_my_boardings_returns_own_records(
         count=1,
         recorded_at=datetime.now(timezone.utc),
         occupancy_after=1,
-        tenant_id="tenant-x",
+        tenant_id=tenant.id,
     )
     db.add(rec)
-    await db.commit()
+    await db.flush()
 
     r = await client.get("/api/v1/boardings/me", headers=auth_headers(passenger))
     assert r.status_code == 200

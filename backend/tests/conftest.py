@@ -35,14 +35,30 @@ _TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 
 @pytest_asyncio.fixture
 async def test_engine():
+    from sqlalchemy import event
+
     engine = create_async_engine(
         _TEST_DB_URL,
         echo=False,
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
-    yield engine
-    await engine.dispose()
+
+    # SQLite disables foreign-key enforcement per connection. Turn it on so
+    # ON DELETE CASCADE / SET NULL semantics (used by occupancy_events →
+    # boarding_passenger_events and users → boarding_passenger_events) are
+    # actually enforced in tests, not silently ignored.
+    def _enable_sqlite_fks(dbapi_connection, _connection_record) -> None:
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
+    event.listen(engine.sync_engine, "connect", _enable_sqlite_fks)
+    try:
+        yield engine
+    finally:
+        event.remove(engine.sync_engine, "connect", _enable_sqlite_fks)
+        await engine.dispose()
 
 
 @pytest_asyncio.fixture
@@ -111,7 +127,7 @@ def make_tenant(db: AsyncSession):
             is_active=is_active,
         )
         db.add(tenant)
-        await db.commit()
+        await db.flush()
         return tenant
 
     return _create
@@ -143,7 +159,7 @@ def make_user(db: AsyncSession):
             is_deleted=False,
         )
         db.add(user)
-        await db.commit()
+        await db.flush()
         return user
 
     return _create
@@ -204,7 +220,7 @@ def make_route(db: AsyncSession):
             is_deleted=False,
         )
         db.add(route)
-        await db.commit()
+        await db.flush()
         return route
 
     return _create
@@ -263,7 +279,7 @@ def make_trip(db: AsyncSession):
             is_deleted=False,
         )
         db.add(trip)
-        await db.commit()
+        await db.flush()
         return trip
 
     return _create
@@ -291,7 +307,7 @@ def make_driver(db: AsyncSession):
             is_deleted=False,
         )
         db.add(driver)
-        await db.commit()
+        await db.flush()
         return driver
 
     return _create
@@ -319,7 +335,7 @@ def make_gps_device(db: AsyncSession):
             is_active=is_active,
         )
         db.add(device)
-        await db.commit()
+        await db.flush()
         return device
 
     return _create
@@ -356,7 +372,7 @@ async def active_vehicle_at_stop(
 ):
     route = await make_route(tenant_id=tenant.id)
     db.add(RouteStop(route_id=route.id, stop_id=stop.id, stop_order=1))
-    await db.commit()
+    await db.flush()
     vehicle = await make_vehicle(
         tenant_id=tenant.id,
         status="active",
@@ -365,7 +381,7 @@ async def active_vehicle_at_stop(
         lng=30.0585,
     )
     vehicle.speed = 30
-    await db.commit()
+    await db.flush()
     return vehicle
 
 

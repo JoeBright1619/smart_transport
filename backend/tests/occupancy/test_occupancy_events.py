@@ -145,7 +145,7 @@ def _make_event(
 async def test_model_roundtrip(db: AsyncSession, tenant, vehicle) -> None:
     event = _make_event(tenant_id=tenant.id, vehicle_id=vehicle.id)
     db.add(event)
-    await db.commit()
+    await db.flush()
 
     fetched = (
         await db.execute(select(OccupancyEvent).where(OccupancyEvent.id == event.id))
@@ -157,11 +157,11 @@ async def test_model_roundtrip(db: AsyncSession, tenant, vehicle) -> None:
 
 async def test_idempotency_key_is_unique(db: AsyncSession, tenant, vehicle) -> None:
     db.add(_make_event(tenant_id=tenant.id, vehicle_id=vehicle.id, key="dup-key"))
-    await db.commit()
+    await db.flush()
 
     db.add(_make_event(tenant_id=tenant.id, vehicle_id=vehicle.id, key="dup-key"))
     with pytest.raises(IntegrityError):
-        await db.commit()
+        await db.flush()
     await db.rollback()
 
 
@@ -191,11 +191,11 @@ async def test_children_cascade_delete_with_parent(
             ),
         ]
     )
-    await db.commit()
+    await db.flush()
 
     # Exercise the DB-level FK: DELETE the parent with SQL, not ORM cascade.
     await db.execute(delete(OccupancyEvent).where(OccupancyEvent.id == parent.id))
-    await db.commit()
+    await db.flush()
 
     remaining = (
         (
@@ -226,10 +226,10 @@ async def test_passenger_id_set_null_on_user_delete(
         event_type=BoardingEventType.boarded,
     )
     db.add(child)
-    await db.commit()
+    await db.flush()
 
     await db.execute(delete(User).where(User.id == user.id))
-    await db.commit()
+    await db.flush()
 
     await db.refresh(child)
     assert child.passenger_id is None

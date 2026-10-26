@@ -12,7 +12,7 @@ async def test_service_token_grants_tenant_access(
     _, plaintext = await issue_token(
         db, tenant_id=tenant.id, name="gps-sim-test", scopes="vehicles:read"
     )
-    await db.commit()
+    await db.flush()
 
     resp = await client.get(
         "/api/v1/vehicles?status=active",
@@ -26,11 +26,7 @@ async def test_service_token_grants_tenant_access(
 
 @pytest.mark.asyncio
 async def test_service_token_returns_only_its_tenant_vehicles(
-    client: AsyncClient,
-    tenant,
-    db: AsyncSession,
-    make_tenant,
-    make_vehicle,
+    client: AsyncClient, tenant, db: AsyncSession, make_tenant, make_vehicle, route
 ):
     # A second tenant whose vehicles must NOT leak into the first tenant's view
     other_tenant = await make_tenant(name="Other Co")
@@ -38,12 +34,12 @@ async def test_service_token_returns_only_its_tenant_vehicles(
     own_vehicle = await make_vehicle(
         tenant_id=tenant.id,
         status="active",
-        route_id="route-1",
+        route_id=route.id,
     )
     other_vehicle = await make_vehicle(
         tenant_id=other_tenant.id,
         status="active",
-        route_id="route-1",
+        route_id=route.id,
     )
 
     _, plaintext = await issue_token(
@@ -52,7 +48,7 @@ async def test_service_token_returns_only_its_tenant_vehicles(
         name="gps-sim-test",
         scopes="vehicles:read",
     )
-    await db.commit()
+    await db.flush()
 
     resp = await client.get(
         "/api/v1/vehicles?status=active",
@@ -69,23 +65,19 @@ async def test_service_token_returns_only_its_tenant_vehicles(
 
 @pytest.mark.asyncio
 async def test_each_service_token_sees_only_its_own_tenant_vehicles(
-    client: AsyncClient,
-    tenant,
-    db: AsyncSession,
-    make_tenant,
-    make_vehicle,
+    client: AsyncClient, tenant, db: AsyncSession, make_tenant, make_vehicle, route
 ):
     other_tenant = await make_tenant(name="Other Co")
 
     own_vehicle = await make_vehicle(
         tenant_id=tenant.id,
         status="active",
-        route_id="route-1",
+        route_id=route.id,
     )
     other_vehicle = await make_vehicle(
         tenant_id=other_tenant.id,
         status="active",
-        route_id="route-1",
+        route_id=route.id,
     )
 
     _, token_a = await issue_token(
@@ -94,7 +86,7 @@ async def test_each_service_token_sees_only_its_own_tenant_vehicles(
     _, token_b = await issue_token(
         db, tenant_id=other_tenant.id, name="b", scopes="vehicles:read"
     )
-    await db.commit()
+    await db.flush()
 
     resp_a = await client.get(
         "/api/v1/vehicles?status=active",
@@ -129,7 +121,7 @@ async def test_inactive_service_token_is_401(
         db, tenant_id=tenant.id, name="revoked", scopes="vehicles:read"
     )
     row.is_active = False
-    await db.commit()
+    await db.flush()
 
     resp = await client.get(
         "/api/v1/vehicles?status=active",
@@ -145,7 +137,7 @@ async def test_token_without_required_scope_is_403(
     _, plaintext = await issue_token(
         db, tenant_id=tenant.id, name="wrong-scope", scopes="telemetry:read"
     )
-    await db.commit()
+    await db.flush()
 
     resp = await client.get(
         "/api/v1/vehicles?status=active",

@@ -12,7 +12,7 @@ async def test_whoami_returns_token_tenant(
     _, plaintext = await issue_token(
         db, tenant_id=tenant.id, name="gps-sim-test", scopes="vehicles:read"
     )
-    await db.commit()
+    await db.flush()
 
     resp = await client.get(
         "/api/v1/service/whoami",

@@ -33,7 +33,7 @@ class TestGPSDeviceModel:
                 is_active=True,
             )
             db.add(device)
-            await db.commit()
+            await db.flush()
             await db.refresh(device)
 
             assert device.id == "gps-test-001"
@@ -58,7 +58,7 @@ class TestGPSDeviceModel:
                 device_type="gps_service",
             )
             db.add(device)
-            await db.commit()
+            await db.flush()
             await db.refresh(device)
 
             # is_active should default to True
@@ -80,7 +80,7 @@ class TestGPSDeviceModel:
                 is_active=False,
             )
             db.add(device)
-            await db.commit()
+            await db.flush()
             await db.refresh(device)
 
             assert device.is_active is False
@@ -104,7 +104,7 @@ class TestGPSDeviceSerialization:
                 device_type="calamp",
             )
             db.add(device)
-            await db.commit()
+            await db.flush()
 
             # Access the columns for serialization
             data = {

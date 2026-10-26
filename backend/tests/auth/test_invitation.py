@@ -38,7 +38,7 @@ def make_invited_user(make_user, db: AsyncSession):
             expires_delta=timedelta(hours=48),
         )
         user.invitation_token_hash = sha256(token.encode()).hexdigest()
-        await db.commit()
+        await db.flush()
         return user, token
 
     return _create
@@ -154,7 +154,7 @@ async def test_invite_reuses_soft_deleted_email(
         tenant_id=tenant.id, email="recycled@test.local", role="operator"
     )
     existing.is_deleted = True
-    await db.commit()
+    await db.flush()
 
     r = await client.post(
         "/api/v1/users",

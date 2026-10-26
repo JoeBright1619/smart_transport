@@ -38,7 +38,7 @@ async def shared_stop(db, tenant_a):
         is_deleted=False,
     )
     db.add(stop)
-    await db.commit()
+    await db.flush()
     return stop
 
 
@@ -67,7 +67,7 @@ async def active_vehicle_tenant_a(db, make_vehicle, tenant_a, shared_stop):
         lng=30.0585,
     )
     vehicle.speed = 30
-    await db.commit()
+    await db.flush()
     return vehicle
 
 
@@ -96,7 +96,7 @@ async def active_vehicle_tenant_b(db, make_vehicle, tenant_b, shared_stop):
         lng=30.0560,
     )
     vehicle.speed = 25
-    await db.commit()
+    await db.flush()
     return vehicle
 
 
