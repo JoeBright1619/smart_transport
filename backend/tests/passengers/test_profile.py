@@ -142,8 +142,8 @@ async def test_patch_profile_forbidden_for_admin(client, admin_user):
 # ---------------------------------------------------------------------------
 
 
-async def test_list_passengers_returns_passengers(client, admin_user, passenger_user):
-    r = await client.get("/api/v1/passengers", headers=auth_headers(admin_user))
+async def test_list_passengers_returns_passengers(client, superadmin, passenger_user):
+    r = await client.get("/api/v1/passengers", headers=auth_headers(superadmin))
     assert r.status_code == 200
     body = r.json()
     assert body["meta"]["total"] >= 1
@@ -151,9 +151,9 @@ async def test_list_passengers_returns_passengers(client, admin_user, passenger_
     assert passenger_user.id in ids
 
 
-async def test_list_passengers_excludes_staff(client, admin_user, make_user, tenant):
+async def test_list_passengers_excludes_staff(client, superadmin, make_user, tenant):
     operator = await make_user(tenant_id=tenant.id, role="operator")
-    r = await client.get("/api/v1/passengers", headers=auth_headers(admin_user))
+    r = await client.get("/api/v1/passengers", headers=auth_headers(superadmin))
     ids = [p["id"] for p in r.json()["data"]]
     assert operator.id not in ids
 
@@ -168,11 +168,11 @@ async def test_list_passengers_requires_auth(client):
     assert r.status_code == 401
 
 
-async def test_list_passengers_pagination(client, admin_user, make_user):
+async def test_list_passengers_pagination(client, superadmin, make_user):
     for i in range(3):
         await make_user(tenant_id=None, role="passenger", email=f"p{i}@test.local")
     r = await client.get(
-        "/api/v1/passengers?page=1&page_size=2", headers=auth_headers(admin_user)
+        "/api/v1/passengers?page=1&page_size=2", headers=auth_headers(superadmin)
     )
     assert r.status_code == 200
     assert len(r.json()["data"]) <= 2

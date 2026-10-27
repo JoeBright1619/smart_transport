@@ -96,7 +96,7 @@ async def list_operators(
 @router.get(
     "",
     response_model=PaginatedResponse[PassengerListItem],
-    dependencies=[Depends(require_role("superadmin", "admin"))],
+    dependencies=[Depends(require_role("superadmin"))],
     summary="List all passengers",
     description="Returns a paginated list of all passenger accounts with trip counts.",
 )

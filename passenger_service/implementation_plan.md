@@ -203,17 +203,17 @@ on macOS/Linux use ./.venv/bin/python -m pytest -q.
 - [x] Commit: `backend: add occupancy schema, models, and migration`
 
 ### Task 2.2 — Latest-arrival-sequence endpoint
-- [ ] Add `GET /api/v1/vehicles/{vehicle_id}/latest-arrival-sequence`
+- [x] Add `GET /api/v1/vehicles/{vehicle_id}/latest-arrival-sequence`
       (requires Task 2.1's `occupancy_events` table).
-- [ ] Returns `{"data": {"arrival_sequence": N}}` with `N = MAX(arrival_sequence)`
+- [x] Returns `{"data": {"arrival_sequence": N}}` with `N = MAX(arrival_sequence)`
       from `occupancy_events` for that vehicle, scoped to the caller's tenant.
-- [ ] 404 with error code `vehicle_not_found` for an unknown vehicle or one
+- [x] 404 with error code `vehicle_not_found` for an unknown vehicle or one
       belonging to another tenant; 404 with error code `no_arrival_records` for a
       known vehicle with no events yet.
-- [ ] Test: returns max sequence; both 404 variants; tenant scoping.
-- [ ] Commit: `backend: add latest-arrival-sequence endpoint`
+- [x] Test: returns max sequence; both 404 variants; tenant scoping.
+- [x] Commit: `backend: add latest-arrival-sequence endpoint`
 
-### Task 2.3 — Confirm universal passenger pool endpoint
+### Task 2.3a — Confirm universal passenger pool endpoint
 The backend **already exposes a passengers endpoint**; this task confirms
 its contract and closes any gap, rather than adding a new route.
 
@@ -242,6 +242,33 @@ its contract and closes any gap, rather than adding a new route.
       The universal response is a superset of every tenant's response.
 - [x] Commit: `backend: confirm/extend passenger pool endpoint for universal use`
 
+### Task 2.3b — Universal service-token principal
+
+The machine consumer (`passenger_service`, Task 3.4) needs `GET /api/v1/passengers`, but every `ServiceToken` today is bound to a `tenant_id`, and `_resolve_service_token` always returns a `Tenant`. This task adds a tenant-agnostic service-token path so the consumer stops impersonating a superadmin JWT.
+
+- [ ] Migration: make `service_tokens.tenant_id` nullable. `downgrade` must `raise RuntimeError` if any `tenant_id IS NULL` rows exist (do not delete them).
+- [ ] `ServiceToken.tenant_id` → `Mapped[str | None]`, `nullable=True`. Docstring notes NULL = universal token.
+- [ ] `issue_token(..., universal: bool = False)` — `universal=True` sets `tenant_id=None`. No change to `hash_token` / `generate_plaintext_token` / `verify_token` / `has_scope`.
+- [ ] New dependency `require_superadmin_or_universal_service(scope)` in `app/core/dependencies.py`, returning `Principal(kind="superadmin" | "universal_service", tenant: Tenant | None)`:
+  - `X-Service-Token` + scope match + `tenant_id IS NULL` → `universal_service`.
+  - `X-Service-Token` + scope match + `tenant_id NOT NULL` → 403 (a tenant-bound token must not become universal by accident).
+  - JWT + `role == "superadmin"` → `superadmin`.
+  - Anything else → 401/403 via `_raise_error`.
+  - Do **not** modify `get_tenant_or_service` or `_resolve_service_token` — existing callers must be unaffected.
+- [ ] `list_passengers` dependency changes from `require_role("superadmin")` to `Depends(require_superadmin_or_universal_service("passengers:read_universal"))`. Handler body unchanged. Docstring line added: "Auth: superadmin JWT, or universal service token scoped `passengers:read_universal`."
+- [ ] `conftest.py`: add `make_service_token` fixture wrapping `issue_token` (kwargs: `tenant_id`, `universal`, `name`, `scopes`, `dev`; returns `(row, plaintext)`). Existing `test_service_token.py` must keep passing unchanged.
+- [ ] Test: universal token → `GET /api/v1/passengers` returns 200 with all passengers.
+- [ ] Test: universal token missing `passengers:read_universal` scope → 403.
+- [ ] Test: tenant-bound token (with that scope) → 403 (rejects accidental upgrade).
+- [ ] Test: tenant-bound token on `GET /api/v1/vehicles` still 200 (regression: `get_tenant_or_service` unchanged).
+- [ ] Test: superadmin JWT on `GET /api/v1/passengers` still 200 (regression: 2.3a unchanged).
+- [ ] Commit: `backend: add universal service-token principal and allow passenger pool access`
+
+**Notes for the implementer.**
+
+- Token format stays `stk_live_` / `stk_dev_` — no distinct universal prefix.
+- `passengers:read_universal` is a sensitive scope; document that in `service_token_service.py`'s `issue_token` docstring.
+- Grep for `service_token.tenant_id` usages after applying; only `_resolve_service_token` reads it today and it's deliberately untouched, but confirm nothing else assumes non-null.
 
 ### Task 2.4 — Error-code consistency sweep across backend services
 **Scope.** Task 2.2 migrated the vehicle-not-found code from `"NOT_FOUND" → "vehicle_not_found"` in three services (vehicle_service, fleet_assignment, trip_service).
@@ -325,6 +352,42 @@ its contract and closes any gap, rather than adding a new route.
       `cached_ids() -> Sequence[str]`, refreshed on the same
       `VEHICLE_REFRESH_INTERVAL` as the vehicle map. There is no per-vehicle
       copy and no per-tenant copy of the pool.
+      GET /api/v1/passengers?page=N&page_size=M — paginated.
+
+#### Backend Contract (Confirmed in Task 2.3a)
+
+##### Endpoint
+
+`GET /api/v1/passengers?page=N&page_size=M`
+
+- Supports pagination using `page` and `page_size` query parameters.
+
+##### Authentication
+
+**Interim authentication:**
+- Header: `Authorization: Bearer <superadmin JWT>`
+- Use a superadmin JWT from `passenger_service` configuration.
+
+**Future authentication (Task 2.3b):**
+- Header: `X-Service-Token: <universal token>`
+- The fetcher will switch to the universal service-token mechanism with a one-line configuration change.
+
+##### Response Format
+
+```json
+{
+  "data": [
+    {
+      "id": "string"
+    }
+  ],
+  "meta": {
+    "total": 100,
+    "page": 1,
+    "pageSize": 20
+  }
+}
+```
 - [ ] Test: mocked HTTP returns the expected list; **the request URL contains
       no `tenant_id` query parameter**; cache hit avoids a second call; refresh
       after the interval.
