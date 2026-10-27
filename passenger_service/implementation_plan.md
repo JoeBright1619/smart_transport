@@ -246,23 +246,23 @@ its contract and closes any gap, rather than adding a new route.
 
 The machine consumer (`passenger_service`, Task 3.4) needs `GET /api/v1/passengers`, but every `ServiceToken` today is bound to a `tenant_id`, and `_resolve_service_token` always returns a `Tenant`. This task adds a tenant-agnostic service-token path so the consumer stops impersonating a superadmin JWT.
 
-- [ ] Migration: make `service_tokens.tenant_id` nullable. `downgrade` must `raise RuntimeError` if any `tenant_id IS NULL` rows exist (do not delete them).
-- [ ] `ServiceToken.tenant_id` → `Mapped[str | None]`, `nullable=True`. Docstring notes NULL = universal token.
-- [ ] `issue_token(..., universal: bool = False)` — `universal=True` sets `tenant_id=None`. No change to `hash_token` / `generate_plaintext_token` / `verify_token` / `has_scope`.
-- [ ] New dependency `require_superadmin_or_universal_service(scope)` in `app/core/dependencies.py`, returning `Principal(kind="superadmin" | "universal_service", tenant: Tenant | None)`:
+- [x] Migration: make `service_tokens.tenant_id` nullable. `downgrade` must `raise RuntimeError` if any `tenant_id IS NULL` rows exist (do not delete them).
+- [x] `ServiceToken.tenant_id` → `Mapped[str | None]`, `nullable=True`. Docstring notes NULL = universal token.
+- [x] `issue_token(..., universal: bool = False)` — `universal=True` sets `tenant_id=None`. No change to `hash_token` / `generate_plaintext_token` / `verify_token` / `has_scope`.
+- [x] New dependency `require_superadmin_or_universal_service(scope)` in `app/core/dependencies.py`, returning `Principal(kind="superadmin" | "universal_service", tenant: Tenant | None)`:
   - `X-Service-Token` + scope match + `tenant_id IS NULL` → `universal_service`.
   - `X-Service-Token` + scope match + `tenant_id NOT NULL` → 403 (a tenant-bound token must not become universal by accident).
   - JWT + `role == "superadmin"` → `superadmin`.
   - Anything else → 401/403 via `_raise_error`.
   - Do **not** modify `get_tenant_or_service` or `_resolve_service_token` — existing callers must be unaffected.
-- [ ] `list_passengers` dependency changes from `require_role("superadmin")` to `Depends(require_superadmin_or_universal_service("passengers:read_universal"))`. Handler body unchanged. Docstring line added: "Auth: superadmin JWT, or universal service token scoped `passengers:read_universal`."
-- [ ] `conftest.py`: add `make_service_token` fixture wrapping `issue_token` (kwargs: `tenant_id`, `universal`, `name`, `scopes`, `dev`; returns `(row, plaintext)`). Existing `test_service_token.py` must keep passing unchanged.
-- [ ] Test: universal token → `GET /api/v1/passengers` returns 200 with all passengers.
-- [ ] Test: universal token missing `passengers:read_universal` scope → 403.
-- [ ] Test: tenant-bound token (with that scope) → 403 (rejects accidental upgrade).
-- [ ] Test: tenant-bound token on `GET /api/v1/vehicles` still 200 (regression: `get_tenant_or_service` unchanged).
-- [ ] Test: superadmin JWT on `GET /api/v1/passengers` still 200 (regression: 2.3a unchanged).
-- [ ] Commit: `backend: add universal service-token principal and allow passenger pool access`
+- [x] `list_passengers` dependency changes from `require_role("superadmin")` to `Depends(require_superadmin_or_universal_service("passengers:read_universal"))`. Handler body unchanged. Docstring line added: "Auth: superadmin JWT, or universal service token scoped `passengers:read_universal`."
+- [x] `conftest.py`: add `make_service_token` fixture wrapping `issue_token` (kwargs: `tenant_id`, `universal`, `name`, `scopes`, `dev`; returns `(row, plaintext)`). Existing `test_service_token.py` must keep passing unchanged.
+- [x] Test: universal token → `GET /api/v1/passengers` returns 200 with all passengers.
+- [x] Test: universal token missing `passengers:read_universal` scope → 403.
+- [x] Test: tenant-bound token (with that scope) → 403 (rejects accidental upgrade).
+- [x] Test: tenant-bound token on `GET /api/v1/vehicles` still 200 (regression: `get_tenant_or_service` unchanged).
+- [x] Test: superadmin JWT on `GET /api/v1/passengers` still 200 (regression: 2.3a unchanged).
+- [x] Commit: `backend: add universal service-token principal and allow passenger pool access`
 
 **Notes for the implementer.**
 
@@ -354,7 +354,7 @@ The machine consumer (`passenger_service`, Task 3.4) needs `GET /api/v1/passenge
       copy and no per-tenant copy of the pool.
       GET /api/v1/passengers?page=N&page_size=M — paginated.
 
-#### Backend Contract (Confirmed in Task 2.3a)
+#### Backend Contract (Confirmed in Task 2.3a + 2.3b):
 
 ##### Endpoint
 
@@ -365,12 +365,11 @@ The machine consumer (`passenger_service`, Task 3.4) needs `GET /api/v1/passenge
 ##### Authentication
 
 **Interim authentication:**
-- Header: `Authorization: Bearer <superadmin JWT>`
-- Use a superadmin JWT from `passenger_service` configuration.
-
-**Future authentication (Task 2.3b):**
-- Header: `X-Service-Token: <universal token>`
-- The fetcher will switch to the universal service-token mechanism with a one-line configuration change.
+- Header: `X-Service-Token: <universal token>`. Universal tokens are tenant-agnostic service tokens issued via    `issue_token(db, universal=True, scopes="passengers:read_universal", ...)`.
+- Response: `{"data": [{"id": str, ...}], "meta": {"total": int, "page": int, "pageSize": int}}`.
+- Fetcher must paginate until `len(accumulated) >= meta.total`, then project `id` from each item.
+- No `tenant_id` parameter — passengers are universal.
+- `passenger_service` config needs: `BACKEND_BASE_URL` (already exists for other calls), `PASSENGER_POOL_SERVICE_TOKEN` (the plaintext universal token, secret-managed like other service tokens).
 
 ##### Response Format
 

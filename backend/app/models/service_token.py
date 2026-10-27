@@ -14,13 +14,20 @@ def generate_service_token_id() -> str:
 
 
 class ServiceToken(Base):
+    """Service token for machine-to-machine authentication.
+
+    ``tenant_id`` is NULL for universal (tenant-agnostic) tokens, which bypass
+    tenant resolution and must carry an explicit ``*_universal`` scope. All
+    other tokens are bound to a tenant.
+    """
+
     __tablename__ = "service_tokens"
 
     id: Mapped[str] = mapped_column(
         String, primary_key=True, default=generate_service_token_id
     )
     tenant_id: Mapped[str] = mapped_column(
-        String, ForeignKey("tenants.id"), nullable=False, index=True
+        String, ForeignKey("tenants.id"), nullable=True, index=True
     )
 
     name: Mapped[str] = mapped_column(String, nullable=False)

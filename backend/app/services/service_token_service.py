@@ -25,18 +25,29 @@ def generate_plaintext_token(dev: bool = False) -> str:
 async def issue_token(
     db: AsyncSession,
     *,
-    tenant_id: str,
+    tenant_id: str | None = None,
     name: str,
     scopes: str = "vehicles:read",
+    universal: bool = False,
     dev: bool = False,
 ) -> tuple[ServiceToken, str]:
     """Create a service token. Returns (row, plaintext).
 
     The plaintext is returned exactly once and never stored.
+
+    Pass ``universal=True`` for a tenant-agnostic token (``tenant_id`` is
+    set to NULL). Universal tokens bypass tenant resolution and should carry
+    a ``*_universal`` scope such as ``passengers:read_universal`` — that scope
+    is sensitive and should only be issued to known machine consumers.
     """
+    if universal and tenant_id is not None:
+        raise ValueError("universal=True is incompatible with tenant_id")
+    if not universal and tenant_id is None:
+        raise ValueError("tenant_id is required unless universal=True")
+
     plaintext = generate_plaintext_token(dev=dev)
     row = ServiceToken(
-        tenant_id=tenant_id,
+        tenant_id=None if universal else tenant_id,
         name=name,
         token_prefix=plaintext[:16],
         token_hash=hash_token(plaintext),

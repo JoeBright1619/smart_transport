@@ -65,3 +65,30 @@ async def test_pagination(client, superadmin, make_user):
     assert body["meta"]["total"] >= 5
     assert body["meta"]["page"] == 1
     assert body["meta"]["pageSize"] == 2
+
+
+async def test_universal_token_returns_same_pool_as_superadmin(
+    client, superadmin, make_service_token, make_user
+):
+    for _ in range(3):
+        await make_user(tenant_id=None, role="passenger")
+
+    _, plaintext = await make_service_token(
+        universal=True, scopes="passengers:read_universal"
+    )
+
+    jwt_ids = {
+        p["id"]
+        for p in (
+            await client.get("/api/v1/passengers", headers=auth_headers(superadmin))
+        ).json()["data"]
+    }
+    token_ids = {
+        p["id"]
+        for p in (
+            await client.get(
+                "/api/v1/passengers", headers={"X-Service-Token": plaintext}
+            )
+        ).json()["data"]
+    }
+    assert jwt_ids == token_ids

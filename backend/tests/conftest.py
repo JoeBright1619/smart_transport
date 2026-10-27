@@ -427,3 +427,27 @@ def make_occupancy_event(db: AsyncSession):
         return event
 
     return _create
+
+
+@pytest.fixture
+def make_service_token(db: AsyncSession):
+    from app.services.service_token_service import issue_token
+
+    async def _create(
+        *,
+        tenant_id: str | None = None,
+        universal: bool = False,
+        name: str = "test-token",
+        scopes: str = "vehicles:read",
+        dev: bool = False,
+    ):
+        return await issue_token(
+            db,
+            tenant_id=tenant_id,
+            name=name,
+            scopes=scopes,
+            universal=universal,
+            dev=dev,
+        )
+
+    return _create

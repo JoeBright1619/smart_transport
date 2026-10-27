@@ -1,5 +1,6 @@
 from collections.abc import Callable
-from typing import Annotated, Any, NoReturn, Awaitable
+from dataclasses import dataclass
+from typing import Annotated, Any, NoReturn, Awaitable, Literal
 
 from fastapi import Depends, HTTPException, Header, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -259,6 +260,71 @@ async def _resolve_service_token(
         return tenant
 
     return None
+
+
+@dataclass(frozen=True)
+class Principal:
+    """Caller identity for tenant-agnostic endpoints.
+
+    ``superadmin`` — human user with role superadmin.
+    ``universal_service`` — machine client authenticated with a universal
+    (tenant_id IS NULL) service token carrying the required scope.
+    """
+
+    kind: Literal["superadmin", "universal_service"]
+    tenant: Tenant | None
+
+
+def require_superadmin_or_universal_service(
+    *,
+    required_scope: str,
+) -> Callable[..., Awaitable[Principal]]:
+    """Authenticate as superadmin (JWT) or a universal service token.
+
+    Universal service tokens are those with ``tenant_id IS NULL`` and the
+    required ``*_universal`` scope. Tenant-bound service tokens are
+    explicitly rejected — they must not silently become tenant-agnostic.
+    """
+
+    async def dependency(
+        db: Annotated[AsyncSession, Depends(get_db)],
+        x_service_token: Annotated[str | None, Header(alias="X-Service-Token")] = None,
+        credentials: Annotated[
+            HTTPAuthorizationCredentials | None, Depends(security)
+        ] = None,
+    ) -> Principal:
+        if x_service_token:
+            row = await verify_token(db, x_service_token)
+            if row is None:
+                _raise_error(
+                    status.HTTP_401_UNAUTHORIZED,
+                    "UNAUTHORIZED",
+                    "Invalid or inactive service token",
+                )
+            if not has_scope(row, required_scope):
+                _raise_error(
+                    status.HTTP_403_FORBIDDEN,
+                    "FORBIDDEN",
+                    f"Service token missing required scope: {required_scope}",
+                )
+            if row.tenant_id is not None:
+                _raise_error(
+                    status.HTTP_403_FORBIDDEN,
+                    "FORBIDDEN",
+                    "Universal scope requires a universal service token",
+                )
+            return Principal(kind="universal_service", tenant=None)
+
+        user = await get_current_user(credentials=credentials, db=db)
+        if user.role != "superadmin":
+            _raise_error(
+                status.HTTP_403_FORBIDDEN,
+                "FORBIDDEN",
+                "User does not have permission to access this resource",
+            )
+        return Principal(kind="superadmin", tenant=None)
+
+    return dependency
 
 
 async def _load_active_tenant(db: AsyncSession, tenant_id: str) -> Tenant | None:

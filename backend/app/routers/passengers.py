@@ -2,7 +2,12 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import get_current_user, require_role
+from app.core.dependencies import (
+    Principal,
+    get_current_user,
+    require_role,
+    require_superadmin_or_universal_service,
+)
 from app.models.user import User
 from app.schemas.common import APIResponse, Meta, PaginatedResponse
 from app.schemas.passenger import (
@@ -96,14 +101,22 @@ async def list_operators(
 @router.get(
     "",
     response_model=PaginatedResponse[PassengerListItem],
-    dependencies=[Depends(require_role("superadmin"))],
     summary="List all passengers",
-    description="Returns a paginated list of all passenger accounts with trip counts.",
+    description=(
+        "Returns a paginated list of all passenger accounts with trip counts. "
+        "Auth: superadmin JWT, or a universal service token scoped "
+        "`passengers:read_universal`."
+    ),
 )
 async def list_passengers(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
+    _: Principal = Depends(
+        require_superadmin_or_universal_service(
+            required_scope="passengers:read_universal"
+        )
+    ),
 ) -> PaginatedResponse[PassengerListItem]:
     passengers, total = await passenger_service.list_passengers(db, page, page_size)
     return PaginatedResponse(
