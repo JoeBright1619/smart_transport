@@ -5,6 +5,7 @@ from fastapi import status
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import error_codes
 from app.core.errors import _raise_error
 from app.models.maintenance import MaintenanceRecord
 from app.models.vehicle import Vehicle
@@ -58,7 +59,7 @@ async def get_maintenance_record_by_id(
     if not record:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "NOT_FOUND",
+            error_codes.MAINTENANCE_RECORD_NOT_FOUND,
             "Maintenance record not found",
         )
     return record
@@ -75,7 +76,7 @@ async def create_maintenance_record(
     if not vehicle_res.scalar_one_or_none():
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "VEHICLE_NOT_FOUND",
+            error_codes.VEHICLE_NOT_FOUND,
             "Vehicle not found",
         )
 

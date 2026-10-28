@@ -4,6 +4,7 @@ from fastapi import status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import error_codes
 from app.core.errors import _raise_error
 from app.core.security import hash_password
 from app.models.tenant import Tenant
@@ -31,7 +32,7 @@ async def create_tenant(db: AsyncSession, data: Any) -> Tenant:
         if existing_user is not None:
             _raise_error(
                 status.HTTP_409_CONFLICT,
-                "EMAIL_ALREADY_EXISTS",
+                error_codes.EMAIL_ALREADY_EXISTS,
                 "A user with this email already exists",
             )
 
@@ -63,7 +64,7 @@ async def get_tenant(db: AsyncSession, tenant_id: str) -> Tenant:
     if tenant is None:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "NOT_FOUND",
+            error_codes.TENANT_NOT_FOUND,
             "Tenant not found",
         )
 

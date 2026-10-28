@@ -12,6 +12,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import error_codes
 from app.core.errors import _raise_error
 from app.core.security import hash_password
 from app.models.passenger_profile import PassengerProfile
@@ -97,14 +98,14 @@ async def verify_email_otp(db: AsyncSession, email: str, otp: str) -> User:
     if user is None:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "NOT_FOUND",
+            error_codes.ACCOUNT_NOT_FOUND,
             "No account found for this email",
         )
 
     if user.status != "pending_verification":
         _raise_error(
             status.HTTP_409_CONFLICT,
-            "ALREADY_VERIFIED",
+            error_codes.ALREADY_VERIFIED,
             "This email is already verified",
         )
 
@@ -117,7 +118,7 @@ async def verify_email_otp(db: AsyncSession, email: str, otp: str) -> User:
     if user.otp_code != sha256(otp.encode()).hexdigest():
         _raise_error(
             status.HTTP_400_BAD_REQUEST,
-            "INVALID_OTP",
+            error_codes.INVALID_OTP,
             "Verification code is incorrect",
         )
 
@@ -147,14 +148,14 @@ async def resend_otp(db: AsyncSession, email: str) -> None:
     if user is None:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "NOT_FOUND",
+            error_codes.ACCOUNT_NOT_FOUND,
             "No account found for this email",
         )
 
     if user.status != "pending_verification":
         _raise_error(
             status.HTTP_409_CONFLICT,
-            "ALREADY_VERIFIED",
+            error_codes.ALREADY_VERIFIED,
             "This email is already verified",
         )
 

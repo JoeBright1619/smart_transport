@@ -19,6 +19,7 @@ from fastapi import status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import error_codes
 from app.core.errors import _raise_error
 from app.models.driver import Driver
 from app.models.vehicle import Vehicle
@@ -41,7 +42,7 @@ async def _get_vehicle(db: AsyncSession, vehicle_id: str, tenant_id: str) -> Veh
     if vehicle is None:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "VEHICLE_NOT_FOUND",
+            error_codes.VEHICLE_NOT_FOUND,
             "Vehicle not found",
         )
     return vehicle
@@ -60,7 +61,7 @@ async def _get_driver(db: AsyncSession, driver_id: str, tenant_id: str) -> Drive
     if driver is None:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "NOT_FOUND",
+            error_codes.DRIVER_NOT_FOUND,
             "Driver not found",
         )
     return driver

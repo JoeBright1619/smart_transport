@@ -9,6 +9,7 @@ from sqlalchemy import select, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import error_codes
 from app.core.config import settings
 from app.core.errors import _raise_error
 from app.core.security import decode_access_token, create_access_token, hash_password
@@ -67,7 +68,7 @@ async def get_user_by_id(db: AsyncSession, user_id: str, tenant_id: str) -> User
     if not user:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "NOT_FOUND",
+            error_codes.USER_NOT_FOUND,
             "User not found",
         )
     return user
@@ -176,14 +177,14 @@ async def accept_invitation(
     except JWTError:
         _raise_error(
             status.HTTP_400_BAD_REQUEST,
-            "INVALID_TOKEN",
+            error_codes.INVALID_TOKEN,
             "Invitation token is invalid or expired",
         )
 
     if payload.get("type") != "invite":
         _raise_error(
             status.HTTP_400_BAD_REQUEST,
-            "INVALID_TOKEN",
+            error_codes.INVALID_TOKEN,
             "Not an invitation token",
         )
 
@@ -193,7 +194,7 @@ async def accept_invitation(
     if user is None:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "NOT_FOUND",
+            error_codes.USER_NOT_FOUND,
             "User not found",
         )
     if user.status != "invited":
@@ -205,7 +206,7 @@ async def accept_invitation(
     if user.invitation_token_hash != sha256(data.token.encode()).hexdigest():
         _raise_error(
             status.HTTP_400_BAD_REQUEST,
-            "INVALID_TOKEN",
+            error_codes.INVALID_TOKEN,
             "Invitation token is invalid",
         )
 

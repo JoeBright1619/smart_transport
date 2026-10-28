@@ -7,6 +7,7 @@ from fastapi import status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import error_codes
 from app.core.errors import _raise_error
 from app.core.geo_math import haversine_distance
 from app.models.route import Route, RouteStop, Stop
@@ -87,7 +88,9 @@ async def get_arrivals_for_stop(
         )
     )
     if stop is None:
-        _raise_error(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Stop not found")
+        _raise_error(
+            status.HTTP_404_NOT_FOUND, error_codes.STOP_NOT_FOUND, "Stop not found"
+        )
 
     rows = (
         await db.execute(
@@ -171,7 +174,9 @@ async def get_cross_tenant_arrivals(
         select(Stop).where(Stop.id == stop_id, Stop.is_deleted.is_(False))
     )
     if stop is None:
-        _raise_error(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Stop not found")
+        _raise_error(
+            status.HTTP_404_NOT_FOUND, error_codes.STOP_NOT_FOUND, "Stop not found"
+        )
 
     rows = (
         await db.execute(

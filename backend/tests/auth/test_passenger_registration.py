@@ -217,7 +217,7 @@ async def test_verify_email_wrong_otp_returns_400(client, pending_user):
         json={"email": "pending@test.local", "otp": "000000"},
     )
     assert r.status_code == 400
-    assert r.json()["error"]["code"] == "INVALID_OTP"
+    assert r.json()["error"]["code"] == "invalid_otp"
 
 
 async def test_verify_email_expired_otp_returns_400(client, db: AsyncSession):
@@ -266,7 +266,7 @@ async def test_verify_email_already_verified_returns_409(
         json={"email": "pending@test.local", "otp": otp},
     )
     assert r.status_code == 409
-    assert r.json()["error"]["code"] == "ALREADY_VERIFIED"
+    assert r.json()["error"]["code"] == "already_verified"
 
 
 # ---------------------------------------------------------------------------

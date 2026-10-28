@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import error_codes
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.errors import _raise_error
@@ -120,7 +121,7 @@ async def _get_active_tenant(db: AsyncSession, tenant_id: str | None) -> Tenant 
     if tenant is None or not tenant.is_active:
         _raise_error(
             status.HTTP_403_FORBIDDEN,
-            "TENANT_INACTIVE",
+            error_codes.TENANT_INACTIVE,
             "Tenant account is inactive",
         )
 

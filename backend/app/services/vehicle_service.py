@@ -4,6 +4,7 @@ from fastapi import status
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import error_codes
 from app.core.errors import _raise_error
 from app.models.trip import Trip
 from app.models.vehicle import Vehicle
@@ -58,7 +59,7 @@ async def get_vehicle_by_id(
     if not vehicle:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "vehicle_not_found",
+            error_codes.VEHICLE_NOT_FOUND,
             "Vehicle not found",
         )
     return vehicle
@@ -86,7 +87,7 @@ async def get_latest_arrival_sequence(
     if latest is None:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "no_arrival_records",
+            error_codes.NO_ARRIVAL_RECORDS,
             "No arrival records for vehicle",
         )
     return latest

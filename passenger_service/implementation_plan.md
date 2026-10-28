@@ -330,10 +330,10 @@ constants. Pure addition — no caller changes, no behavior change.
 
 **Deliverable.**
 
-- [ ] Create `backend/app/core/error_codes.py` with the constants below.
-- [ ] No imports, no caller changes elsewhere. The module is standalone.
-- [ ] `pytest backend/tests -q` — 460 passed (unchanged).
-- [ ] Commit: `backend: add error_codes module for resource-specific error identifiers`
+- [x] Create `backend/app/core/error_codes.py` with the constants below.
+- [x] No imports, no caller changes elsewhere. The module is standalone.
+- [x] `pytest backend/tests -q` — 460 passed (unchanged).
+- [x] Commit: `backend: add error_codes module for resource-specific error identifiers`
 
 **Module contents.**
 
@@ -388,17 +388,17 @@ constants from phase 2. Generic HTTP-class codes stay unchanged.
 
 **Deliverable.**
 
-- [ ] Replace every `"NOT_FOUND"` at a resource-specific site with the
+- [x] Replace every `"NOT_FOUND"` at a resource-specific site with the
       corresponding `error_codes.X_NOT_FOUND`.
-- [ ] Replace specific-condition literals with constants.
-- [ ] Promote "email already exists" everywhere to `EMAIL_ALREADY_EXISTS`.
-- [ ] Retroactively switch `vehicle_service.py`'s `"vehicle_not_found"` /
+- [x] Replace specific-condition literals with constants.
+- [x] Promote "email already exists" everywhere to `EMAIL_ALREADY_EXISTS`.
+- [x] Retroactively switch `vehicle_service.py`'s `"vehicle_not_found"` /
       `"no_arrival_records"` to constants.
-- [ ] Leave generic codes unchanged.
-- [ ] Leave `gps_handler.py:54` unchanged.
-- [ ] Update tests asserting on changed codes.
-- [ ] `pytest backend/tests -q` — expect 460 passed.
-- [ ] Commit: `backend: use named error codes throughout services and routers`
+- [x] Leave generic codes unchanged.
+- [x] Leave `gps_handler.py:54` unchanged.
+- [x] Update tests asserting on changed codes.
+- [x] `pytest backend/tests -q` — expect 460 passed.
+- [x] Commit: `backend: use named error codes throughout services and routers`
 
 **Call-site mapping.**
 

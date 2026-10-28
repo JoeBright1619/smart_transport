@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
-from app.core.errors import _raise_error
 from app.models.analytics import AnalyticsRecord
 from app.models.driver import Driver
 from app.models.maintenance import MaintenanceRecord
@@ -480,7 +479,7 @@ async def get_passenger_report(
     date_from: date,
     date_to: date,
 ) -> PassengerReportResponse:
-    from fastapi import status
+    from fastapi import HTTPException
 
     user_q = select(User).where(
         User.id == passenger_id,
@@ -492,10 +491,9 @@ async def get_passenger_report(
     user = user_result.scalar_one_or_none()
 
     if user is None:
-        _raise_error(
-            status.HTTP_404_NOT_FOUND,
-            "NOT_FOUND",
-            "Passenger not found in this tenant.",
+        raise HTTPException(
+            status_code=404,
+            detail="Passenger not found in this tenant.",
         )
 
     # Phase 12 boarding records do not exist yet — return a graceful placeholder.

@@ -8,6 +8,7 @@ from jose import JWTError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import error_codes
 from app.core.database import get_db
 from app.core.errors import _raise_error
 from app.models.gps_device import GPSDevice
@@ -114,7 +115,7 @@ async def get_current_tenant(
     if current_user.tenant_id is None:
         _raise_error(
             status.HTTP_403_FORBIDDEN,
-            "TENANT_REQUIRED",
+            error_codes.TENANT_REQUIRED,
             "A tenant-scoped account is required",
         )
 
@@ -130,7 +131,7 @@ async def get_current_tenant(
     if not tenant.is_active:
         _raise_error(
             status.HTTP_403_FORBIDDEN,
-            "TENANT_INACTIVE",
+            error_codes.TENANT_INACTIVE,
             "Tenant account is inactive",
         )
 
@@ -218,7 +219,7 @@ async def _resolve_service_token(
         if tenant is None:
             _raise_error(
                 status.HTTP_403_FORBIDDEN,
-                "TENANT_INACTIVE",
+                error_codes.TENANT_INACTIVE,
                 "Service token tenant is inactive or missing",
             )
         return tenant
@@ -237,7 +238,7 @@ async def _resolve_service_token(
         if tenant is None:
             _raise_error(
                 status.HTTP_403_FORBIDDEN,
-                "TENANT_INACTIVE",
+                error_codes.TENANT_INACTIVE,
                 "Bootstrap tenant is inactive or missing",
             )
         return tenant

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy import or_
 
+from app.core import error_codes
 from app.core.errors import _raise_error
 from app.core.security import create_access_token
 from app.models.tenant import Tenant
@@ -77,7 +78,7 @@ async def get_tenant_detail(db: AsyncSession, tenant_id: str) -> SuperadminTenan
     if tenant is None:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "NOT_FOUND",
+            error_codes.TENANT_NOT_FOUND,
             "Tenant not found",
         )
 
@@ -104,7 +105,7 @@ async def update_tenant_status(
     if tenant is None:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "NOT_FOUND",
+            error_codes.TENANT_NOT_FOUND,
             "Tenant not found",
         )
 
@@ -132,7 +133,7 @@ async def impersonate_tenant_admin(
     if tenant is None:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "NOT_FOUND",
+            error_codes.TENANT_NOT_FOUND,
             "Tenant not found",
         )
 
@@ -146,7 +147,7 @@ async def impersonate_tenant_admin(
     if admin is None:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "NOT_FOUND",
+            error_codes.TENANT_ADMIN_NOT_FOUND,
             "Tenant admin not found",
         )
 
@@ -260,7 +261,7 @@ def _require_passenger(user: User | None, user_id: str) -> User:
     if user is None:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "NOT_FOUND",
+            error_codes.PASSENGER_NOT_FOUND,
             "Passenger not found",
         )
     if user.role != "passenger":

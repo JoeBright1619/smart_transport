@@ -5,6 +5,7 @@ from fastapi import status
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import error_codes
 from app.core.errors import _raise_error
 from app.models.driver import Driver
 from app.models.trip import Trip
@@ -50,7 +51,9 @@ async def get_driver_by_id(db: AsyncSession, driver_id: str, tenant_id: str) -> 
     )
     driver = result.scalar_one_or_none()
     if not driver:
-        _raise_error(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Driver not found")
+        _raise_error(
+            status.HTTP_404_NOT_FOUND, error_codes.DRIVER_NOT_FOUND, "Driver not found"
+        )
 
     return driver
 

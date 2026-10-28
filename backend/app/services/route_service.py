@@ -6,6 +6,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import error_codes
 from app.core.errors import _raise_error
 from app.models.route import Route, Stop, RouteStop
 from app.models.trip import Trip
@@ -89,7 +90,7 @@ async def get_stop_by_id(db: AsyncSession, stop_id: str, tenant_id: str) -> Stop
     if stop is None:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "NOT_FOUND",
+            error_codes.STOP_NOT_FOUND,
             "Stop not found",
         )
     return stop
@@ -169,7 +170,7 @@ async def _get_route_stops_by_id(
     if missing_ids:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "NOT_FOUND",
+            error_codes.STOPS_NOT_FOUND,
             "One or more stops were not found",
         )
 
@@ -246,7 +247,9 @@ async def get_route_by_id(db: AsyncSession, route_id: str, tenant_id: str) -> Ro
     )
     route = result.scalar_one_or_none()
     if not route:
-        _raise_error(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Route not found")
+        _raise_error(
+            status.HTTP_404_NOT_FOUND, error_codes.ROUTE_NOT_FOUND, "Route not found"
+        )
     return route
 
 
@@ -266,7 +269,9 @@ async def ensure_route_active(db: AsyncSession, route_id: str, tenant_id: str) -
         )
     ).scalar_one_or_none()
     if route is None:
-        _raise_error(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Route not found")
+        _raise_error(
+            status.HTTP_404_NOT_FOUND, error_codes.ROUTE_NOT_FOUND, "Route not found"
+        )
     if not route.is_active:
         _raise_error(
             status.HTTP_409_CONFLICT,

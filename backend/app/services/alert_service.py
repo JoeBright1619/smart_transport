@@ -4,6 +4,7 @@ from fastapi import status
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import error_codes
 from app.core.errors import _raise_error
 from app.models.alert import Alert
 from app.models.vehicle import Vehicle
@@ -48,7 +49,9 @@ async def acknowledge_alert(db: AsyncSession, alert_id: str, tenant_id: str) -> 
     )
     alert = result.scalar_one_or_none()
     if not alert:
-        _raise_error(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Alert not found")
+        _raise_error(
+            status.HTTP_404_NOT_FOUND, error_codes.ALERT_NOT_FOUND, "Alert not found"
+        )
 
     alert.is_acknowledged = True
     await db.flush()

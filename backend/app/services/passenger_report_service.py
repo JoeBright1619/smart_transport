@@ -8,6 +8,7 @@ from fastapi import status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import error_codes
 from app.core.errors import _raise_error
 from app.models.boarding_record import BoardingRecord
 from app.models.route import Route, Stop
@@ -30,7 +31,7 @@ async def get_passenger_usage_report(
     if user is None:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "NOT_FOUND",
+            error_codes.PASSENGER_NOT_FOUND,
             "Passenger not found",
         )
     if user.role != "passenger":

@@ -4,6 +4,8 @@ from datetime import datetime, timedelta, timezone
 from fastapi import status
 from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core import error_codes
 from app.core.errors import _raise_error
 from app.models.route import Route, RouteStop, Stop
 from app.models.trip import Trip
@@ -59,7 +61,7 @@ async def get_trip_by_id(db: AsyncSession, trip_id: str, tenant_id: str) -> Trip
     if not trip:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "NOT_FOUND",
+            error_codes.TRIP_NOT_FOUND,
             "Trip not found",
         )
     return trip
@@ -80,7 +82,7 @@ async def create_trip(
     if not vehicle:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "vehicle_not_found",
+            error_codes.VEHICLE_NOT_FOUND,
             "Vehicle not found",
         )
     if vehicle.status in ("active", "maintenance", "offline"):
@@ -102,7 +104,7 @@ async def create_trip(
     if not driver:
         _raise_error(
             status.HTTP_404_NOT_FOUND,
-            "NOT_FOUND",
+            error_codes.DRIVER_NOT_FOUND,
             "Driver not found",
         )
     if driver.status == "on-trip":

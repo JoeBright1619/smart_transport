@@ -67,7 +67,7 @@ async def test_create_tenant_duplicate_email(db: AsyncSession):
 
     assert exc_info.value.status_code == 409
     assert isinstance(exc_info.value.detail, dict)
-    assert exc_info.value.detail["error"]["code"] == "EMAIL_ALREADY_EXISTS"
+    assert exc_info.value.detail["error"]["code"] == "email_already_exists"
 
 
 async def test_get_tenant_valid_and_invalid(db: AsyncSession, make_tenant):
@@ -83,7 +83,7 @@ async def test_get_tenant_valid_and_invalid(db: AsyncSession, make_tenant):
 
     assert exc_info.value.status_code == 404
     assert isinstance(exc_info.value.detail, dict)
-    assert exc_info.value.detail["error"]["code"] == "NOT_FOUND"
+    assert exc_info.value.detail["error"]["code"] == "tenant_not_found"
 
 
 async def test_suspend_and_reactivate_tenant(db: AsyncSession, make_tenant):
