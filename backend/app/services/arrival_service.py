@@ -3,10 +3,11 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import _raise_error
 from app.core.geo_math import haversine_distance
 from app.models.route import Route, RouteStop, Stop
 from app.models.vehicle import Vehicle
@@ -15,17 +16,6 @@ from app.schemas.arrival import ArrivalRead, PublicArrivalRead
 
 if TYPE_CHECKING:
     from app.websocket.route_simulation import StopPoint
-
-
-def _error_detail(code: str, message: str) -> dict:
-    return {
-        "data": None,
-        "meta": None,
-        "error": {
-            "code": code,
-            "message": message,
-        },
-    }
 
 
 def _fallback_next_stop_index(vehicle: Vehicle, stops: list[StopPoint]) -> int:
@@ -97,10 +87,7 @@ async def get_arrivals_for_stop(
         )
     )
     if stop is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "Stop not found"),
-        )
+        _raise_error(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Stop not found")
 
     rows = (
         await db.execute(
@@ -184,10 +171,7 @@ async def get_cross_tenant_arrivals(
         select(Stop).where(Stop.id == stop_id, Stop.is_deleted.is_(False))
     )
     if stop is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "Stop not found"),
-        )
+        _raise_error(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Stop not found")
 
     rows = (
         await db.execute(

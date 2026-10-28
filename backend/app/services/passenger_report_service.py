@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta, timezone
 
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import _raise_error
 from app.models.boarding_record import BoardingRecord
 from app.models.route import Route, Stop
 from app.models.user import User
@@ -19,10 +20,6 @@ from app.schemas.analytics import (
 )
 
 
-def _error_detail(code: str, message: str) -> dict:
-    return {"data": None, "meta": None, "error": {"code": code, "message": message}}
-
-
 async def get_passenger_usage_report(
     db: AsyncSession,
     passenger_id: str,
@@ -31,14 +28,16 @@ async def get_passenger_usage_report(
 ) -> PassengerUsageReport:
     user = await db.scalar(select(User).where(User.id == passenger_id))
     if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "Passenger not found"),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "NOT_FOUND",
+            "Passenger not found",
         )
     if user.role != "passenger":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=_error_detail("FORBIDDEN", "User is not a passenger"),
+        _raise_error(
+            status.HTTP_403_FORBIDDEN,
+            "FORBIDDEN",
+            "User is not a passenger",
         )
 
     start_dt = datetime.combine(date_from, time.min, tzinfo=timezone.utc)

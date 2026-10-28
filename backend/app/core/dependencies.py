@@ -1,14 +1,15 @@
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Annotated, Any, NoReturn, Awaitable, Literal
+from typing import Annotated, Awaitable, Literal
 
-from fastapi import Depends, HTTPException, Header, status
+from fastapi import Depends, Header, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.errors import _raise_error
 from app.models.gps_device import GPSDevice
 from app.core.security import decode_access_token
 from app.core.config import settings
@@ -44,24 +45,6 @@ async def authenticate_gps_device(
         )
 
     return device
-
-
-def _error_detail(code: str, message: str) -> dict[str, Any]:
-    return {
-        "data": None,
-        "meta": None,
-        "error": {
-            "code": code,
-            "message": message,
-        },
-    }
-
-
-def _raise_error(status_code: int, code: str, message: str) -> NoReturn:
-    raise HTTPException(
-        status_code=status_code,
-        detail=_error_detail(code, message),
-    )
 
 
 async def get_current_user(

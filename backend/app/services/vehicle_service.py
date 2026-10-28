@@ -1,26 +1,16 @@
 from typing import Sequence
 
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import _raise_error
 from app.models.trip import Trip
 from app.models.vehicle import Vehicle
 from app.schemas.vehicle import VehicleCreate, VehicleUpdate
 from app.services import audit_service, fleet_assignment, route_service, trip_service
 from app.services.fleet_position import ensure_vehicle_position
 from app.models.occupancy_event import OccupancyEvent
-
-
-def _error_detail(code: str, message: str) -> dict:
-    return {
-        "data": None,
-        "meta": None,
-        "error": {
-            "code": code,
-            "message": message,
-        },
-    }
 
 
 async def get_vehicles(
@@ -66,9 +56,10 @@ async def get_vehicle_by_id(
     )
     vehicle = result.scalar_one_or_none()
     if not vehicle:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("vehicle_not_found", "Vehicle not found"),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "vehicle_not_found",
+            "Vehicle not found",
         )
     return vehicle
 
@@ -93,11 +84,10 @@ async def get_latest_arrival_sequence(
     )
     latest = result.scalar_one_or_none()
     if latest is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail(
-                "no_arrival_records", "No arrival records for vehicle"
-            ),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "no_arrival_records",
+            "No arrival records for vehicle",
         )
     return latest
 
@@ -108,12 +98,10 @@ async def create_vehicle(
     # A brand-new vehicle has no trip, driver or route, so it cannot be "on a journey".
     # active is only reachable by starting a journey on an existing vehicle.
     if data.status == "active":
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail(
-                "CANNOT_CREATE_ACTIVE",
-                "A new vehicle cannot be created as active — add it, then start a journey",
-            ),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "CANNOT_CREATE_ACTIVE",
+            "A new vehicle cannot be created as active — add it, then start a journey",
         )
 
     existing = await db.execute(
@@ -124,11 +112,10 @@ async def create_vehicle(
         )
     )
     if existing.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail(
-                "CONFLICT", "Vehicle with this registration number already exists"
-            ),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "CONFLICT",
+            "Vehicle with this registration number already exists",
         )
 
     vehicle = Vehicle(
@@ -170,20 +157,16 @@ async def guard_deactivation(
     if conflict_trip is None:
         return
     if conflict_trip.status == "active":
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail(
-                "CONFLICT",
-                "Vehicle has an active trip — complete or cancel the trip first",
-            ),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "CONFLICT",
+            "Vehicle has an active trip — complete or cancel the trip first",
         )
     if new_status in ("maintenance", "offline"):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail(
-                "CONFLICT",
-                "Cannot set vehicle to maintenance or offline — it has a scheduled trip",
-            ),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "CONFLICT",
+            "Cannot set vehicle to maintenance or offline — it has a scheduled trip",
         )
 
 
@@ -261,9 +244,10 @@ async def delete_vehicle(
     vehicle = await get_vehicle_by_id(db, vehicle_id, tenant_id)
 
     if vehicle.status == "active":
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail("CONFLICT", "Cannot delete an active vehicle"),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "CONFLICT",
+            "Cannot delete an active vehicle",
         )
 
     vehicle.is_deleted = True

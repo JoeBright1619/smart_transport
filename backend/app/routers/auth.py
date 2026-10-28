@@ -1,14 +1,14 @@
 from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 from secrets import token_urlsafe
-from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db
+from app.core.errors import _raise_error
 from app.core.security import create_access_token, verify_password
 from app.models.refresh_token import RefreshToken
 from app.models.tenant import Tenant
@@ -28,27 +28,10 @@ from app.schemas.auth import (
 from app.schemas.common import APIResponse, MessageResponse
 from app.services import audit_service, passenger_service, tenant_service
 
+
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 REFRESH_TOKEN_COOKIE = "refresh_token"  # nosec
-
-
-def _error_detail(code: str, message: str) -> dict[str, Any]:
-    return {
-        "data": None,
-        "meta": None,
-        "error": {
-            "code": code,
-            "message": message,
-        },
-    }
-
-
-def _raise_error(status_code: int, code: str, message: str) -> None:
-    raise HTTPException(
-        status_code=status_code,
-        detail=_error_detail(code, message),
-    )
 
 
 def _token_hash(token: str) -> str:

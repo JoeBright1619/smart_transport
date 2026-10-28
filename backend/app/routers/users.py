@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, Query, status, HTTPException
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_tenant, get_current_user, require_role
+from app.core.errors import _raise_error
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.schemas.common import PaginatedResponse, APIResponse, Meta, MessageResponse
@@ -10,17 +11,6 @@ from app.schemas.user import UserCreate, UserInviteAccept, UserRead, UserUpdate
 from app.services import user_service
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
-
-
-def _error_detail(code: str, message: str) -> dict:
-    return {
-        "data": None,
-        "meta": None,
-        "error": {
-            "code": code,
-            "message": message,
-        },
-    }
 
 
 @router.get(
@@ -76,10 +66,7 @@ async def get_user(
     tenant: Tenant = Depends(get_current_tenant),
 ):
     if current_user.role not in ["admin", "superadmin"] and current_user.id != id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=_error_detail("FORBIDDEN", "Cannot view other users"),
-        )
+        _raise_error(status.HTTP_403_FORBIDDEN, "FORBIDDEN", "Cannot view other users")
 
     user = await user_service.get_user_by_id(db, id, tenant.id)
     return APIResponse(data=UserRead.model_validate(user))

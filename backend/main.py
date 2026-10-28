@@ -13,6 +13,7 @@ from sqlalchemy import text
 
 from app.core.config import settings
 from app.core.database import engine
+from app.core.errors import _error_detail
 from app.core.mqtt_client import MQTTClient
 from app.services.gps_mqtt_subscriber import GPSMQTTSubscriber
 from app.services.simulation_runner import (
@@ -44,14 +45,7 @@ logger = logging.getLogger(__name__)
 def _error_response(status_code: int, code: str, message: str) -> JSONResponse:
     return JSONResponse(
         status_code=status_code,
-        content={
-            "data": None,
-            "meta": None,
-            "error": {
-                "code": code,
-                "message": message,
-            },
-        },
+        content=_error_detail(code, message),
     )
 
 

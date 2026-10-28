@@ -13,27 +13,19 @@ Rules:
 """
 
 from __future__ import annotations
+from typing import NoReturn
 
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import _raise_error
 from app.models.driver import Driver
 from app.models.vehicle import Vehicle
 
 
-def _error_detail(code: str, message: str) -> dict:
-    return {
-        "data": None,
-        "meta": None,
-        "error": {"code": code, "message": message},
-    }
-
-
-def _conflict(code: str, message: str) -> HTTPException:
-    return HTTPException(
-        status_code=status.HTTP_409_CONFLICT, detail=_error_detail(code, message)
-    )
+def _conflict(code: str, message: str) -> NoReturn:
+    _raise_error(status.HTTP_409_CONFLICT, code, message)
 
 
 async def _get_vehicle(db: AsyncSession, vehicle_id: str, tenant_id: str) -> Vehicle:
@@ -47,9 +39,10 @@ async def _get_vehicle(db: AsyncSession, vehicle_id: str, tenant_id: str) -> Veh
         )
     ).scalar_one_or_none()
     if vehicle is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("vehicle_not_found", "Vehicle not found"),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "VEHICLE_NOT_FOUND",
+            "Vehicle not found",
         )
     return vehicle
 
@@ -65,9 +58,10 @@ async def _get_driver(db: AsyncSession, driver_id: str, tenant_id: str) -> Drive
         )
     ).scalar_one_or_none()
     if driver is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "Driver not found"),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "NOT_FOUND",
+            "Driver not found",
         )
     return driver
 

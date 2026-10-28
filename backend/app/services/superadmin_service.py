@@ -1,11 +1,12 @@
 from datetime import date, datetime, time, timedelta, timezone
 
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy import or_
 
+from app.core.errors import _raise_error
 from app.core.security import create_access_token
 from app.models.tenant import Tenant
 from app.models.trip import Trip
@@ -18,17 +19,6 @@ from app.schemas.superadmin import (
 )
 from app.schemas.user import UserRead
 from app.services import audit_service
-
-
-def _error_detail(code: str, message: str) -> dict:
-    return {
-        "data": None,
-        "meta": None,
-        "error": {
-            "code": code,
-            "message": message,
-        },
-    }
 
 
 async def _tenant_counts(db: AsyncSession, tenant_id: str) -> tuple[int, int]:
@@ -85,9 +75,10 @@ async def list_tenants(
 async def get_tenant_detail(db: AsyncSession, tenant_id: str) -> SuperadminTenantDetail:
     tenant = await db.scalar(select(Tenant).where(Tenant.id == tenant_id))
     if tenant is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "Tenant not found"),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "NOT_FOUND",
+            "Tenant not found",
         )
 
     vehicle_count, user_count = await _tenant_counts(db, tenant.id)
@@ -111,9 +102,10 @@ async def update_tenant_status(
 ) -> SuperadminTenantDetail:
     tenant = await db.get(Tenant, tenant_id)
     if tenant is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "Tenant not found"),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "NOT_FOUND",
+            "Tenant not found",
         )
 
     before = {"isActive": tenant.is_active}
@@ -138,9 +130,10 @@ async def impersonate_tenant_admin(
 ) -> str:
     tenant = await db.get(Tenant, tenant_id)
     if tenant is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "Tenant not found"),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "NOT_FOUND",
+            "Tenant not found",
         )
 
     admin = await db.scalar(
@@ -151,9 +144,10 @@ async def impersonate_tenant_admin(
         )
     )
     if admin is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "Tenant admin not found"),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "NOT_FOUND",
+            "Tenant admin not found",
         )
 
     await audit_service.log(
@@ -264,14 +258,16 @@ async def list_passengers(
 
 def _require_passenger(user: User | None, user_id: str) -> User:
     if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "Passenger not found"),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "NOT_FOUND",
+            "Passenger not found",
         )
     if user.role != "passenger":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=_error_detail("FORBIDDEN", "User is not a passenger"),
+        _raise_error(
+            status.HTTP_403_FORBIDDEN,
+            "FORBIDDEN",
+            "User is not a passenger",
         )
     return user
 

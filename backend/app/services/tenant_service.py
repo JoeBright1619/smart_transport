@@ -1,30 +1,13 @@
 from typing import Any
 
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import _raise_error
 from app.core.security import hash_password
 from app.models.tenant import Tenant
 from app.models.user import User
-
-
-def _error_detail(code: str, message: str) -> dict[str, Any]:
-    return {
-        "data": None,
-        "meta": None,
-        "error": {
-            "code": code,
-            "message": message,
-        },
-    }
-
-
-def _raise_error(status_code: int, code: str, message: str) -> None:
-    raise HTTPException(
-        status_code=status_code,
-        detail=_error_detail(code, message),
-    )
 
 
 def _get_value(data: Any, field: str) -> Any:

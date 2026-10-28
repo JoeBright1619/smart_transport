@@ -1,25 +1,15 @@
 from typing import Sequence
 from datetime import datetime, timezone
 
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import _raise_error
 from app.models.driver import Driver
 from app.models.trip import Trip
 from app.schemas.driver import DriverCreate, DriverUpdate
 from app.services import audit_service, fleet_assignment, trip_reconciliation
-
-
-def _error_detail(code: str, message: str) -> dict:
-    return {
-        "data": None,
-        "meta": None,
-        "error": {
-            "code": code,
-            "message": message,
-        },
-    }
 
 
 async def get_drivers(
@@ -60,10 +50,8 @@ async def get_driver_by_id(db: AsyncSession, driver_id: str, tenant_id: str) -> 
     )
     driver = result.scalar_one_or_none()
     if not driver:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "Driver not found"),
-        )
+        _raise_error(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Driver not found")
+
     return driver
 
 
@@ -76,11 +64,10 @@ async def create_driver(
         )
     )
     if existing.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail(
-                "CONFLICT", "Driver with this license number already exists"
-            ),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "CONFLICT",
+            "Driver with this license number already exists",
         )
 
     expiry_dt = datetime.combine(
@@ -119,11 +106,10 @@ async def update_driver(
     if "status" in update_data:
         new_status = update_data["status"]
         if new_status == "on-trip" and driver.status != "on-trip":
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=_error_detail(
-                    "BAD_REQUEST", "Cannot manually set status to on-trip"
-                ),
+            _raise_error(
+                status.HTTP_400_BAD_REQUEST,
+                "BAD_REQUEST",
+                "Cannot manually set status to on-trip",
             )
         if new_status == "off-duty":
             # Self-heal first: clear any orphaned trips (from a restarted/deactivated
@@ -139,12 +125,10 @@ async def update_driver(
                 )
             )
             if conflict_result.scalar_one_or_none():
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail=_error_detail(
-                        "CONFLICT",
-                        "Cannot set driver to off-duty — they have an active or scheduled trip",
-                    ),
+                _raise_error(
+                    status.HTTP_409_CONFLICT,
+                    "CONFLICT",
+                    "Cannot set driver to off-duty — they have an active or scheduled trip",
                 )
         driver.status = new_status
 
@@ -186,11 +170,10 @@ async def delete_driver(
     driver = await get_driver_by_id(db, driver_id, tenant_id)
 
     if driver.status == "on-trip":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=_error_detail(
-                "BAD_REQUEST", "Cannot delete a driver who is currently on-trip"
-            ),
+        _raise_error(
+            status.HTTP_400_BAD_REQUEST,
+            "BAD_REQUEST",
+            "Cannot delete a driver who is currently on-trip",
         )
 
     driver.is_deleted = True

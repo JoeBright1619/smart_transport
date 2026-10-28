@@ -1,11 +1,12 @@
 import math
 from typing import Sequence
 
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import _raise_error
 from app.models.route import Route, Stop, RouteStop
 from app.models.trip import Trip
 from app.models.vehicle import Vehicle
@@ -15,17 +16,6 @@ from app.services import audit_service
 
 EARTH_RADIUS_M = 6_371_000
 STOP_COORDINATE_CONFLICT_METERS = 10
-
-
-def _error_detail(code: str, message: str) -> dict:
-    return {
-        "data": None,
-        "meta": None,
-        "error": {
-            "code": code,
-            "message": message,
-        },
-    }
 
 
 def _distance_meters(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
@@ -73,21 +63,18 @@ async def _assert_stop_unique(
         if stop.id == exclude_stop_id:
             continue
         if stop.name.casefold() == normalized_name:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=_error_detail(
-                    "STOP_NAME_CONFLICT", "A stop with this name already exists"
-                ),
+            _raise_error(
+                status.HTTP_409_CONFLICT,
+                "STOP_NAME_CONFLICT",
+                "A stop with this name already exists",
             )
         if _distance_meters(lat, lng, stop.lat, stop.lng) <= (
             STOP_COORDINATE_CONFLICT_METERS
         ):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=_error_detail(
-                    "STOP_COORDINATE_CONFLICT",
-                    "A stop already exists within 10 meters of these coordinates",
-                ),
+            _raise_error(
+                status.HTTP_409_CONFLICT,
+                "STOP_COORDINATE_CONFLICT",
+                "A stop already exists within 10 meters of these coordinates",
             )
 
 
@@ -100,9 +87,10 @@ async def get_stop_by_id(db: AsyncSession, stop_id: str, tenant_id: str) -> Stop
         )
     )
     if stop is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "Stop not found"),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "NOT_FOUND",
+            "Stop not found",
         )
     return stop
 
@@ -152,12 +140,10 @@ async def delete_stop(db: AsyncSession, stop_id: str, tenant_id: str) -> None:
         select(RouteStop.route_id).where(RouteStop.stop_id == stop_id).limit(1)
     )
     if in_use is not None:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail(
-                "STOP_IN_USE",
-                "This stop is used by one or more routes — remove it from them first",
-            ),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "STOP_IN_USE",
+            "This stop is used by one or more routes — remove it from them first",
         )
 
     stop.is_deleted = True
@@ -181,9 +167,10 @@ async def _get_route_stops_by_id(
 
     missing_ids = [stop_id for stop_id in unique_stop_ids if stop_id not in stops]
     if missing_ids:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "One or more stops were not found"),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "NOT_FOUND",
+            "One or more stops were not found",
         )
 
     return stops
@@ -200,11 +187,10 @@ async def _replace_route_stops(
         for stop_data in stops_data
     ]
     if len(stop_ids) != len(set(stop_ids)):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail(
-                "CONFLICT", "A route cannot include the same stop twice"
-            ),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "CONFLICT",
+            "A route cannot include the same stop twice",
         )
 
     await _get_route_stops_by_id(db, tenant_id, stop_ids)
@@ -260,10 +246,7 @@ async def get_route_by_id(db: AsyncSession, route_id: str, tenant_id: str) -> Ro
     )
     route = result.scalar_one_or_none()
     if not route:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "Route not found"),
-        )
+        _raise_error(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Route not found")
     return route
 
 
@@ -283,17 +266,12 @@ async def ensure_route_active(db: AsyncSession, route_id: str, tenant_id: str) -
         )
     ).scalar_one_or_none()
     if route is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "Route not found"),
-        )
+        _raise_error(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Route not found")
     if not route.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail(
-                "ROUTE_INACTIVE",
-                "Route is disabled — enable it before assigning or dispatching",
-            ),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "ROUTE_INACTIVE",
+            "Route is disabled — enable it before assigning or dispatching",
         )
     return route
 
@@ -343,9 +321,10 @@ async def create_route(
         )
     )
     if existing.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail("CONFLICT", "Route with this number already exists"),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "CONFLICT",
+            "Route with this number already exists",
         )
 
     route = Route(
@@ -390,11 +369,10 @@ async def update_route(
             )
         )
         if existing.scalar_one_or_none():
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=_error_detail(
-                    "CONFLICT", "Route with this number already exists"
-                ),
+            _raise_error(
+                status.HTTP_409_CONFLICT,
+                "CONFLICT",
+                "Route with this number already exists",
             )
         route.number = update_data["number"]
     if "distance" in update_data:
@@ -409,12 +387,10 @@ async def update_route(
             and not update_data["is_active"]
             and await _route_in_use(db, route_id)
         ):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=_error_detail(
-                    "ROUTE_IN_USE",
-                    "Route has active or scheduled trips — end them before disabling",
-                ),
+            _raise_error(
+                status.HTTP_409_CONFLICT,
+                "ROUTE_IN_USE",
+                "Route has active or scheduled trips — end them before disabling",
             )
         route.is_active = update_data["is_active"]
     if "color" in update_data:
@@ -449,11 +425,10 @@ async def delete_route(
     )
     active_trips_result = await db.execute(active_trips_query)
     if active_trips_result.scalars().first():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail(
-                "CONFLICT", "Cannot delete route with active or scheduled trips"
-            ),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "CONFLICT",
+            "Cannot delete route with active or scheduled trips",
         )
 
     route.is_deleted = True

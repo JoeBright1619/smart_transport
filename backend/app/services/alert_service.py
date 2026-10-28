@@ -1,9 +1,10 @@
 from typing import Sequence
 
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import _raise_error
 from app.models.alert import Alert
 from app.models.vehicle import Vehicle
 from app.models.trip import Trip
@@ -47,14 +48,7 @@ async def acknowledge_alert(db: AsyncSession, alert_id: str, tenant_id: str) -> 
     )
     alert = result.scalar_one_or_none()
     if not alert:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "data": None,
-                "meta": None,
-                "error": {"code": "NOT_FOUND", "message": "Alert not found"},
-            },
-        )
+        _raise_error(status.HTTP_404_NOT_FOUND, "NOT_FOUND", "Alert not found")
 
     alert.is_acknowledged = True
     await db.flush()

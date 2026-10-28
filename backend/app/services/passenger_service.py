@@ -7,11 +7,12 @@ from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 from typing import Any
 
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import _raise_error
 from app.core.security import hash_password
 from app.models.passenger_profile import PassengerProfile
 from app.models.route import Route, Stop
@@ -24,10 +25,6 @@ from app.schemas.passenger import (
     ResolvedStop,
 )
 from app.services import audit_service
-
-
-def _error_detail(code: str, message: str) -> dict[str, Any]:
-    return {"data": None, "meta": None, "error": {"code": code, "message": message}}
 
 
 def _utc_now() -> datetime:
@@ -55,11 +52,10 @@ async def register_passenger(
         select(User).where(User.email == email.lower(), User.is_deleted.is_(False))
     )
     if existing:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail(
-                "CONFLICT", "An account with this email already exists"
-            ),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "CONFLICT",
+            "An account with this email already exists",
         )
 
     user = User(
@@ -75,11 +71,10 @@ async def register_passenger(
     try:
         await db.flush()
     except IntegrityError:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail(
-                "CONFLICT", "An account with this email already exists"
-            ),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "CONFLICT",
+            "An account with this email already exists",
         )
 
     otp = _generate_otp()
@@ -100,29 +95,30 @@ async def verify_email_otp(db: AsyncSession, email: str, otp: str) -> User:
         select(User).where(User.email == email.lower(), User.is_deleted.is_(False))
     )
     if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "No account found for this email"),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "NOT_FOUND",
+            "No account found for this email",
         )
 
     if user.status != "pending_verification":
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail("ALREADY_VERIFIED", "This email is already verified"),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "ALREADY_VERIFIED",
+            "This email is already verified",
         )
 
     if user.otp_expires_at is None or _ensure_aware(user.otp_expires_at) < _utc_now():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=_error_detail(
-                "OTP_EXPIRED", "Verification code has expired — request a new one"
-            ),
+        _raise_error(
+            status.HTTP_400_BAD_REQUEST,
+            "OTP_EXPIRED",
+            "Verification code has expired — request a new one",
         )
-
     if user.otp_code != sha256(otp.encode()).hexdigest():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=_error_detail("INVALID_OTP", "Verification code is incorrect"),
+        _raise_error(
+            status.HTTP_400_BAD_REQUEST,
+            "INVALID_OTP",
+            "Verification code is incorrect",
         )
 
     user.email_verified = True
@@ -149,27 +145,27 @@ async def resend_otp(db: AsyncSession, email: str) -> None:
         select(User).where(User.email == email.lower(), User.is_deleted.is_(False))
     )
     if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "No account found for this email"),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "NOT_FOUND",
+            "No account found for this email",
         )
 
     if user.status != "pending_verification":
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail("ALREADY_VERIFIED", "This email is already verified"),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "ALREADY_VERIFIED",
+            "This email is already verified",
         )
 
     if user.otp_resent_at is not None:
         elapsed = (_utc_now() - _ensure_aware(user.otp_resent_at)).total_seconds()
         if elapsed < 60:
             remaining = int(60 - elapsed)
-            raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail=_error_detail(
-                    "TOO_MANY_REQUESTS",
-                    f"Please wait {remaining} seconds before requesting another code",
-                ),
+            _raise_error(
+                status.HTTP_429_TOO_MANY_REQUESTS,
+                "TOO_MANY_REQUESTS",
+                f"Please wait {remaining} seconds before requesting another code",
             )
 
     otp = _generate_otp()

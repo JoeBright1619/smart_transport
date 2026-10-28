@@ -3,13 +3,14 @@ from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 from typing import TYPE_CHECKING, Sequence
 
-from fastapi import HTTPException, status
+from fastapi import status
 from jose import JWTError
 from sqlalchemy import select, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.errors import _raise_error
 from app.core.security import decode_access_token, create_access_token, hash_password
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate, UserInviteAccept
@@ -29,17 +30,6 @@ ROLE_RANKS = {
 
 def get_role_rank(role: str) -> int:
     return ROLE_RANKS.get(role, 0)
-
-
-def _error_detail(code: str, message: str) -> dict:
-    return {
-        "data": None,
-        "meta": None,
-        "error": {
-            "code": code,
-            "message": message,
-        },
-    }
 
 
 async def get_users(
@@ -75,9 +65,10 @@ async def get_user_by_id(db: AsyncSession, user_id: str, tenant_id: str) -> User
     )
     user = result.scalar_one_or_none()
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "User not found"),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "NOT_FOUND",
+            "User not found",
         )
     return user
 
@@ -90,20 +81,20 @@ async def create_user(
     tenant: "Tenant | None" = None,
 ) -> User:
     if get_role_rank(data.role) > get_role_rank(current_user.role):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=_error_detail(
-                "FORBIDDEN", "Cannot create user with a higher role than your own"
-            ),
+        _raise_error(
+            status.HTTP_403_FORBIDDEN,
+            "FORBIDDEN",
+            "Cannot create user with a higher role than your own",
         )
 
     existing = await db.execute(
         select(User).where(User.email == data.email, User.is_deleted.is_(False))
     )
     if existing.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail("CONFLICT", "Email already exists"),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "CONFLICT",
+            "Email already exists",
         )
 
     if data.password is not None:
@@ -121,9 +112,10 @@ async def create_user(
         try:
             await db.flush()
         except IntegrityError:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=_error_detail("CONFLICT", "Email already exists"),
+            _raise_error(
+                status.HTTP_409_CONFLICT,
+                "CONFLICT",
+                "Email already exists",
             )
         await audit_service.log(
             db, current_user.id, tenant_id, "User", user.id, "create"
@@ -145,11 +137,11 @@ async def create_user(
     try:
         await db.flush()
     except IntegrityError:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail("CONFLICT", "Email already exists"),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "CONFLICT",
+            "Email already exists",
         )
-
     # Signed JWT valid for 48 h; stored as a hash to allow single-use invalidation
     token = create_access_token(
         {"sub": user.id, "type": "invite"},
@@ -182,38 +174,39 @@ async def accept_invitation(
     try:
         payload = decode_access_token(data.token)
     except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=_error_detail(
-                "INVALID_TOKEN", "Invitation token is invalid or expired"
-            ),
+        _raise_error(
+            status.HTTP_400_BAD_REQUEST,
+            "INVALID_TOKEN",
+            "Invitation token is invalid or expired",
         )
 
     if payload.get("type") != "invite":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=_error_detail("INVALID_TOKEN", "Not an invitation token"),
+        _raise_error(
+            status.HTTP_400_BAD_REQUEST,
+            "INVALID_TOKEN",
+            "Not an invitation token",
         )
 
     user = await db.scalar(
         select(User).where(User.id == payload.get("sub"), User.is_deleted.is_(False))
     )
     if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "User not found"),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "NOT_FOUND",
+            "User not found",
         )
     if user.status != "invited":
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail(
-                "ALREADY_ACCEPTED", "Invitation has already been used"
-            ),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "ALREADY_ACCEPTED",
+            "Invitation has already been used",
         )
     if user.invitation_token_hash != sha256(data.token.encode()).hexdigest():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=_error_detail("INVALID_TOKEN", "Invitation token is invalid"),
+        _raise_error(
+            status.HTTP_400_BAD_REQUEST,
+            "INVALID_TOKEN",
+            "Invitation token is invalid",
         )
 
     user.password_hash = hash_password(data.new_password)
@@ -236,29 +229,29 @@ async def update_user(
 
     if data.role is not None and data.role != user.role:
         if is_own_record:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=_error_detail("FORBIDDEN", "Cannot change own role"),
+            _raise_error(
+                status.HTTP_403_FORBIDDEN,
+                "FORBIDDEN",
+                "Cannot change own role",
             )
         if get_role_rank(data.role) > get_role_rank(current_user.role):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=_error_detail(
-                    "FORBIDDEN", "Cannot assign a role higher than your own"
-                ),
+            _raise_error(
+                status.HTTP_403_FORBIDDEN,
+                "FORBIDDEN",
+                "Cannot assign a role higher than your own",
             )
         if get_role_rank(user.role) > get_role_rank(current_user.role):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=_error_detail(
-                    "FORBIDDEN", "Cannot modify a user with a higher role than your own"
-                ),
+            _raise_error(
+                status.HTTP_403_FORBIDDEN,
+                "FORBIDDEN",
+                "Cannot modify a user with a higher role than your own",
             )
 
     if not is_own_record and current_user.role not in ["admin", "superadmin"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=_error_detail("FORBIDDEN", "Cannot modify other users"),
+        _raise_error(
+            status.HTTP_403_FORBIDDEN,
+            "FORBIDDEN",
+            "Cannot modify other users",
         )
 
     if data.full_name is not None:
@@ -285,19 +278,19 @@ async def delete_user(
     db: AsyncSession, user_id: str, tenant_id: str, current_user: User
 ) -> None:
     if user_id == current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=_error_detail("BAD_REQUEST", "Cannot delete own account"),
+        _raise_error(
+            status.HTTP_400_BAD_REQUEST,
+            "BAD_REQUEST",
+            "Cannot delete own account",
         )
 
     user = await get_user_by_id(db, user_id, tenant_id)
 
     if get_role_rank(user.role) > get_role_rank(current_user.role):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=_error_detail(
-                "FORBIDDEN", "Cannot delete a user with a higher role than your own"
-            ),
+        _raise_error(
+            status.HTTP_403_FORBIDDEN,
+            "FORBIDDEN",
+            "Cannot delete a user with a higher role than your own",
         )
 
     user.is_deleted = True

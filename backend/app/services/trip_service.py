@@ -1,10 +1,10 @@
 from typing import Sequence
 from datetime import datetime, timedelta, timezone
 
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from app.core.errors import _raise_error
 from app.models.route import Route, RouteStop, Stop
 from app.models.trip import Trip
 from app.models.driver import Driver
@@ -12,17 +12,6 @@ from app.models.vehicle import Vehicle
 from app.schemas.trip import DEFAULT_JOURNEY_LOOPS, TripCreate, TripUpdate
 from app.services import audit_service, route_service
 from app.websocket import route_simulation
-
-
-def _error_detail(code: str, message: str) -> dict:
-    return {
-        "data": None,
-        "meta": None,
-        "error": {
-            "code": code,
-            "message": message,
-        },
-    }
 
 
 async def get_trips(
@@ -68,9 +57,10 @@ async def get_trip_by_id(db: AsyncSession, trip_id: str, tenant_id: str) -> Trip
     )
     trip = result.scalar_one_or_none()
     if not trip:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "Trip not found"),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "NOT_FOUND",
+            "Trip not found",
         )
     return trip
 
@@ -88,17 +78,16 @@ async def create_trip(
     )
     vehicle = vehicle_result.scalar_one_or_none()
     if not vehicle:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("vehicle_not_found", "Vehicle not found"),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "vehicle_not_found",
+            "Vehicle not found",
         )
     if vehicle.status in ("active", "maintenance", "offline"):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail(
-                "CONFLICT",
-                f"Vehicle is not available for dispatch (status: {vehicle.status})",
-            ),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "CONFLICT",
+            f"Vehicle is not available for dispatch (status: {vehicle.status})",
         )
 
     # Validate driver belongs to tenant, is not deleted, and is dispatchable
@@ -111,14 +100,16 @@ async def create_trip(
     )
     driver = driver_result.scalar_one_or_none()
     if not driver:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "Driver not found"),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "NOT_FOUND",
+            "Driver not found",
         )
     if driver.status == "on-trip":
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail("CONFLICT", "Driver is currently on a trip"),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "CONFLICT",
+            "Driver is currently on a trip",
         )
 
     # Route must exist and be active (not disabled) to dispatch onto it.
@@ -134,11 +125,10 @@ async def create_trip(
         )
     )
     if conflicting_trip.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail(
-                "CONFLICT", "Vehicle or driver already has an active or scheduled trip"
-            ),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "CONFLICT",
+            "Vehicle or driver already has an active or scheduled trip",
         )
 
     # The end is derived from the route and rounds unless the caller pins it explicitly:
@@ -280,12 +270,10 @@ async def update_trip(
 
     new_status = data.status
     if new_status not in VALID_TRANSITIONS.get(trip.status, []):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=_error_detail(
-                "BAD_REQUEST",
-                f"Invalid status transition from {trip.status} to {new_status}",
-            ),
+        _raise_error(
+            status.HTTP_400_BAD_REQUEST,
+            "BAD_REQUEST",
+            f"Invalid status transition from {trip.status} to {new_status}",
         )
 
     now = datetime.now(timezone.utc)
@@ -324,12 +312,10 @@ async def start_journey(
     since the Fleet quick-start does not pick one).
     """
     if vehicle.driver_id is None or vehicle.route_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=_error_detail(
-                "JOURNEY_REQUIRES_DRIVER_ROUTE",
-                "Assign a driver and a route to the vehicle before starting a journey",
-            ),
+        _raise_error(
+            status.HTTP_409_CONFLICT,
+            "JOURNEY_REQUIRES_DRIVER_ROUTE",
+            "Assign a driver and a route to the vehicle before starting a journey",
         )
 
     now = datetime.now(timezone.utc)

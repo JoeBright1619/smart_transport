@@ -270,32 +270,221 @@ The machine consumer (`passenger_service`, Task 3.4) needs `GET /api/v1/passenge
 - `passengers:read_universal` is a sensitive scope; document that in `service_token_service.py`'s `issue_token` docstring.
 - Grep for `service_token.tenant_id` usages after applying; only `_resolve_service_token` reads it today and it's deliberately untouched, but confirm nothing else assumes non-null.
 
-### Task 2.4 — Error-code consistency sweep across backend services
-**Scope.** Task 2.2 migrated the vehicle-not-found code from `"NOT_FOUND" → "vehicle_not_found"` in three services (vehicle_service, fleet_assignment, trip_service).
- The remaining ~27 **"NOT_FOUND"** sites across 11 services and two error-body shapes remain. This task completes the sweep.
+### Task 2.4 — Phase 1: Extract shared error helpers
 
-- [ ] Decide whether the canonical error-body shape is `{"detail": {"code": ..., "message": ...}} (FastAPI default, ~28 sites) or {"error": {"code": ..., "message": ...}} (alert_service:55, tenant_service:83)`. Client-contract decision; confirm with the API consumer before proceeding.
+**Scope.** Extract the duplicated `_error_detail` / `_raise_error` helpers
+into a shared module and consolidate redundant raise call sites. No
+code-string changes.
 
-- [ ] Rename every **"NOT_FOUND"** in `backend/app/services/` to a specific snake_case code:
-      stop_not_found, driver_not_found, route_not_found, trip_not_found, user_not_found, tenant_not_found, tenant_admin_not_found, alert_not_found, maintenance_record_not_found, passenger_not_found, account_not_found, stops_not_found (for the plural case in route_service:186).
+**Deliverable.**
 
-- [ ] Unify the error-body shape per the decision above.
+- [x] Create `backend/app/core/errors.py` with `_error_detail` (returns
+      `dict[str, Any]`) and `_raise_error` (returns `NoReturn`).
+- [x] Delete duplicate `def _error_detail` from 15 files and
+      `def _raise_error` from 3 files (`core/dependencies.py`,
+      `routers/auth.py`, `services/tenant_service.py`); import from
+      `app.core.errors`.
+- [x] `main.py`'s `_error_response` uses `_error_detail` (the builder, not
+      the raiser) — the one legitimate builder call site.
+- [x] `alert_service.py`'s inline `{"error": {...}}` dict replaced with
+      `_raise_error(...)`.
+- [x] Consolidate redundant raise sites:
+      `raise HTTPException(..., detail=_error_detail(...))` →
+      `_raise_error(...)`. Behavior-preserving.
+- [x] `pytest backend/tests -q` — 460 passed.
+- [x] Commit: `backend: extract shared error helpers and consolidate raise call sites`
 
-- [ ] Add `backend/app/core/error_codes.py` with a named     constant per code, and reference constants rather than string literals in services (prevents recurrence).
 
-- [ ] Update every test asserting on **"NOT_FOUND"** — currently `tests/test_tenant_service.py:86`, plus any others surfaced by running the suite.
+**Commit.**
 
-- [ ] Verify no external client (frontend, API docs, integrations) matches on **"NOT_FOUND"** before merging. If any do, coordinate a compatible release or add a shim.
+```
+backend: extract shared error helpers and consolidate raise call sites
 
-- [ ] Update API docs (if docs/ exists) to enumerate codes per endpoint.
+_error_detail was duplicated in 15 files with only cosmetic annotation
+drift. _raise_error was duplicated in 3 files with a real annotation
+inconsistency (NoReturn vs None despite both raising unconditionally).
+Both now live in app/core/errors.py and are imported everywhere.
 
-- [ ] Commit: `backend: use resource-specific error codes for 404s.`
+Redundant raise call sites
+(raise HTTPException(..., detail=_error_detail(...))) consolidated to
+_raise_error(...). Behavior-preserving: the emitted HTTPException detail
+is byte-identical. main.py's _error_response continues to use
+_error_detail (it builds a JSONResponse, does not raise) — this is the
+one legitimate builder call site.
 
-**Constraints.** No HTTP status changes, no error-message changes, no changes to response models or router signatures, no renaming of non-404 codes (FORBIDDEN, CONFLICT, VALIDATION_ERROR) — those may warrant their own task.
+No status, message, response-model, or router-signature changes.
+alert_service's inline {"error": {...}} dict now routes through
+_raise_error so the wire shape cannot drift.
 
-**Wire casing for error codes.** Error codes are snake_case in the body (`"vehicle_not_found"`, `"NOT_FOUND"`) even though response models serialize to camelCase (`arrivalSequence`, `pageSize`). Decide whether codes should follow the camelCase convention (`"vehicleNotFound"`) or stay snake_case (current). **Recommendation: stay snake_case** — error codes are identifiers, not display strings, and `gps_handler.py:54` already uses `"vehicle_not_found"` (snake_case). Snake_case codes are also easier to grep for in client code. Confirm and document; if camelCase is chosen, all codes and every test that asserts on them change together.
+Refs: Task 2.4 (phase 1 of 3)
+```
 
-**Risk.** Client compatibility (any consumer matching on "NOT_FOUND"); test surface (expect 5–20 stale assertions to update, all mechanical).
+**Risk.** Single large mechanical diff (~18 files). Mitigated by per-file
+incremental test runs, `_raise_error` vs `_error_detail` greps, and a
+manual 500-handler test.
+
+### Task 2.4 — Phase 2: `error_codes` module
+
+**Scope.** Add `backend/app/core/error_codes.py` with named snake_case
+constants. Pure addition — no caller changes, no behavior change.
+
+**Deliverable.**
+
+- [ ] Create `backend/app/core/error_codes.py` with the constants below.
+- [ ] No imports, no caller changes elsewhere. The module is standalone.
+- [ ] `pytest backend/tests -q` — 460 passed (unchanged).
+- [ ] Commit: `backend: add error_codes module for resource-specific error identifiers`
+
+**Module contents.**
+
+- **404 — resource not found:**
+  `STOP_NOT_FOUND`, `DRIVER_NOT_FOUND`, `ROUTE_NOT_FOUND`,
+  `TRIP_NOT_FOUND`, `USER_NOT_FOUND`, `TENANT_NOT_FOUND`,
+  `TENANT_ADMIN_NOT_FOUND`, `ALERT_NOT_FOUND`,
+  `MAINTENANCE_RECORD_NOT_FOUND`, `PASSENGER_NOT_FOUND`,
+  `ACCOUNT_NOT_FOUND`, `STOPS_NOT_FOUND`, `VEHICLE_NOT_FOUND`,
+  `NO_ARRIVAL_RECORDS`.
+- **Specific conditions:**
+  `EMAIL_ALREADY_EXISTS`, `ALREADY_VERIFIED`, `INVALID_OTP`,
+  `INVALID_TOKEN`, `TENANT_INACTIVE`, `TENANT_REQUIRED`.
+- **Generic HTTP-class codes** (`FORBIDDEN`, `CONFLICT`, `BAD_REQUEST`,
+  `UNAUTHORIZED`) documented in a header comment as unchanged and
+  intentionally absent from the module.
+
+**Module docstring should state:**
+- Codes are snake_case identifiers.
+- Codes are the client-facing discriminator in `{"error": {"code": ..., "message": ...}}`.
+- Renaming a code requires client coordination.
+- Generic HTTP-class codes are deliberately not named here — client outcome
+  is identical regardless of casing, so renaming gains nothing.
+
+**File list.**
+
+- `backend/app/core/error_codes.py` (new)
+
+**Commit.**
+
+```
+backend: add error_codes module for resource-specific error identifiers
+
+Pure addition: defines snake_case constants for 404s and specific
+conditions so service call sites can reference them instead of literals
+in phase 3. Generic HTTP-class codes (FORBIDDEN, CONFLICT, BAD_REQUEST,
+UNAUTHORIZED) are deliberately omitted — renaming them gains no
+information for clients and would require per-site decisions.
+
+No caller changes, no behavior change.
+
+Refs: Task 2.4 (phase 2 of 3)
+```
+
+**Risk.** None. New file, no imports, no callers yet.
+
+
+### Task 2.4 — Phase 3: Replace code literals with constants
+
+**Scope.** Replace `"NOT_FOUND"` and specific-condition literals with the
+constants from phase 2. Generic HTTP-class codes stay unchanged.
+
+**Deliverable.**
+
+- [ ] Replace every `"NOT_FOUND"` at a resource-specific site with the
+      corresponding `error_codes.X_NOT_FOUND`.
+- [ ] Replace specific-condition literals with constants.
+- [ ] Promote "email already exists" everywhere to `EMAIL_ALREADY_EXISTS`.
+- [ ] Retroactively switch `vehicle_service.py`'s `"vehicle_not_found"` /
+      `"no_arrival_records"` to constants.
+- [ ] Leave generic codes unchanged.
+- [ ] Leave `gps_handler.py:54` unchanged.
+- [ ] Update tests asserting on changed codes.
+- [ ] `pytest backend/tests -q` — expect 460 passed.
+- [ ] Commit: `backend: use named error codes throughout services and routers`
+
+**Call-site mapping.**
+
+404s:
+- `arrival_service.py:102`, `:189` → `STOP_NOT_FOUND`
+- `driver_service.py:65` → `DRIVER_NOT_FOUND`
+- `fleet_assignment.py:52` → `VEHICLE_NOT_FOUND`; `:70` → `DRIVER_NOT_FOUND`
+- `maintenance_service.py:71` → `MAINTENANCE_RECORD_NOT_FOUND`;
+  `:87` → `VEHICLE_NOT_FOUND`
+- `passenger_report_service.py:36` → `PASSENGER_NOT_FOUND`
+- `passenger_service.py:105`, `:154` → `ACCOUNT_NOT_FOUND`
+- `route_service.py:105` → `STOP_NOT_FOUND`; `:186` → `STOPS_NOT_FOUND`;
+  `:265`, `:288` → `ROUTE_NOT_FOUND`
+- `superadmin_service.py:90`, `:116`, `:143` → `TENANT_NOT_FOUND`;
+  `:156` → `TENANT_ADMIN_NOT_FOUND`; `:269` → `PASSENGER_NOT_FOUND`
+- `trip_service.py:73` → `TRIP_NOT_FOUND`; `:93` → `VEHICLE_NOT_FOUND`;
+  `:116` → `DRIVER_NOT_FOUND`
+- `user_service.py:80`, `:204` → `USER_NOT_FOUND`
+- `vehicle_service.py:71` → `VEHICLE_NOT_FOUND`; `"no_arrival_records"`
+  → `NO_ARRIVAL_RECORDS`; `:266` stays `"CONFLICT"` (generic, unchanged)
+- `alert_service.py`'s `"alert_not_found"` → `ALERT_NOT_FOUND`
+
+Specific conditions:
+- `passenger_service.py:111`, `:160` → `ALREADY_VERIFIED`
+- `passenger_service.py:125` → `INVALID_OTP`
+- `user_service.py:195`, `:216` → `INVALID_TOKEN`
+- `tenant_service.py:49` → `EMAIL_ALREADY_EXISTS`
+- `user_service.py:106`, `:126`, `:150` → `EMAIL_ALREADY_EXISTS`
+  (was `"CONFLICT", "Email already exists"` — unification)
+
+Leave unchanged:
+- `FORBIDDEN` at `users.py:81`, `passenger_report_service.py:41`,
+  `superadmin_service.py:274`, `user_service.py:241`, `:261`
+- `CONFLICT` at `route_service.py:348`, `trip_service.py:121`,
+  `vehicle_service.py:266`
+- `BAD_REQUEST` at `user_service.py:290`
+- `UNAUTHORIZED` and other generic codes in `core/dependencies.py`
+- `gps_handler.py:54`'s `"vehicle_not_found"` (internal status, not HTTP
+  error code)
+
+**Test updates.**
+- `tests/test_tenant_service.py:86`: `"NOT_FOUND"` → `"tenant_not_found"`.
+- Any other assertions surfaced by the run — paste failures, do not guess.
+
+**File list.**
+- `backend/app/core/error_codes.py` (import only — no change if phase 2
+  already created it)
+- 13 service files: `alert_service.py`, `arrival_service.py`,
+  `driver_service.py`, `fleet_assignment.py`, `maintenance_service.py`,
+  `passenger_report_service.py`, `passenger_service.py`, `route_service.py`,
+  `superadmin_service.py`, `tenant_service.py`, `trip_service.py`,
+  `user_service.py`, `vehicle_service.py`
+- `backend/tests/test_tenant_service.py`
+- any other tests surfaced
+
+**Commit.**
+
+```
+backend: use named error codes throughout services and routers
+
+Replaces "NOT_FOUND" and specific-condition literals with constants
+from app.core.error_codes. Generic HTTP-class codes (FORBIDDEN,
+CONFLICT, BAD_REQUEST, UNAUTHORIZED) stay as literals — client outcome
+is identical regardless of casing, so renaming gains nothing.
+
+"Email already exists" is unified to EMAIL_ALREADY_EXISTS at all four
+sites (previously "CONFLICT" in user_service.py, already
+EMAIL_ALREADY_EXISTS in tenant_service.py).
+
+gps_handler.py's "vehicle_not_found" is unchanged — it is an internal
+dict status, not an HTTP error code.
+
+Client-visible change: consumers matching on "NOT_FOUND",
+"ALREADY_VERIFIED", "INVALID_OTP", "INVALID_TOKEN", "TENANT_INACTIVE",
+"TENANT_REQUIRED", or "EMAIL_ALREADY_EXISTS" must update in a
+coordinated release.
+
+No status, message, response-model, or router-signature changes.
+
+Refs: Task 2.4 (phase 3 of 3)
+```
+
+**Risk.**
+- Client compatibility: coordinate with frontend before merging.
+- Test surface: expect ~1–10 mechanical assertion updates. Run the suite
+  and paste failures as they appear.
 
 ---
 

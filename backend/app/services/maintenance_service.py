@@ -1,25 +1,15 @@
 from datetime import datetime, timezone
 from typing import Sequence
 
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.errors import _raise_error
 from app.models.maintenance import MaintenanceRecord
 from app.models.vehicle import Vehicle
 from app.schemas.maintenance import MaintenanceCreate, MaintenanceUpdate
 from app.services import audit_service, vehicle_service
-
-
-def _error_detail(code: str, message: str) -> dict:
-    return {
-        "data": None,
-        "meta": None,
-        "error": {
-            "code": code,
-            "message": message,
-        },
-    }
 
 
 async def get_maintenance_records(
@@ -66,9 +56,10 @@ async def get_maintenance_record_by_id(
     )
     record = result.scalar_one_or_none()
     if not record:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("NOT_FOUND", "Maintenance record not found"),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "NOT_FOUND",
+            "Maintenance record not found",
         )
     return record
 
@@ -82,9 +73,10 @@ async def create_maintenance_record(
         )
     )
     if not vehicle_res.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=_error_detail("vehicle_not_found", "Vehicle not found"),
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            "VEHICLE_NOT_FOUND",
+            "Vehicle not found",
         )
 
     record = MaintenanceRecord(
