@@ -46,6 +46,7 @@ class VehicleUpdate(APIModel):
 
 class VehicleRead(APIModel):
     id: str = Field(json_schema_extra={"example": "veh-uuid"})
+    tenant_id: str = Field(json_schema_extra={"example": "ten-uuid"})
     registration_number: str = Field(json_schema_extra={"example": "RAD 001 A"})
     model: str = Field(json_schema_extra={"example": "Yutong ZK6120"})
     seating_capacity: int = Field(default=45, json_schema_extra={"example": 45})
