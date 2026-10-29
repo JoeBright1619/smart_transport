@@ -530,11 +530,40 @@ Refs: Task 2.4 (phase 3 of 3)
       `route_id`; non-zero occupancy is read; missing field defaults to 0.
 - [x] Commit: `passenger_service: add vehicle map fetcher`
 
-### Task 3.3 — Tenant identity
+### Task 3.3 — Tenant identity [DEFERRED]
 - [ ] Create `passenger_service/identity.py` with `resolve_tenant_id(...)`,
       mirroring `gps_service/vehicle_tracker/identity.py`.
 - [ ] Test: mocked HTTP; parses `{data: {tenant_id: ...}}`.
 - [ ] Commit: `passenger_service: add tenant identity resolver`
+
+**Deferred pending backend decision.** gps_service's resolver calls
+`GET /api/v1/service/whoami`, which uses `get_tenant_or_service()` and
+rejects universal (NULL-tenant) service tokens. passenger_service's
+role is cross-tenant (universal passenger pool, per §5 / Task 2.3b),
+so the gps_service pattern doesn't fit. Three paths forward:
+
+1. **Per-vehicle lookup** — `resolve_tenant_id(vehicle_id, ...)` calling
+   `GET /api/v1/vehicles/{id}`. But that endpoint is user-role-gated
+   (`require_role("admin", "operator", "dispatcher")` + `get_current_tenant`),
+   so a service token can't call it today. Needs a backend change to
+   allow service-token access (and probably universal, to be useful
+   cross-tenant).
+
+2. **Universal-aware whoami** — new backend endpoint returning
+   `{kind: "tenant" | "universal_service", tenant_id: str | null}` so
+   callers can distinguish bound vs universal tokens. Requires backend
+   work.
+
+3. **Drop it** — no resolver needed until the backend supports
+   universal-token access to `/vehicles` and `/passengers`. Cross-tenant
+   fetchers simply return rows carrying their own `tenant_id`
+   (added to `VehicleRead` in Task 3.2 for exactly this reason).
+
+Revisit after: (a) passenger_service's auth model is decided (tenant-scoped
+token per tenant? universal token? both?), and (b) the backend gains
+whatever endpoint the chosen path needs. Downstream tasks (3.4+) that
+might consume a tenant resolver should either not need one, or be
+explicitly blocked on this decision.
 
 ### Task 3.4 — Passenger pool fetcher
 - [ ] Add `passenger_service/passenger_pool/fetcher.py` — a **single universal**
