@@ -23,6 +23,11 @@ class PassengerServiceSettings(BaseSettings):
     BACKEND_REQUEST_TIMEOUT: float = 10.0
     BACKEND_PAGE_SIZE: int = 100
 
+    # Universal passenger-pool token (scopes="passengers:read_universal",
+    # tenant_id IS NULL). Used by PassengerPoolFetcher; distinct from
+    # BACKEND_SERVICE_TOKEN, which may be tenant-scoped.
+    PASSENGER_POOL_SERVICE_TOKEN: str = ""
+
     VEHICLE_REFRESH_INTERVAL: float = 30.0
 
     # Stop-arrival detection (design doc §3)
