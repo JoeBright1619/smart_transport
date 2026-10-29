@@ -518,7 +518,7 @@ Refs: Task 2.4 (phase 3 of 3)
 - [x] Commit: `passenger_service: add route cache`
 
 ### Task 3.2 — Vehicle map
-- [ ] Create `passenger_service/vehicle_map/fetcher.py` with
+- [x] Create `passenger_service/vehicle_map/fetcher.py` with
       `VehicleMapFetcher(base_url, service_token, ...)` exposing
       `fetch_active_vehicles() -> list[VehicleInfo]` where `VehicleInfo`
       carries `vehicle_id`, `tenant_id`, `route_id`, `seating_capacity`,
@@ -526,9 +526,9 @@ Refs: Task 2.4 (phase 3 of 3)
       missing → 0).
       Reuse `gps_service/vehicle_tracker/wire.py`'s `normalize_keys` approach
       (copy, don't import).
-- [ ] Test: mocked HTTP; camelCase → snake_case; skips vehicles with no
+- [x] Test: mocked HTTP; camelCase → snake_case; skips vehicles with no
       `route_id`; non-zero occupancy is read; missing field defaults to 0.
-- [ ] Commit: `passenger_service: add vehicle map fetcher`
+- [x] Commit: `passenger_service: add vehicle map fetcher`
 
 ### Task 3.3 — Tenant identity
 - [ ] Create `passenger_service/identity.py` with `resolve_tenant_id(...)`,
