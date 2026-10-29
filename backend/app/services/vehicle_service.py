@@ -93,6 +93,104 @@ async def get_latest_arrival_sequence(
     return latest
 
 
+async def get_all_active_vehicles(
+    db: AsyncSession,
+    status_filter: str | None,
+    page: int,
+    page_size: int,
+) -> tuple[list[Vehicle], int]:
+    """List vehicles across all tenants (universal scope only).
+
+    Same semantics as get_vehicles() minus the tenant filter. Used only
+    by the /api/v1/service/vehicles endpoint, which is guarded by
+    require_superadmin_or_universal_service(vehicles:read_universal).
+    """
+
+    stmt = select(Vehicle).where(Vehicle.is_deleted.is_(False))
+
+    if status_filter is not None:
+        stmt = stmt.where(Vehicle.status == status_filter)
+
+    # Total before pagination
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = (await db.execute(count_stmt)).scalar_one()
+
+    stmt = (
+        stmt.order_by(Vehicle.updated_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    )
+    result = await db.execute(stmt)
+    return list(result.scalars().all()), total
+
+
+async def get_vehicle_by_id_any_tenant(
+    db: AsyncSession,
+    vehicle_id: str,
+) -> Vehicle:
+    """Return a vehicle across all tenants, or 404.
+
+    Same as get_vehicle_by_id minus the tenant filter. Used only by
+    /api/v1/service/vehicles/{id}.
+    """
+
+    stmt = select(Vehicle).where(
+        Vehicle.id == vehicle_id,
+        Vehicle.is_deleted.is_(False),
+    )
+    vehicle = (await db.execute(stmt)).scalar_one_or_none()
+
+    if vehicle is None:
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            error_codes.VEHICLE_NOT_FOUND,
+            "Vehicle not found",
+        )
+    return vehicle
+
+
+async def get_latest_arrival_sequence_any_tenant(
+    db: AsyncSession,
+    vehicle_id: str,
+) -> int:
+    """Return the highest arrival_sequence for a vehicle across all tenants.
+
+    Same as get_latest_arrival_sequence minus the tenant filter. Used only
+    by /api/v1/service/vehicles/{id}/latest-arrival-sequence.
+
+    Raises:
+      vehicle_not_found — no vehicle row with that id.
+      no_arrival_records — vehicle exists but has no occupancy_events.
+    """
+
+    # Confirm the vehicle exists first so we can distinguish
+    # vehicle_not_found from no_arrival_records.
+    exists = await db.execute(
+        select(Vehicle.id).where(
+            Vehicle.id == vehicle_id,
+            Vehicle.is_deleted.is_(False),
+        )
+    )
+    if exists.scalar_one_or_none() is None:
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            error_codes.VEHICLE_NOT_FOUND,
+            "Vehicle not found",
+        )
+
+    seq_stmt = select(func.max(OccupancyEvent.arrival_sequence)).where(
+        OccupancyEvent.vehicle_id == vehicle_id
+    )
+    seq = (await db.execute(seq_stmt)).scalar_one_or_none()
+    if seq is None:
+        _raise_error(
+            status.HTTP_404_NOT_FOUND,
+            error_codes.NO_ARRIVAL_RECORDS,
+            "No arrival records for this vehicle",
+        )
+    return int(seq)
+
+
 async def create_vehicle(
     db: AsyncSession, data: VehicleCreate, tenant_id: str, current_user_id: str
 ) -> Vehicle:
