@@ -1,8 +1,9 @@
 """Wire-normalization helpers.
 
-Copied verbatim from gps_service/vehicle_tracker/wire.py rather than
-imported — services do not share code (architectural boundary, project
-context §1). Keep the two copies in sync if the algorithm changes.
+Copied from gps_service/vehicle_tracker/wire.py (via vehicle_map/wire.py)
+rather than imported — services (and, for cleanliness, packages within
+a service) do not share this utility. Keep copies in sync if the
+algorithm changes.
 """
 
 from __future__ import annotations

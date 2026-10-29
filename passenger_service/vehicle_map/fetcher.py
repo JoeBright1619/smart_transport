@@ -3,7 +3,7 @@ from __future__ import annotations
 import aiohttp
 
 from passenger_service.vehicle_map.models import VehicleInfo
-from passenger_service.vehicle_map.wire import normalize_keys
+from passenger_service.wire import normalize_keys
 
 _PAGE_SIZE = 100  # backend VehicleRead caps page_size at le=100
 

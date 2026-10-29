@@ -566,7 +566,7 @@ might consume a tenant resolver should either not need one, or be
 explicitly blocked on this decision.
 
 ### Task 3.4 — Passenger pool fetcher
-- [ ] Add `passenger_service/passenger_pool/fetcher.py` — a **single universal**
+- [x] Add `passenger_service/passenger_pool/fetcher.py` — a **single universal**
       `PassengerPoolFetcher` with `fetch_passenger_ids() -> list[str]` (calls
       Task 2.3's endpoint **without** `tenant_id` — passengers are not
       tenant-bound; see design §7 "Universal passengers") and
@@ -608,10 +608,10 @@ explicitly blocked on this decision.
   }
 }
 ```
-- [ ] Test: mocked HTTP returns the expected list; **the request URL contains
+- [x] Test: mocked HTTP returns the expected list; **the request URL contains
       no `tenant_id` query parameter**; cache hit avoids a second call; refresh
       after the interval.
-- [ ] Commit: `passenger_service: add passenger pool fetcher`
+- [x] Commit: `passenger_service: add passenger pool fetcher`
 
 ### Task 3.5 — Arrival-sequence client
 - [ ] Create `passenger_service/vehicle_map/sequence_client.py` with
