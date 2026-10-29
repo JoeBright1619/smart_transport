@@ -1,0 +1,3 @@
+-r backend/requirements.txt
+-r gps_service/requirements.txt
+-r passenger_service/requirements.txt

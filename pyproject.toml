@@ -8,3 +8,7 @@ exclude_dirs = [
     "gps_service/tests",
     "passenger_service/tests"
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+asyncio_mode = "auto"
