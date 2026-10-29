@@ -1,7 +1,10 @@
+from pathlib import Path
 from typing import List
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_BACKEND_ROOT = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
@@ -43,7 +46,10 @@ class Settings(BaseSettings):
     EMAIL_BACKEND: str = "console"
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
+        env_file=_BACKEND_ROOT / ".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore",
     )
 
     @field_validator("CORS_ORIGINS", mode="before")
