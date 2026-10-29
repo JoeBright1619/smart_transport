@@ -537,19 +537,19 @@ Refs: Task 2.4 (phase 3 of 3)
 
 Mirrors Task 2.3b's passenger pattern (`passengers:read_universal` + `require_superadmin_or_universal_service`).
 
-- [ ] Add three service-layer functions in `backend/app/services/vehicle_service.py`:
+- [x] Add three service-layer functions in `backend/app/services/vehicle_service.py`:
   - `get_all_active_vehicles(db, status_filter, page, page_size) -> tuple[list[Vehicle], int]` — same query as `get_vehicles` **minus the tenant filter**. Returns `(vehicles, total)` for pagination.
   - `get_vehicle_by_id_any_tenant(db, vehicle_id) -> Vehicle` — same as `get_vehicle_by_id` minus tenant filter; raises 404 `vehicle_not_found`.
   - `get_latest_arrival_sequence_any_tenant(db, vehicle_id) -> int` — same as `get_latest_arrival_sequence` minus tenant filter; same `vehicle_not_found` / `no_arrival_records` 404 behavior.
   - Scope string `"vehicles:read_universal"` used as a literal at call sites (matching `passengers:read_universal` — no constants module exists).
 
-- [ ] Create `backend/app/routers/service_vehicles.py`:
+- [x] Create `backend/app/routers/service_vehicles.py`:
   - `router = APIRouter(prefix="/api/v1/service/vehicles", tags=["service"])`
   - `GET ""` → `PaginatedResponse[VehicleRead]`, guard `require_superadmin_or_universal_service(required_scope="vehicles:read_universal")`. Query params: `status`, `page`, `page_size` (mirror the user endpoint).
   - `GET "/{id}"` → `APIResponse[VehicleRead]`, same guard.
   - `GET "/{id}/latest-arrival-sequence"` → `APIResponse[LatestArrivalSequenceRead]`, same guard.
 
-- [ ] Register in `backend/main.py`:
+- [x] Register in `backend/main.py`:
 
   ```python
   app.include_router(service_vehicles.router)
@@ -557,7 +557,7 @@ Mirrors Task 2.3b's passenger pattern (`passengers:read_universal` + `require_su
 
   alongside the other `include_router` calls.
 
-- [ ] Tests in `backend/tests/service/test_service_vehicles.py` (create `tests/service/__init__.py` if absent):
+- [x] Tests in `backend/tests/service/test_service_vehicles.py` (create `tests/service/__init__.py` if absent):
   - **List endpoint**
     - superadmin JWT → 200
     - universal token with `vehicles:read_universal` → 200
@@ -575,7 +575,7 @@ Mirrors Task 2.3b's passenger pattern (`passengers:read_universal` + `require_su
     - 404 `no_arrival_records` for an existing vehicle with no occupancy events
     - scope gates (as above)
 
-- [ ] Commit split:
+- [x] Commit split:
   1. `backend: add universal fleet service functions` — service layer + tests for the three functions, no endpoints yet.
   2. `backend: add /service/vehicles endpoints` — router + main.py wiring + endpoint tests.
   3. `docs: unblock Tasks 3.3 and 3.5 in passenger_service plan` — update `implementation_plan.md`; 3.3 and 3.5 lose the DEFERRED marker, add a note that both now call `/api/v1/service/vehicles*`.
@@ -597,40 +597,13 @@ Mirrors Task 2.3b's passenger pattern (`passengers:read_universal` + `require_su
 
 **Test count target:** current 460 + ~13–16 new tests → **473–476 passed** in `backend/tests`.
 
-### Task 3.3 — Tenant identity [DEFERRED]
+### Task 3.3 — Tenant identity
 - [ ] Create `passenger_service/identity.py` with `resolve_tenant_id(...)`,
       mirroring `gps_service/vehicle_tracker/identity.py`.
 - [ ] Test: mocked HTTP; parses `{data: {tenant_id: ...}}`.
 - [ ] Commit: `passenger_service: add tenant identity resolver`
 
-**Deferred pending backend decision.** gps_service's resolver calls
-`GET /api/v1/service/whoami`, which uses `get_tenant_or_service()` and
-rejects universal (NULL-tenant) service tokens. passenger_service's
-role is cross-tenant (universal passenger pool, per §5 / Task 2.3b),
-so the gps_service pattern doesn't fit. Three paths forward:
-
-1. **Per-vehicle lookup** — `resolve_tenant_id(vehicle_id, ...)` calling
-   `GET /api/v1/vehicles/{id}`. But that endpoint is user-role-gated
-   (`require_role("admin", "operator", "dispatcher")` + `get_current_tenant`),
-   so a service token can't call it today. Needs a backend change to
-   allow service-token access (and probably universal, to be useful
-   cross-tenant).
-
-2. **Universal-aware whoami** — new backend endpoint returning
-   `{kind: "tenant" | "universal_service", tenant_id: str | null}` so
-   callers can distinguish bound vs universal tokens. Requires backend
-   work.
-
-3. **Drop it** — no resolver needed until the backend supports
-   universal-token access to `/vehicles` and `/passengers`. Cross-tenant
-   fetchers simply return rows carrying their own `tenant_id`
-   (added to `VehicleRead` in Task 3.2 for exactly this reason).
-
-Revisit after: (a) passenger_service's auth model is decided (tenant-scoped
-token per tenant? universal token? both?), and (b) the backend gains
-whatever endpoint the chosen path needs. Downstream tasks (3.4+) that
-might consume a tenant resolver should either not need one, or be
-explicitly blocked on this decision.
+Backend endpoints in Task 3.0. Client implementation unblocked.
 
 ### Task 3.4 — Passenger pool fetcher
 - [x] Add `passenger_service/passenger_pool/fetcher.py` — a **single universal**
