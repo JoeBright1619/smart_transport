@@ -491,7 +491,7 @@ Refs: Task 2.4 (phase 3 of 3)
 ## Phase 3 — passenger_service backend clients
 
 ### Task 3.1 — Route cache
-- [ ] Create `passenger_service/route_cache/cache.py`. Mirror
+- [x] Create `passenger_service/route_cache/cache.py`. Mirror
       `gps_service/route_cache/cache.py` (copy, don't import), with these
       **deliberate differences**:
       1. **Sort by `sequence` after fetch.** `_fetch_route_stops` returns
@@ -499,20 +499,23 @@ Refs: Task 2.4 (phase 3 of 3)
          simulation rely on `stops` being sequence-sorted; this is the
          only place the data enters the process, so it is the only place
          the sort belongs.
-      2. **Re-export `RouteStop`** from `gps_service.models.gps_data`
-         (or import it directly in callers) — do **not** define a
-         duplicate. The model is `stop_id`, `latitude`, `longitude`,
-         `sequence`; there is no `stop_index`.
-      3. Keep the wire-to-model mapping `stop["order"] → sequence`
+      2. Keep the wire-to-model mapping `stop["order"] → sequence`
          exactly as gps_service does; add a one-line comment:
          `# backend wire field is "order"; model field is "sequence"`.
-- [ ] Same API as gps_service: `get_route_stops(route_id, token) ->
+- [x] **Define `RouteStop` locally** in `passenger_service/models/route_stop.py`,
+      mirroring `gps_service.models.gps_data.RouteStop` (same fields:
+      `stop_id`, `latitude`, `longitude`, `sequence`; no `stop_index`).
+      Do not import across the service boundary — the brief's original
+      "re-export from gps_service" wording conflicts with the architectural
+      boundary in the project context (§1). The local mirror keeps the
+      two services decoupled.
+- [x] Same API as gps_service: `get_route_stops(route_id, token) ->
       list[RouteStop]`, TTL 60s, `close()`.
-- [ ] Test: mocked aiohttp; cache hit avoids second HTTP call; TTL expiry
+- [x] Test: mocked aiohttp; cache hit avoids second HTTP call; TTL expiry
       triggers refetch; missing stops handled; **returned stops are sorted
       by `sequence` even when the mocked response is out of order**; the
       `order → sequence` mapping is exercised.
-- [ ] Commit: `passenger_service: add route cache`
+- [x] Commit: `passenger_service: add route cache`
 
 ### Task 3.2 — Vehicle map
 - [ ] Create `passenger_service/vehicle_map/fetcher.py` with
