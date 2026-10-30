@@ -654,14 +654,14 @@ Backend endpoints in Task 3.0. Client implementation unblocked.
 - [x] Commit: `passenger_service: add passenger pool fetcher`
 
 ### Task 3.5 — Arrival-sequence client
-- [ ] Create `passenger_service/vehicle_map/sequence_client.py` with
+- [x] Create `passenger_service/vehicle_map/sequence_client.py` with
       `SequenceClient.fetch_latest_sequence(vehicle_id) -> int` calling
       Task 2.2's endpoint.
-- [ ] Both 404 variants (`vehicle_not_found`, `no_arrival_records`) → `0`.
+- [x] Both 404 variants (`vehicle_not_found`, `no_arrival_records`) → `0`.
       Network errors and 5xx **raise** (the caller must not guess 0 on a
       transient failure).
-- [ ] Test: mocked HTTP; 200 → value; both 404s → 0; 5xx / timeout raises.
-- [ ] Commit: `passenger_service: add arrival-sequence client`
+- [x] Test: mocked HTTP; 200 → value; both 404s → 0; 5xx / timeout raises.
+- [x] Commit: `passenger_service: add arrival-sequence client`
 
 ---
 
