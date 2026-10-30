@@ -598,10 +598,10 @@ Mirrors Task 2.3b's passenger pattern (`passengers:read_universal` + `require_su
 **Test count target:** current 460 + ~13–16 new tests → **473–476 passed** in `backend/tests`.
 
 ### Task 3.3 — Tenant identity
-- [ ] Create `passenger_service/identity.py` with `resolve_tenant_id(...)`,
+- [x] Create `passenger_service/identity.py` with `resolve_tenant_id(...)`,
       mirroring `gps_service/vehicle_tracker/identity.py`.
-- [ ] Test: mocked HTTP; parses `{data: {tenant_id: ...}}`.
-- [ ] Commit: `passenger_service: add tenant identity resolver`
+- [x] Test: mocked HTTP; parses `{data: {tenant_id: ...}}`.
+- [x] Commit: `passenger_service: add tenant identity resolver`
 
 Backend endpoints in Task 3.0. Client implementation unblocked.
 
