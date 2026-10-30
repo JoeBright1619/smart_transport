@@ -185,7 +185,7 @@ AND them (require both to allow).
 
 Each incoming position message carries `vehicle_id` and `tenant_id`. The service maintains a **vehicle-to-route mapping** that it populates by:
 
-1. **On startup:** Fetching active vehicles from `GET /api/v1/vehicles?status=active` (same endpoint as `VehicleFetcher`). Each vehicle record includes `route_id`, `seatingCapacity` and `currentOccupancy`.
+1. **On startup:** Fetching active vehicles from `GET /api/v1/service/vehicles?status=active` — the tenant-agnostic fleet endpoint added in backend Task 3.0. Auth: universal service token with `vehicles:read_universal` scope (the `/api/v1/vehicles` endpoint is tenant-anchored and rejects universal tokens). Each vehicle record includes `route_id`, `tenantId`, `seatingCapacity` and `currentOccupancy`.
 2. **Periodically:** Re-fetching every `VEHICLE_REFRESH_INTERVAL` seconds (default: 30s) to pick up route reassignments and new vehicles. Vehicles that disappear from the map have their state dropped and their real passenger IDs released (see §7).
 3. **On cache miss:** If a position arrives for a `vehicle_id` not in the mapping, the service logs and skips that position. The periodic refresh will pick up the vehicle on its next cycle.
 
@@ -233,7 +233,7 @@ class VehicleArrivalState:
     arrival_sequence: int = 0                  # incremented per arrival, per vehicle; never reset
     onboard: int = 0                           # current passenger count (== len(passengers) once synthesised)
     needs_synthesis: bool = False              # True when onboard > 0 but passengers is empty (seeded/route change)
-    last_position_ts: str | None = None        # ISO timestamp from last position event
+    last_position_ts: datetime | None = None   # datetime from last position event (PositionEvent.timestamp)
     passengers: list[dict] = field(default_factory=list)
         # Each entry: {"origin_sequence": int, "dest_sequence": int,
         #              "distance_km": float, "passenger_id": str | None}
@@ -632,19 +632,20 @@ any tenant; the backend's passenger pool is universal. Consequences for
 this design:
 
 1. **The pool fetcher is tenant-agnostic.** It calls
-   `GET /api/v1/passengers?role=passenger` (no `tenant_id`) and caches
-   one list for the whole process. There is no per-tenant pool, and
-   `PassengerPoolFetcher` does not take a tenant argument.
+   `GET /api/v1/passengers` (no `tenant_id`, no `role` filter) with a
+   universal service token carrying `passengers:read_universal`, and
+   caches one list for the whole process. There is no per-tenant pool,
+   and `PassengerPoolFetcher` does not take a tenant argument. The
+   pool contains all registered passengers regardless of role; role
+   filtering is deliberately omitted for the demo.
 2. **The exclusion set is already global, not per-tenant.** §7 rule 4
    ("Global one-bus-at-a-time") says a real passenger cannot be on two
    vehicles simultaneously — that rule was already written process-wide,
    not per-tenant, and remains correct under universal passengers. No
    code change to the exclusion logic.
-3. **The vehicle map and route cache remain tenant-scoped.** Vehicles
-   belong to tenants; routes belong to tenants. Only _passengers_ are
-   universal. The orchestrator still resolves tenant identity (for the
-   vehicle map and route cache); it simply does not pass it to the pool
-   fetcher.
+3. **The vehicle map is cross-tenant; the route cache is keyed by**
+   **route id (globally unique).** Vehicles belong to tenants — each row from `/api/v1/service/vehicles` carries `tenantId` — but the map itself spans all tenants because it is fetched with a universal service token (Task 3.0). Route ids are globally unique, so the route cache needs no tenant dimension. Only *passengers* are conceptually universal (no tenant at all). The orchestrator does not derive tenant from the vehicle map or route cache; it uses `position.tenant_id` from the inbound MQTT event to scope the
+   outbound occupancy topic.
 4. **`OccupancyEvent` still carries `tenant_id`.** The event describes
    a _vehicle_, and the vehicle is tenant-scoped. The passengers named
    in `boarded_passenger_ids` / `alighted_passenger_ids` are universal
