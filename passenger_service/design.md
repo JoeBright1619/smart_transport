@@ -39,19 +39,19 @@ Inside `passenger_service`:
 
 ### Message flows
 
-| #   | From              | To                | Transport                                              | Payload                                                              |
-| --- | ----------------- | ----------------- | ------------------------------------------------------ | -------------------------------------------------------------------- |
-| 1   | backend           | gps_service       | HTTP (`/api/v1/vehicles`, `/api/v1/service/whoami`)    | Vehicle list, tenant identity                                        |
-| 2   | backend           | gps_service       | HTTP (`/api/v1/routes/{id}`)                           | Route stops                                                          |
-| 3   | gps_service       | MQTT broker       | MQTT publish `gps/{tenant}/{vehicle}/position`         | `GPSPositionUpdate` payload                                          |
-| 4   | MQTT broker       | backend           | MQTT subscribe `gps/+/+/position`                      | same                                                                 |
-| 5   | MQTT broker       | passenger_service | MQTT subscribe `gps/+/+/position`                      | same                                                                 |
-| 6   | backend           | passenger_service | HTTP (`/api/v1/routes/{id}`, `/api/v1/service/whoami`) | Route stops, tenant identity                                         |
-| 7   | backend           | passenger_service | HTTP (`/api/v1/vehicles?status=active`)                | Vehicle list incl. `route_id`, `seatingCapacity`, `currentOccupancy` |
-| 8   | backend           | passenger_service | HTTP (`/api/v1/passengers?role=passenger`)             | Passenger ID pool (**universal**, not tenant-scoped — see §7)        |
-| 9   | backend           | passenger_service | HTTP (`/api/v1/vehicles/{id}/latest-arrival-sequence`) | Max `arrival_sequence` per vehicle                                   |
-| 10  | passenger_service | MQTT broker       | MQTT publish `gps/{tenant}/{vehicle}/occupancy`        | `OccupancyEvent` payload                                             |
-| 11  | MQTT broker       | backend           | MQTT subscribe `gps/+/+/occupancy`                     | same                                                                 |
+| #   | From              | To                | Transport                                                      | Payload                                                                          |
+| --- | ----------------- | ----------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| 1   | backend           | gps_service       | HTTP (`/api/v1/vehicles`, `/api/v1/service/whoami`)            | Vehicle list, tenant identity                                                    |
+| 2   | backend           | gps_service       | HTTP (`/api/v1/routes/{id}`)                                   | Route stops                                                                      |
+| 3   | gps_service       | MQTT broker       | MQTT publish `gps/{tenant}/{vehicle}/position`                 | `GPSPositionUpdate` payload                                                      |
+| 4   | MQTT broker       | backend           | MQTT subscribe `gps/+/+/position`                              | same                                                                             |
+| 5   | MQTT broker       | passenger_service | MQTT subscribe `gps/+/+/position`                              | same                                                                             |
+| 6   | backend           | passenger_service | HTTP (`/api/v1/routes/{id}`)                                   | Route stops                                                                      |
+| 7   | backend           | passenger_service | HTTP (`/api/v1/service/vehicles?status=active`)                | Vehicle list incl. `route_id`, `tenantId`, `seatingCapacity`, `currentOccupancy` |
+| 8   | backend           | passenger_service | HTTP (`/api/v1/passengers`)                                    | Passenger ID pool (**universal**, not tenant-scoped — see §7)                    |
+| 9   | backend           | passenger_service | HTTP (`/api/v1/service/vehicles/{id}/latest-arrival-sequence`) | Max `arrival_sequence` per vehicle                                               |
+| 10  | passenger_service | MQTT broker       | MQTT publish `gps/{tenant}/{vehicle}/occupancy`                | `OccupancyEvent` payload                                                         |
+| 11  | MQTT broker       | backend           | MQTT subscribe `gps/+/+/occupancy`                             | same                                                                             |
 
 Row 8 fetches the **universal** passenger pool. Passengers in this system
 are not tenant-bound: a real user can board vehicles of any tenant.
@@ -205,10 +205,10 @@ The route is fetched on demand. During the fetch, if the fetch fails (network er
 
 `PositionEvent` (passenger_service/models/position.py) is the parsed inbound MQTT position message published by gps_service. It is a Pydantic v2 BaseModel with exactly six fields, all named in snake_case to match both the design and the wire: `vehicle_id, tenant_id, lat, lng, speed, timestamp`. The wire contract is owned by `gps_service/mqtt/payload.py` (to_backend_payload), which mirrors the backend's GPSPositionUpdate schema; its field names are snake_case and require no aliases. lat and lng are constrained to [-90, 90] and [-180, 180]; speed is constrained to >= 0; timestamp is an ISO 8601 datetime. The wire carries additional fields (device_id, heading, fuel, engine_status, source) that PositionEvent intentionally does not model; they are ignored on parse (extra="ignore"). The two services mirror each other's conventions but do not share code — position.py imports nothing from gps_service.
 Its fields are:
-    stop_id: str
-    latitude: float     # -90..90
-    longitude: float    # -180..180
-    sequence: int       # >= 0; route-defined order
+stop_id: str
+latitude: float # -90..90
+longitude: float # -180..180
+sequence: int # >= 0; route-defined order
 
 There is **no `stop_index` field**. The design's earlier use of `stop_index` was a spec bug; every reference to it has been replaced by `sequence`. The simulation compares `dest_sequence == current_sequence`, not array indices. This makes the logic robust to gapped route data (e.g. sequence values `[0, 1, 3]` after a stop deletion).
 
@@ -430,9 +430,9 @@ silently dropping real events via `ON CONFLICT DO NOTHING`.
 
 **Implementation:** the backend exposes a new endpoint:
 
-    GET /api/v1/vehicles/{vehicle_id}/latest-arrival-sequence
-    → 200 {"data": {"arrival_sequence": 47}}
-    → 404 (error code `vehicle_not_found`)       unknown vehicle, or a vehicle of another tenant
+    GET /api/v1/service/vehicles/{vehicle_id}/latest-arrival-sequence
+    → 200 {"data": {"arrivalSequence": 47}}
+    → 404 (error code `vehicle_not_found`)       unknown vehicle
     → 404 (error code `no_arrival_records`)      known vehicle with no occupancy events yet
 
 The service calls this **lazily, the first time a vehicle is seen** (on its
@@ -507,7 +507,7 @@ time-range queries and chronological consistency with telemetry data.
 alongside `arrival_sequence`.
 
 **Implementation:** the vehicle-map fetch reads `currentOccupancy` from the
-existing `GET /api/v1/vehicles?status=active` response (it is already part of
+existing `GET /api/v1/service/vehicles?status=active` response (it is already part of
 the backend's vehicle schema) into `VehicleInfo.current_occupancy` (default 0
 when absent). On a vehicle's first appearance the orchestrator builds a
 `VehicleSeed` from that value and the fetched sequence.
@@ -549,7 +549,7 @@ keyed by `vehicle_id`. No persistence to disk or Redis.
 
 State is **seeded from the backend** when a vehicle is first seen:
 
-- `arrival_sequence` — from `GET /api/v1/vehicles/{id}/latest-arrival-sequence`
+- `arrival_sequence` — from `GET /api/v1/service/vehicles/{id}/latest-arrival-sequence`
 - `onboard` — from `currentOccupancy` in the existing vehicle-list fetch
 - `passengers` — _not_ fetched; synthesised anonymously on the first arrival (§7)
 
@@ -592,15 +592,15 @@ scope for v1.
 
 **On restart**: nothing that was recorded in the backend is lost.
 
-| State field                                  | Recovered on restart? | From                                                       | Notes                                                                                             |
-| -------------------------------------------- | --------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `arrival_sequence`                           | Yes                   | `GET /api/v1/vehicles/{id}/latest-arrival-sequence`        | Max sequence recorded for that vehicle.                                                           |
-| `onboard`                                    | Yes                   | `currentOccupancy` in `GET /api/v1/vehicles?status=active` | Matches the last committed value.                                                                 |
-| `passengers`                                 | Partially             | Synthesised                                                | Anonymous records with random destinations; real passenger identities of those on board are lost. |
-| `_globally_on_board`                         | No                    | —                                                          | Starts empty. See §12.                                                                            |
-| `last_stop_id` / `last_arrival_ts` / `armed` | No                    | —                                                          | Debounce resets. See residual risk below.                                                         |
-| `last_lat` / `last_lng` / `last_speed`       | No                    | —                                                          | Re-derived from the next position event.                                                          |
-| `route_id`                                   | Yes                   | Vehicle-map fetch                                          | Same source as `onboard`.                                                                         |
+| State field                                  | Recovered on restart? | From                                                               | Notes                                                                                             |
+| -------------------------------------------- | --------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| `arrival_sequence`                           | Yes                   | `GET /api/v1/service/vehicles/{id}/latest-arrival-sequence`        | Max sequence recorded for that vehicle.                                                           |
+| `onboard`                                    | Yes                   | `currentOccupancy` in `GET /api/v1/service/vehicles?status=active` | Matches the last committed value.                                                                 |
+| `passengers`                                 | Partially             | Synthesised                                                        | Anonymous records with random destinations; real passenger identities of those on board are lost. |
+| `_globally_on_board`                         | No                    | —                                                                  | Starts empty. See §12.                                                                            |
+| `last_stop_id` / `last_arrival_ts` / `armed` | No                    | —                                                                  | Debounce resets. See residual risk below.                                                         |
+| `last_lat` / `last_lng` / `last_speed`       | No                    | —                                                                  | Re-derived from the next position event.                                                          |
+| `route_id`                                   | Yes                   | Vehicle-map fetch                                                  | Same source as `onboard`.                                                                         |
 
 **Residual risk on restart:** if a vehicle was _at_ a stop when the service
 crashed, and it is _still_ at the same stop when the service restarts, the
@@ -644,7 +644,7 @@ this design:
    not per-tenant, and remains correct under universal passengers. No
    code change to the exclusion logic.
 3. **The vehicle map is cross-tenant; the route cache is keyed by**
-   **route id (globally unique).** Vehicles belong to tenants — each row from `/api/v1/service/vehicles` carries `tenantId` — but the map itself spans all tenants because it is fetched with a universal service token (Task 3.0). Route ids are globally unique, so the route cache needs no tenant dimension. Only *passengers* are conceptually universal (no tenant at all). The orchestrator does not derive tenant from the vehicle map or route cache; it uses `position.tenant_id` from the inbound MQTT event to scope the
+   **route id (globally unique).** Vehicles belong to tenants — each row from `/api/v1/service/vehicles` carries `tenantId` — but the map itself spans all tenants because it is fetched with a universal service token (Task 3.0). Route ids are globally unique, so the route cache needs no tenant dimension. Only _passengers_ are conceptually universal (no tenant at all). The orchestrator does not derive tenant from the vehicle map or route cache; it uses `position.tenant_id` from the inbound MQTT event to scope the
    outbound occupancy topic.
 4. **`OccupancyEvent` still carries `tenant_id`.** The event describes
    a _vehicle_, and the vehicle is tenant-scoped. The passengers named
@@ -718,7 +718,7 @@ set, passes it in as `excluded_ids`, and updates it from the result (§3).
 
 1. **Per-passenger state.** Every boarder is a discrete record with an origin and destination. Alightings are determined by `dest_sequence == current_sequence`, not by a random draw.
 2. **Deterministic given a seed.** All randomness uses a `random.Random` seeded from `make_rng(vehicle_id, arrival_sequence)`: an int taken from a SHA-256 digest, which is stable across Python versions and distinct per arrival.
-3. **Real-ID assignment.** A random subset of new boarders receives a real `passenger_id` from the **universal** passenger pool (§7 "Universal  passengers"). The remainder are anonymous (`passenger_id=None`).
+3. **Real-ID assignment.** A random subset of new boarders receives a real `passenger_id` from the **universal** passenger pool (§7 "Universal passengers"). The remainder are anonymous (`passenger_id=None`).
 4. **Global one-bus-at-a-time.** A real passenger cannot be assigned to two vehicles simultaneously. The orchestrator holds a single `_globally_on_board: set[str]` for the process and passes it to the engine as `excluded_ids`. IDs are released when passengers alight, when a vehicle changes route, and when a vehicle leaves the vehicle map. (See §12 for the restart caveat.)
 5. **Revenue.** Each alighting passenger contributes `distance_km * REVENUE_PER_KM` to the event's `revenue_delta`. `REVENUE_PER_KM = 60.0` (matches the pre-existing constant).
 
@@ -807,7 +807,7 @@ selected = rng.sample(available, n)   # random subset, assigned to the first n b
 
 The orchestrator then updates `_globally_on_board`: remove `alighted_ids`, add
 `boarded_ids`. The pool comes from a **single universal cached fetcher**
-(`GET /api/v1/passengers?role=passenger` — no `tenant_id`, refreshed on the
+(`GET /api/v1/passengers` — no `tenant_id`, refreshed on the
 same `VEHICLE_REFRESH_INTERVAL` as the vehicle map) and is passed into the
 engine as an argument; it is not copied into per-vehicle or per-tenant state.
 The exclusion set `excluded_ids` is process-global and is _not_ reset per
@@ -860,11 +860,11 @@ Three table writes per occupancy event (in one transaction), plus a possible cap
     time-range queries.
     The `idempotency_key` UNIQUE constraint is what makes ingestion idempotent.
 
-   Insert uses `INSERT ... ON CONFLICT (idempotency_key) DO NOTHING`.
+Insert uses `INSERT ... ON CONFLICT (idempotency_key) DO NOTHING`.
 
-   `source` from the wire payload is validated but **not** written to a
-   column — it is constant and adds no analytical value. If multi-publisher
-   provenance is ever needed, add a `source` column then.
+`source` from the wire payload is validated but **not** written to a
+column — it is constant and adds no analytical value. If multi-publisher
+provenance is ever needed, add a `source` column then.
 
 2.  **Append-only per-passenger child log** — new table `boarding_passenger_events`:
 
@@ -1056,21 +1056,21 @@ After cutover:
 Items marked (resolved) are kept for the decision record; only the
 unmarked rows are open.
 
-| #   | Question                                                                 | Recommended default                                                                                                                                                                                                                                                                                                      | Impact if wrong                    |
-| --- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- |
-| 1   | Should `arrival_sequence` be seeded from the backend?                    | **Resolved: yes**, lazily on a vehicle's first appearance. Backend exposes `GET /api/v1/vehicles/{id}/latest-arrival-sequence`.                                                                                                                                                                                          | —                                  |
-| 2   | Should `onboard` be seeded from `vehicles.current_occupancy`?            | **Resolved: yes**, from `currentOccupancy` in the vehicle-list fetch, with anonymous passengers synthesised on the first arrival (§5, §7).                                                                                                                                                                               | —                                  |
-| 3   | Is loop counting (`completed_loops`) simulation or derived?              | **Open — gps_service concern.** gps_service has no loop counting today; recorded as a disclaimer (§10, §12). Not part of this project.                                                                                                                                                                                   | Low — cosmetic; not demo-critical. |
-| 4   | Should the audit log be partitioned or pruned (it grows forever)?        | **Defer.** Demo scale doesn't need it.                                                                                                                                                                                                                                                                                   | Low.                               |
-| 5   | _(resolved)_ Should `onboard` be allowed to exceed `seating_capacity`?   | **Yes, up to `CRUSH_CAPACITY_FACTOR * seating_capacity`** (1.15 × 45 = 51 max for default). Only reachable at terminus.                                                                                                                                                                                                  | —                                  |
-| 6   | _(resolved)_ Two stops near-simultaneous arrival?                        | **Only fire one arrival per position event** (first match in route order).                                                                                                                                                                                                                                               | —                                  |
-| 7   | _(resolved)_ Determinism of the RNG across Python versions.              | **Seed = int from `sha256(f"{vehicle_id}:{arrival_sequence}")`** via `make_rng`.                                                                                                                                                                                                                                         | —                                  |
-| 8   | Should `passenger_service` expose a REST API beyond health/status?       | **No.** Debug via `/status` only.                                                                                                                                                                                                                                                                                        | Low.                               |
-| 9   | What happens if the position stream stalls (all vehicles stop moving)?   | **Service idles; no events fire.** Health endpoint stays green.                                                                                                                                                                                                                                                          | Low.                               |
-| 10  | Should the backend reject occupancy events for vehicles it doesn't know? | **Yes.** Log warning, drop. Never auto-create.                                                                                                                                                                                                                                                                           | Low.                               |
-| 11  | Global "one bus at a time" invariant on restart.                         | **`_globally_on_board` is not reseeded on restart** (v1). A restart can theoretically double-book a passenger; self-corrects on next alighting. Documented in §12.                                                                                                                                                       | Low at demo scale.                 |
-| 12  | Where do passenger IDs come from?                                        | **Resolved: the backend's existing passengers endpoint** (`GET /api/v1/passengers?role=passenger`), called **without** `tenant_id` — passengers are universal (§7). One process-wide cached fetcher, refreshed on the vehicle-map interval, passed to the engine. Do not add a second endpoint; do not pass `tenant_id`. | —                                  |
-| 13  | Revenue currency and rate.                                               | `REVENUE_PER_KM = 60.0`, carried as `revenue_delta: float` on the event. Backend accumulates to `analytics_daily.revenue`. Matches existing behaviour.                                                                                                                                                                   | Low.                               |
+| #   | Question                                                                 | Recommended default                                                                                                                                                                                                                                                                                       | Impact if wrong                    |
+| --- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| 1   | Should `arrival_sequence` be seeded from the backend?                    | **Resolved: yes**, lazily on a vehicle's first appearance. Backend exposes `GET /api/v1/service/vehicles/{id}/latest-arrival-sequence`.                                                                                                                                                                   | —                                  |
+| 2   | Should `onboard` be seeded from `vehicles.current_occupancy`?            | **Resolved: yes**, from `currentOccupancy` in the vehicle-list fetch, with anonymous passengers synthesised on the first arrival (§5, §7).                                                                                                                                                                | —                                  |
+| 3   | Is loop counting (`completed_loops`) simulation or derived?              | **Open — gps_service concern.** gps_service has no loop counting today; recorded as a disclaimer (§10, §12). Not part of this project.                                                                                                                                                                    | Low — cosmetic; not demo-critical. |
+| 4   | Should the audit log be partitioned or pruned (it grows forever)?        | **Defer.** Demo scale doesn't need it.                                                                                                                                                                                                                                                                    | Low.                               |
+| 5   | _(resolved)_ Should `onboard` be allowed to exceed `seating_capacity`?   | **Yes, up to `CRUSH_CAPACITY_FACTOR * seating_capacity`** (1.15 × 45 = 51 max for default). Only reachable at terminus.                                                                                                                                                                                   | —                                  |
+| 6   | _(resolved)_ Two stops near-simultaneous arrival?                        | **Only fire one arrival per position event** (first match in route order).                                                                                                                                                                                                                                | —                                  |
+| 7   | _(resolved)_ Determinism of the RNG across Python versions.              | **Seed = int from `sha256(f"{vehicle_id}:{arrival_sequence}")`** via `make_rng`.                                                                                                                                                                                                                          | —                                  |
+| 8   | Should `passenger_service` expose a REST API beyond health/status?       | **No.** Debug via `/status` only.                                                                                                                                                                                                                                                                         | Low.                               |
+| 9   | What happens if the position stream stalls (all vehicles stop moving)?   | **Service idles; no events fire.** Health endpoint stays green.                                                                                                                                                                                                                                           | Low.                               |
+| 10  | Should the backend reject occupancy events for vehicles it doesn't know? | **Yes.** Log warning, drop. Never auto-create.                                                                                                                                                                                                                                                            | Low.                               |
+| 11  | Global "one bus at a time" invariant on restart.                         | **`_globally_on_board` is not reseeded on restart** (v1). A restart can theoretically double-book a passenger; self-corrects on next alighting. Documented in §12.                                                                                                                                        | Low at demo scale.                 |
+| 12  | Where do passenger IDs come from?                                        | **Resolved: the backend's existing passengers endpoint** (`GET /api/v1/passengers`), called **without** `tenant_id` — passengers are universal (§7). One process-wide cached fetcher, refreshed on the vehicle-map interval, passed to the engine. Do not add a second endpoint; do not pass `tenant_id`. | —                                  |
+| 13  | Revenue currency and rate.                                               | `REVENUE_PER_KM = 60.0`, carried as `revenue_delta: float` on the event. Backend accumulates to `analytics_daily.revenue`. Matches existing behaviour.                                                                                                                                                    | Low.                               |
 
 ---
 
