@@ -668,7 +668,7 @@ Backend endpoints in Task 3.0. Client implementation unblocked.
 ## Phase 4 — Detection and simulation
 
 ### Task 4.1 — Vehicle arrival state and store
-- [ ] Create `passenger_service/detection/state.py` with the
+- [x] Create `passenger_service/detection/state.py` with the
       `VehicleArrivalState` dataclass (fields per design §3, including
       `armed`, `needs_synthesis`, `passengers`, `current_trip_id`; **no**
       `passenger_pool`), `VehicleSeed(arrival_sequence=0, onboard=0)`, and
@@ -682,13 +682,13 @@ Backend endpoints in Task 3.0. Client implementation unblocked.
           `released_ids`
         - same route: returns the existing state, `released_ids = []`
       - `remove(vehicle_id) -> list[str]` returns the real IDs that were on board
-- [ ] Test: initialises with and without a seed; persists across calls; seeded
+- [x] Test: initialises with and without a seed; persists across calls; seeded
       `arrival_sequence`/`onboard` applied; route change keeps the sequence,
       returns released IDs and sets `needs_synthesis`; `remove` returns IDs.
-- [ ] Commit: `passenger_service: add per-vehicle arrival state`
+- [x] Commit: `passenger_service: add per-vehicle arrival state`
 
 ### Task 4.2 — Stop arrival detection
-- [ ] Create `passenger_service/detection/detector.py` with
+- [x] Create `passenger_service/detection/detector.py` with
       `detect_arrival(position, stops, state, now_mono, settings) -> RouteStop | None`.
       **Pure**: it does not mutate `state` (the orchestrator updates
       `arrival_sequence`, `last_stop_id`, `last_arrival_ts`, `armed`).
@@ -698,13 +698,13 @@ Backend endpoints in Task 3.0. Client implementation unblocked.
       index in the return value — callers use `stop.sequence`.
       Haversine distance, speed threshold, cooldown, and re-arm
       (`state.armed`); first match in `sequence` order.
-- [ ] Test: near+slow → returns the `RouteStop` (assert on `stop_id`);
+- [x] Test: near+slow → returns the `RouteStop` (assert on `stop_id`);
       near+fast → None; far+slow → None; repeat within cooldown → None;
       same stop after cooldown but `armed=False` → None; different stop
       → returns; **gapped sequence data (`[0, 1, 3]`) returns the stop
       whose `sequence` matches, not the array index**; state is not
       mutated.
-- [ ] Commit: `passenger_service: add stop arrival detector`
+- [x] Commit: `passenger_service: add stop arrival detector`
 
 ### Task 4.3 — Passenger simulation
 - [ ] Create `passenger_service/simulation/engine.py` implementing design §7:
