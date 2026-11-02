@@ -33,7 +33,32 @@ class OccupancyEvent(BaseModel):
         default="passenger_service", description="Fixed string for provenance"
     )
     idempotency_key: str = Field(
-        description='"{vehicle_id}:{stop_id}:{arrival_sequence}"'
+        description=(
+            '"{vehicle_id}:{stop_id}:{arrival_sequence}" — note that '
+            "arrival_sequence is the per-vehicle monotonic counter, not the "
+            "stop's route sequence. Stable across replays (backend dedups "
+            "on ON CONFLICT)."
+        )
+    )
+
+    # Per-passenger attribution (§7). Populated from SimulationResult;
+    # empty lists are equivalent to "no real passengers" and are accepted
+    # by the backend (Task 2.1 schema has the same defaults).
+    boarded_passenger_ids: list[str] = Field(
+        default_factory=list,
+        description="Real user IDs that boarded at this stop",
+    )
+    alighted_passenger_ids: list[str] = Field(
+        default_factory=list,
+        description="Real user IDs that alighted at this stop",
+    )
+
+    # Simulation revenue for this stop. 0.0 when no alightings generated
+    # revenue. Units are simulation-only (REVENUE_PER_KM is a demo constant).
+    revenue_delta: float = Field(
+        default=0.0,
+        ge=0.0,
+        description="Revenue delta from alightings, simulation units",
     )
 
 
@@ -48,12 +73,19 @@ def build_occupancy_event(
     alightings: int,
     arrival_sequence: int,
     position_timestamp: str,
+    boarded_passenger_ids: list[str] | None = None,
+    alighted_passenger_ids: list[str] | None = None,
+    revenue_delta: float | None = None,
 ) -> OccupancyEvent:
     """Construct an ``OccupancyEvent`` with derived fields filled in.
 
     ``service_timestamp``, ``source``, and ``idempotency_key`` are computed
-    here so the caller (the detection orchestrator) only has to provide the
-    values it already has.
+    here so the caller only has to provide the values it already has.
+
+    ``boarded_passenger_ids`` / ``alighted_passenger_ids`` / ``revenue_delta``
+    are the three §5 fields added when this model was reconciled with the
+    backend schema. ``None`` maps to empty/0.0 (matching the backend's
+    defaults); the orchestrator (Task 4.6) always passes real values.
     """
     return OccupancyEvent(
         vehicle_id=vehicle_id,
@@ -68,4 +100,7 @@ def build_occupancy_event(
         service_timestamp=datetime.now(UTC).isoformat(),
         source="passenger_service",
         idempotency_key=f"{vehicle_id}:{stop_id}:{arrival_sequence}",
+        boarded_passenger_ids=boarded_passenger_ids or [],
+        alighted_passenger_ids=alighted_passenger_ids or [],
+        revenue_delta=revenue_delta if revenue_delta is not None else 0.0,
     )

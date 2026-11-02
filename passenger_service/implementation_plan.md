@@ -773,14 +773,15 @@ Backend endpoints in Task 3.0. Client implementation unblocked.
 - [x] Commit: `passenger_service: add occupancy event model`
 
 ### Task 4.5 — Occupancy event: per-passenger and revenue fields
-(Follow-up to 4.4, whose first commit landed without these.)
-- [ ] Add `boarded_passenger_ids: list[str] = Field(default_factory=list)`,
+Folded into 4.4's reconcile commit. Kept in the plan for history; no
+separate work remains.
+- [x] Add `boarded_passenger_ids: list[str] = Field(default_factory=list)`,
       `alighted_passenger_ids: list[str] = Field(default_factory=list)`,
       `revenue_delta: float = Field(default=0.0, ge=0.0)`; extend
       `build_occupancy_event(...)` to accept them.
-- [ ] Test: optional fields default to empty/0.0 when omitted; round-trip with
+- [x] Test: optional fields default to empty/0.0 when omitted; round-trip with
       populated lists; negative `revenue_delta` rejected.
-- [ ] Commit: `passenger_service: add per-passenger and revenue fields to occupancy event`
+- [x] Commit: `passenger_service: add per-passenger and revenue fields to occupancy event`
 
 ---
 

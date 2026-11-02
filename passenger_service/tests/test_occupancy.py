@@ -20,6 +20,9 @@ def _valid_kwargs(**overrides) -> dict:
         "alightings": 2,
         "arrival_sequence": 5,
         "position_timestamp": "2026-10-19T14:00:00+00:00",
+        "boarded_passenger_ids": ["pas-a", "pas-b"],
+        "alighted_passenger_ids": ["pas-c"],
+        "revenue_delta": 120.0,
     }
     base.update(overrides)
     return base
@@ -55,6 +58,9 @@ def test_build_passes_through_caller_fields():
     assert event.alightings == 2
     assert event.arrival_sequence == 5
     assert event.position_timestamp == "2026-10-19T14:00:00+00:00"
+    assert event.boarded_passenger_ids == ["pas-a", "pas-b"]
+    assert event.alighted_passenger_ids == ["pas-c"]
+    assert event.revenue_delta == 120.0
 
 
 def test_idempotency_key_format():
@@ -165,5 +171,37 @@ def test_model_dump_shape_matches_schema():
         "service_timestamp",
         "source",
         "idempotency_key",
+        "boarded_passenger_ids",
+        "alighted_passenger_ids",
+        "revenue_delta",
     }
     assert set(build_occupancy_event(**_valid_kwargs()).model_dump().keys()) == expected
+
+
+def test_revenue_delta_zero_default_when_omitted() -> None:
+    kwargs = _valid_kwargs()
+    del kwargs["revenue_delta"]
+    event = build_occupancy_event(**kwargs)
+    assert event.revenue_delta == 0.0
+
+
+def test_revenue_delta_rejects_negative() -> None:
+    with pytest.raises(ValidationError):
+        OccupancyEvent(
+            **{
+                **_valid_kwargs(),
+                "revenue_delta": -1.0,
+                "service_timestamp": "2026-10-19T14:00:01+00:00",
+                "source": "passenger_service",
+                "idempotency_key": "veh-123:stop-42:5",
+            }
+        )
+
+
+def test_boarded_and_alighted_ids_default_to_empty() -> None:
+    kwargs = _valid_kwargs()
+    del kwargs["boarded_passenger_ids"]
+    del kwargs["alighted_passenger_ids"]
+    event = build_occupancy_event(**kwargs)
+    assert event.boarded_passenger_ids == []
+    assert event.alighted_passenger_ids == []
