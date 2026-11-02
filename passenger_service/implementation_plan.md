@@ -707,7 +707,7 @@ Backend endpoints in Task 3.0. Client implementation unblocked.
 - [x] Commit: `passenger_service: add stop arrival detector`
 
 ### Task 4.3 — Passenger simulation
-- [ ] Create `passenger_service/simulation/engine.py` implementing design §7:
+- [x] Create `passenger_service/simulation/engine.py` implementing design §7:
       ```python
       make_rng(vehicle_id, arrival_sequence) -> random.Random
           # random.Random(int.from_bytes(sha256(f"{vehicle_id}:{arrival_sequence}".encode()).digest()[:8], "big"))
@@ -745,7 +745,7 @@ Backend endpoints in Task 3.0. Client implementation unblocked.
       - real-ID assignment from `passenger_pool` excluding remaining passengers'
         IDs, this stop's alighted IDs, and `excluded_ids`
       - revenue accumulation (`sum(distance_km of alighters) * revenue_per_km`)
-- [ ] Test cases (each with a named seed):
+- [x] Test cases (each with a named seed):
       - Terminus loads within `[0.75c, 1.10c]`, all boarders have
         `dest_sequence > 0` (sequence, not array index)
       - Mid-route respects `capacity // 6` cap and available seats
@@ -762,7 +762,7 @@ Backend endpoints in Task 3.0. Client implementation unblocked.
         (+ through-passengers at the last stop), `onboard == len(passengers)`
       - Gapped sequence data (`[0, 1, 3]`): a passenger with   `dest_sequence=3` alights when `current_sequence=3`, not when
         the array index reaches 2.
-- [ ] Commit: `passenger_service: add passenger simulation engine`
+- [x] Commit: `passenger_service: add passenger simulation engine`
 
 ### Task 4.4 — Occupancy event model
 - [x] Create `passenger_service/models/occupancy.py` with `OccupancyEvent`
