@@ -50,7 +50,9 @@ def _page(rows: list[dict], total: int, page: int = 1, page_size: int = 100) -> 
 
 
 def _mock_url(page: int = 1) -> str:
-    return f"{BACKEND}/api/v1/vehicles" f"?status=active&page={page}&page_size=100"
+    return (
+        f"{BACKEND}/api/v1/service/vehicles" f"?status=active&page={page}&page_size=100"
+    )
 
 
 async def test_maps_camelcase_wire_to_snake_fields() -> None:

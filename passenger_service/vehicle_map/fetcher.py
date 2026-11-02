@@ -59,7 +59,7 @@ class VehicleMapFetcher:
     async def _fetch_page(self, page: int) -> dict:
         session = await self._get_session()
 
-        url = f"{self.base_url}/api/v1/vehicles"
+        url = f"{self.base_url}/api/v1/service/vehicles"
         params = {"status": "active", "page": page, "page_size": _PAGE_SIZE}
         headers = {"X-Service-Token": self._service_token}
 
