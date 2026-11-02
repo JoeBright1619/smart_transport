@@ -792,7 +792,7 @@ separate work remains.
 > — the orchestrator calls it with `boarded_passenger_ids`,
 > `alighted_passenger_ids`, `revenue_delta`). Do not start this task
 > against the Task 4.4 signature.
-- [ ] Create `passenger_service/detection/orchestrator.py` with
+- [x] Create `passenger_service/detection/orchestrator.py` with
       `ArrivalOrchestrator`. Given a `PositionEvent` and its collaborators
       (`state_store`, `route_cache`, `vehicle_map`, `sequence_client`,
       `pool_fetcher`, `publisher`, `settings`), it runs the detection loop and
@@ -813,11 +813,11 @@ separate work remains.
         IDs and `revenue_delta`, and publishes
       - after every event, re-arms when the bus is beyond the radius of the last
         stop, and updates `last_*` observations
-- [ ] Test: inject mocked collaborators; occupancy event published on detected
+- [x] Test: inject mocked collaborators; occupancy event published on detected
       arrival with expected fields; no publish on non-arrival; first-sight
       seeding applies sequence and onboard; sequence-client failure skips the
       event; route change releases IDs and keeps the sequence; two vehicles sharing one orchestrator never hold the same real passenger ID at the same time; global set updated from the result; `release_vehicle(id)` removes the vehicle's state and releases its real IDs from the global set (returns them).
-- [ ] Commit: `passenger_service: add detection orchestrator`
+- [x] Commit: `passenger_service: add detection orchestrator`
 
 ### Task 5.2 — Periodic refresh
 - [ ] Add a background task that refreshes the vehicle map **and** the passenger
