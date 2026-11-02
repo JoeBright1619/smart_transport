@@ -1,9 +1,8 @@
 """Inbound occupancy event schema, published by passenger_service over MQTT.
 
-Authored against design §5, not against ``passenger_service/models/occupancy.py``
-(Task 4.4 is behind §5; Task 4.5 will bring the wire model into line). The
-backend validates against this schema on ingestion and hands off to
-``app.services.occupancy_writer`` for persistence.
+Mirrors passenger_service/models/occupancy.py (which was reconciled to §5
+in Task 4.4/4.5). The backend validates against this schema on ingestion
+and hands off to ``app.services.occupancy_writer`` for persistence.
 """
 
 from __future__ import annotations
