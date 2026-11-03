@@ -22,7 +22,7 @@ async def test_fetches_and_maps_order_to_sequence() -> None:
     try:
         with aioresponses() as m:
             m.get(
-                f"{BACKEND}/api/v1/routes/{ROUTE_ID}",
+                f"{BACKEND}/api/v1/service/routes/{ROUTE_ID}",
                 payload=_route_payload(
                     [
                         _stop("stp-1", order=0, lat=1.5, lng=2.5),
@@ -47,7 +47,7 @@ async def test_cache_hit_avoids_second_http_call() -> None:
     try:
         with aioresponses() as m:
             m.get(
-                f"{BACKEND}/api/v1/routes/{ROUTE_ID}",
+                f"{BACKEND}/api/v1/service/routes/{ROUTE_ID}",
                 payload=_route_payload([_stop("stp-1", order=0)]),
             )
 
@@ -73,7 +73,7 @@ async def test_ttl_expiry_triggers_refetch(monkeypatch: pytest.MonkeyPatch) -> N
 
     try:
         with aioresponses() as m:
-            url = f"{BACKEND}/api/v1/routes/{ROUTE_ID}"
+            url = f"{BACKEND}/api/v1/service/routes/{ROUTE_ID}"
             m.get(url, payload=_route_payload([_stop("stp-1", order=0)]))
             m.get(url, payload=_route_payload([_stop("stp-2", order=0)]))
 
@@ -99,7 +99,7 @@ async def test_missing_stops_field_returns_empty_list() -> None:
     try:
         with aioresponses() as m:
             m.get(
-                f"{BACKEND}/api/v1/routes/{ROUTE_ID}",
+                f"{BACKEND}/api/v1/service/routes/{ROUTE_ID}",
                 payload={"data": {"id": ROUTE_ID}},  # no "stops"
             )
             stops = await cache.get_route_stops(ROUTE_ID, token="tok")
@@ -114,7 +114,7 @@ async def test_null_stops_returns_empty_list() -> None:
     try:
         with aioresponses() as m:
             m.get(
-                f"{BACKEND}/api/v1/routes/{ROUTE_ID}",
+                f"{BACKEND}/api/v1/service/routes/{ROUTE_ID}",
                 payload={"data": {"id": ROUTE_ID, "stops": None}},
             )
             stops = await cache.get_route_stops(ROUTE_ID, token="tok")
@@ -129,7 +129,7 @@ async def test_empty_stops_returns_empty_list() -> None:
     try:
         with aioresponses() as m:
             m.get(
-                f"{BACKEND}/api/v1/routes/{ROUTE_ID}",
+                f"{BACKEND}/api/v1/service/routes/{ROUTE_ID}",
                 payload=_route_payload([]),
             )
             stops = await cache.get_route_stops(ROUTE_ID, token="tok")
@@ -144,7 +144,7 @@ async def test_stops_are_sorted_by_sequence_even_when_response_out_of_order() ->
     try:
         with aioresponses() as m:
             m.get(
-                f"{BACKEND}/api/v1/routes/{ROUTE_ID}",
+                f"{BACKEND}/api/v1/service/routes/{ROUTE_ID}",
                 payload=_route_payload(
                     [
                         _stop("stp-c", order=2),
@@ -169,7 +169,7 @@ async def test_cached_value_is_also_sorted() -> None:
     try:
         with aioresponses() as m:
             m.get(
-                f"{BACKEND}/api/v1/routes/{ROUTE_ID}",
+                f"{BACKEND}/api/v1/service/routes/{ROUTE_ID}",
                 payload=_route_payload(
                     [
                         _stop("stp-z", order=5),

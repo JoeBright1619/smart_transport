@@ -64,7 +64,7 @@ class RouteCache:
 
         session = await self._get_session()
 
-        url = f"{self.backend_url}/api/v1/routes/{route_id}"
+        url = f"{self.backend_url}/api/v1/service/routes/{route_id}"
 
         headers = {"X-Service-Token": token} if token else {}
 
