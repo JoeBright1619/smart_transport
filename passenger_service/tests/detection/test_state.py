@@ -249,3 +249,17 @@ def test_remove_then_get_or_create_starts_fresh() -> None:
     assert second.state.arrival_sequence == 0  # fresh state
     assert second.state.onboard == 0
     assert second.state.armed is True
+
+
+def test_size_tracks_stored_vehicle_count() -> None:
+    store = VehicleStateStore()
+    assert store.size() == 0
+
+    store.get_or_create("veh-1", "rt-1")
+    assert store.size() == 1
+
+    store.get_or_create("veh-2", "rt-1")
+    assert store.size() == 2
+
+    store.remove("veh-1")
+    assert store.size() == 1

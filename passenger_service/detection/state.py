@@ -144,3 +144,7 @@ class VehicleStateStore:
         if state is None:
             return []
         return _real_ids(state)
+
+    def size(self) -> int:
+        """Number of vehicles currently tracked (regardless of state)."""
+        return len(self._by_vehicle)
