@@ -895,12 +895,12 @@ both be live. The subscriber is registered **last** (Task 7.5), after the legacy
 loop is disabled (Task 7.4).
 
 ### Task 7.1 — Occupancy MQTT subscriber
-- [ ] `backend/app/services/occupancy_mqtt_subscriber.py`, mirroring
+- [x] `backend/app/services/occupancy_mqtt_subscriber.py`, mirroring
       `gps_mqtt_subscriber.py`. Subscribes to `gps/+/+/occupancy`, validates
       against `OccupancyEvent`, hands to `OccupancyService.record(...)`.
-- [ ] Test: mocked client + mocked service; invalid payload is logged and
+- [x] Test: mocked client + mocked service; invalid payload is logged and
       dropped; valid payload calls service.
-- [ ] Commit: `backend: add occupancy MQTT subscriber`
+- [x] Commit: `backend: add occupancy MQTT subscriber`
 
 ### Task 7.2 — Occupancy service
 - [ ] `backend/app/services/occupancy_service.py` with

@@ -13,32 +13,11 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.conftest import auth_headers
 
 _PATCH = "app.websocket.manager.manager.publish_to_tenant"
-
-
-# ---------------------------------------------------------------------------
-# Fixtures
-# ---------------------------------------------------------------------------
-
-
-@pytest.fixture
-async def admin(make_user, tenant):
-    return await make_user(tenant_id=tenant.id, role="admin")
-
-
-@pytest.fixture
-async def vehicle(make_vehicle, tenant):
-    return await make_vehicle(
-        tenant_id=tenant.id,
-        status="active",
-        lat=-1.9536,
-        lng=30.0606,
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -143,10 +122,10 @@ async def test_record_stop_events_no_alert_below_capacity(db: AsyncSession, vehi
 # ---------------------------------------------------------------------------
 
 
-async def test_occupancy_endpoint_available(client, admin, vehicle):
+async def test_occupancy_endpoint_available(client, admin_user, vehicle):
     r = await client.get(
         f"/api/v1/vehicles/{vehicle.id}/occupancy",
-        headers=auth_headers(admin),
+        headers=auth_headers(admin_user),
     )
     assert r.status_code == 200
     body = r.json()["data"]
@@ -157,7 +136,7 @@ async def test_occupancy_endpoint_available(client, admin, vehicle):
     assert body["status"] == "available"
 
 
-async def test_occupancy_endpoint_nearly_full(client, admin, db, vehicle):
+async def test_occupancy_endpoint_nearly_full(client, admin_user, db, vehicle):
     from sqlalchemy import update as sa_update
 
     from app.models.vehicle import Vehicle
@@ -171,7 +150,7 @@ async def test_occupancy_endpoint_nearly_full(client, admin, db, vehicle):
 
     r = await client.get(
         f"/api/v1/vehicles/{vehicle.id}/occupancy",
-        headers=auth_headers(admin),
+        headers=auth_headers(admin_user),
     )
     assert r.status_code == 200
     body = r.json()["data"]
@@ -179,7 +158,7 @@ async def test_occupancy_endpoint_nearly_full(client, admin, db, vehicle):
     assert body["remainingSeats"] == 5
 
 
-async def test_occupancy_endpoint_full(client, admin, db, vehicle):
+async def test_occupancy_endpoint_full(client, admin_user, db, vehicle):
     from sqlalchemy import update as sa_update
 
     from app.models.vehicle import Vehicle
@@ -193,7 +172,7 @@ async def test_occupancy_endpoint_full(client, admin, db, vehicle):
 
     r = await client.get(
         f"/api/v1/vehicles/{vehicle.id}/occupancy",
-        headers=auth_headers(admin),
+        headers=auth_headers(admin_user),
     )
     assert r.status_code == 200
     body = r.json()["data"]
@@ -201,10 +180,10 @@ async def test_occupancy_endpoint_full(client, admin, db, vehicle):
     assert body["remainingSeats"] == 0
 
 
-async def test_occupancy_endpoint_returns_404_unknown(client, admin):
+async def test_occupancy_endpoint_returns_404_unknown(client, admin_user):
     r = await client.get(
         "/api/v1/vehicles/no-such-vehicle/occupancy",
-        headers=auth_headers(admin),
+        headers=auth_headers(admin_user),
     )
     assert r.status_code == 404
 
@@ -212,3 +191,105 @@ async def test_occupancy_endpoint_returns_404_unknown(client, admin):
 async def test_occupancy_endpoint_requires_auth(client, vehicle):
     r = await client.get(f"/api/v1/vehicles/{vehicle.id}/occupancy")
     assert r.status_code == 401
+
+
+# ---------------------------------------------------------------------------
+# New (Task 7.2): parameterized threshold + windowed dedup
+# ---------------------------------------------------------------------------
+
+
+async def test_create_capacity_alert_fires_at_fractional_threshold(db, vehicle) -> None:
+    """threshold_fraction < 1.0 makes the alert fire below seating_capacity."""
+    from app.services.alert_service import create_capacity_alert
+
+    vehicle.seating_capacity = 40
+    await db.flush()
+
+    with patch(_PATCH, new_callable=AsyncMock):
+        alert = await create_capacity_alert(
+            db,
+            vehicle,
+            current_occupancy=36,
+            stop_name="Stop A",
+            threshold_fraction=0.9,
+        )
+    assert alert is not None
+    assert alert.type == "capacity"
+
+
+async def test_create_capacity_alert_below_fractional_threshold(db, vehicle) -> None:
+    """Below 0.9 * seating_capacity → no alert (no broadcast either)."""
+    from app.services.alert_service import create_capacity_alert
+
+    vehicle.seating_capacity = 40
+    await db.flush()
+
+    # No broadcast expected — but wrap anyway in case of a regression.
+    with patch(_PATCH, new_callable=AsyncMock):
+        alert = await create_capacity_alert(
+            db,
+            vehicle,
+            current_occupancy=35,
+            stop_name="Stop A",
+            threshold_fraction=0.9,
+        )
+    assert alert is None
+
+
+async def test_dedup_window_suppresses_recent_alert_regardless_of_ack(
+    db, vehicle
+) -> None:
+    from app.services.alert_service import create_capacity_alert
+
+    with patch(_PATCH, new_callable=AsyncMock):
+        first = await create_capacity_alert(
+            db,
+            vehicle,
+            current_occupancy=vehicle.seating_capacity,
+            stop_name="Stop A",
+            threshold_fraction=0.9,
+            dedup_window_seconds=300,
+        )
+        assert first is not None
+
+        first.is_acknowledged = True
+        await db.flush()
+
+        second = await create_capacity_alert(
+            db,
+            vehicle,
+            current_occupancy=vehicle.seating_capacity,
+            stop_name="Stop A",
+            threshold_fraction=0.9,
+            dedup_window_seconds=300,
+        )
+    assert second is None
+
+
+async def test_dedup_window_expires_after_interval(db, vehicle) -> None:
+    from app.services.alert_service import create_capacity_alert
+    from datetime import UTC, datetime, timedelta
+
+    with patch(_PATCH, new_callable=AsyncMock):
+        first = await create_capacity_alert(
+            db,
+            vehicle,
+            current_occupancy=vehicle.seating_capacity,
+            stop_name="Stop A",
+            threshold_fraction=0.9,
+            dedup_window_seconds=300,
+        )
+        assert first is not None
+
+        first.created_at = datetime.now(UTC) - timedelta(seconds=301)
+        await db.flush()
+
+        second = await create_capacity_alert(
+            db,
+            vehicle,
+            current_occupancy=vehicle.seating_capacity,
+            stop_name="Stop A",
+            threshold_fraction=0.9,
+            dedup_window_seconds=300,
+        )
+    assert second is not None

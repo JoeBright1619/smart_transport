@@ -17,6 +17,10 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: str | List[str]
 
+    # Capacity alert (Task 7.2)
+    CAPACITY_ALERT_THRESHOLD: float = 0.9
+    CAPACITY_ALERT_DEDUP_SECONDS: int = 300
+
     DATABASE_URL: str
     REDIS_URL: str
 

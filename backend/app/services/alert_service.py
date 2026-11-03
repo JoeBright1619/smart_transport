@@ -1,3 +1,4 @@
+from datetime import UTC, datetime, timedelta
 from typing import Sequence
 
 from fastapi import status
@@ -170,26 +171,46 @@ async def create_capacity_alert(
     vehicle: Vehicle,
     current_occupancy: int,
     stop_name: str,
+    *,
+    threshold_fraction: float = 1.0,
+    dedup_window_seconds: float | None = None,
 ) -> Alert | None:
-    """Create a capacity alert when a bus reaches or exceeds seating capacity.
+    """Create a capacity alert when a bus reaches or exceeds a threshold.
 
-    Suppressed if an unacknowledged capacity alert already exists for this vehicle.
+    Two dedup modes:
+
+    - ``dedup_window_seconds`` is None (default): suppress while any
+      *unacknowledged* capacity alert exists for this vehicle. This is
+      the pre-Phase-7 behaviour, kept for the legacy boarding.py caller
+      until Phase 8 removes it.
+
+    - ``dedup_window_seconds`` is set: suppress any capacity alert for
+      this vehicle created within the window, regardless of
+      acknowledged state. Used by the simulation path (Task 7.2) with
+      ``settings.CAPACITY_ALERT_DEDUP_SECONDS``.
     """
+
     from app.websocket.manager import (
         manager,
     )  # lazy: avoid circular import at module load
 
-    if current_occupancy < vehicle.seating_capacity:
+    threshold_count = int(vehicle.seating_capacity * threshold_fraction)
+    if current_occupancy < threshold_count:
         return None
 
-    existing = await db.execute(
-        select(Alert).where(
-            Alert.tenant_id == vehicle.tenant_id,
-            Alert.type == "capacity",
-            Alert.vehicle_id == vehicle.id,
-            Alert.is_acknowledged.is_(False),
-        )
+    stmt = select(Alert).where(
+        Alert.tenant_id == vehicle.tenant_id,
+        Alert.type == "capacity",
+        Alert.vehicle_id == vehicle.id,
     )
+
+    if dedup_window_seconds is not None:
+        cutoff = datetime.now(UTC) - timedelta(seconds=dedup_window_seconds)
+        stmt = stmt.where(Alert.created_at > cutoff)
+    else:
+        stmt = stmt.where(Alert.is_acknowledged.is_(False))
+
+    existing = await db.execute(stmt)
     if existing.scalars().first():
         return None
 
@@ -219,6 +240,11 @@ async def create_capacity_alert(
     )
     db.add(alert)
     await db.flush()
+    # Broadcast happens before the caller's transaction commits. If the
+    # transaction later fails, WebSocket clients will have seen an alert
+    # that isn't in the DB. Pre-existing behaviour from the legacy
+    # boarding.py path; flagged as a follow-up to broadcast after
+    # commit. Not fixing now (Task 7.2 preserves the contract).
 
     await manager.publish_to_tenant(
         vehicle.tenant_id,
@@ -235,4 +261,5 @@ async def create_capacity_alert(
             },
         },
     )
+
     return alert
