@@ -253,6 +253,31 @@ async def get_route_by_id(db: AsyncSession, route_id: str, tenant_id: str) -> Ro
     return route
 
 
+async def get_route_by_id_any_tenant(db: AsyncSession, route_id: str) -> Route:
+    """Return a route across all tenants, or 404.
+
+    Same as get_route_by_id minus the tenant filter. Used only by
+    /api/v1/service/routes/{id}, for the cross-tenant route-stop
+    fetches passenger_service performs when processing position events
+    whose route may belong to any tenant.
+    """
+
+    result = await db.execute(
+        select(Route)
+        .options(selectinload(Route.route_stops).selectinload(RouteStop.stop))
+        .where(
+            Route.id == route_id,
+            Route.is_deleted.is_(False),
+        )
+    )
+    route = result.scalar_one_or_none()
+    if not route:
+        _raise_error(
+            status.HTTP_404_NOT_FOUND, error_codes.ROUTE_NOT_FOUND, "Route not found"
+        )
+    return route
+
+
 async def ensure_route_active(db: AsyncSession, route_id: str, tenant_id: str) -> Route:
     """Return the route only if it exists and is active; else 404/409.
 
