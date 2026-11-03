@@ -820,42 +820,66 @@ separate work remains.
 - [x] Commit: `passenger_service: add detection orchestrator`
 
 ### Task 5.2 — Periodic refresh
-- [ ] Add a background task that refreshes the vehicle map **and** the passenger
+- [x] Add a background task that refreshes the vehicle map **and** the passenger
       pool every `VEHICLE_REFRESH_INTERVAL` seconds, mirroring
       `gps_service/api/app.py`'s `_sync_loop`. For vehicles that disappeared from
       the map, call `orchestrator.release_vehicle(vehicle_id)` — it owns both
       `state_store.remove` and the global-set subtraction. Do not reach into
       `_globally_on_board` directly.
-- [ ] The refresh loop takes a `stop_event: asyncio.Event` parameter (created by
+- [x] The refresh loop takes a `stop_event: asyncio.Event` parameter (created by
       the app lifespan in Task 6.1) and waits via
       `asyncio.wait_for(stop_event.wait(), timeout=interval)` so shutdown is
       immediate rather than delayed by up to one interval.
-- [ ] Test: mock fetchers; assert periodic calls; vehicles that left the map are
+- [x] Test: mock fetchers; assert periodic calls; vehicles that left the map are
       removed and their IDs released; shutdown event stops the loop.
-- [ ] Commit: `passenger_service: add periodic vehicle map and pool refresh`
+- [x] Commit: `passenger_service: add periodic vehicle map and pool refresh`
 
 ---
 
 ## Phase 6 — Service entry point
 
 ### Task 6.1 — FastAPI app with lifespan
-- [ ] Create `passenger_service/api/app.py` with `create_app()` and a
-      `lifespan` that:
-      - resolves tenant
-      - connects MQTT publisher and subscriber
-      - builds route cache, vehicle map fetcher, passenger pool fetcher and
-        sequence client, and the orchestrator
-      - does the initial vehicle-map and passenger-pool fetch
+
+**Preconditions** (land before this task):
+- vehicle_map/fetcher.py points at /api/v1/service/vehicles (not /api/v1/vehicles)
+- PASSENGER_POOL_SERVICE_TOKEN carries both passengers:read_universal
+  and vehicles:read_universal scopes
+
+- [x] Create `passenger_service/api/__init__.py` (empty) and
+      `passenger_service/api/app.py` with `create_app()` and a `lifespan`
+      that:
+      - ~~resolves tenant~~ — REMOVED. passenger_service is cross-tenant;
+        no startup tenant resolution. Tenant comes from each inbound
+        position event's payload (§3).
+      - constructs the MQTT publisher and subscriber
+      - builds route cache, vehicle map fetcher, passenger pool fetcher
+        and sequence client (all take base_url=settings.BACKEND_BASE_URL,
+        service_token=settings.PASSENGER_POOL_SERVICE_TOKEN), and the
+        orchestrator
+      - ~~does the initial vehicle-map and passenger-pool fetch~~ — REMOVED.
+        refresh_loop fetches at t=0; no duplicate. To avoid dropping the
+        very first positions, start the loop and await its first iteration
+        before subscribing.
       - subscribes to `gps/+/+/position`
       - starts the periodic refresh task
-      - on shutdown: stops refresh, unsubscribes, disconnects MQTT, closes route cache
-      (per-vehicle sequence/onboard seeding happens lazily inside the orchestrator)
-- [ ] Add `/health` (returns `{"status": "ok"}`) and `/status` (tenant,
-      mqtt_connected, vehicles_tracked, events_published, uptime) in the
-      `{data, meta, error}` envelope.
-- [ ] Test: mocked collaborators; app starts, both endpoints return expected
-      shapes, shutdown completes cleanly.
-- [ ] Commit: `passenger_service: add FastAPI app with health endpoints`
+      - on shutdown: stops refresh (stop_event.set(), await task with
+        timeout), unsubscribes + disconnects MQTT, closes route cache,
+        vehicle map fetcher, sequence client, and pool fetcher.
+      (per-vehicle sequence/onboard seeding happens lazily inside the
+      orchestrator)
+- [x] Add `/health` returning `{"data": {"status": "ok"}, "meta": null,
+      "error": null}` (envelope-wrapped per §5; not bare).
+- [x] Add `/status` returning
+      `{"data": {"mqtt_connected": bool, "vehicles_tracked": int,
+      "events_published": int, "uptime_seconds": float}, "meta": null,
+      "error": null}` — DROPPED `tenant` (no single tenant).
+      Optionally add `vehicles_with_state` and `globally_on_board`
+      if those accessors are added to the orchestrator/state store.
+      Requires an `events_published` counter on ArrivalOrchestrator.
+- [x] Test: mocked collaborators AND mocked MQTT; app starts, subscribes,
+      starts refresh, both endpoints return envelope shapes, shutdown
+      completes cleanly.
+- [x] Commit: `passenger_service: add FastAPI app with health endpoints`
 
 ### Task 6.2 — Entry point
 - [ ] Create `passenger_service/main.py` as a thin uvicorn runner
