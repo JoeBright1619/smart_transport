@@ -40,6 +40,7 @@ async def refresh_loop(
     pool_fetcher: PassengerPoolFetcher,
     settings: PassengerServiceSettings,
     stop_event: asyncio.Event,
+    first_iteration_done: asyncio.Event | None = None,
 ) -> None:
     """Refresh the vehicle map and passenger pool every interval.
 
@@ -48,10 +49,16 @@ async def refresh_loop(
     delayed by up to one interval). Never raises out of the loop — each
     fetcher's failure is logged and the loop continues; a shutdown or a
     caller-driven exception must be the only reason this exits.
+
+    If ``first_iteration_done`` is provided, it is set exactly once,
+    after the first iteration's fetches complete (success or failure).
+    Callers use this to gate "start accepting positions" until the map
+    has been at least attempted, without waiting a full interval.
     """
 
     prev_vehicle_ids: set[str] = set()
     interval = settings.VEHICLE_REFRESH_INTERVAL
+    first_iteration_done = first_iteration_done  # local for closure
 
     while not stop_event.is_set():
         # --- Vehicle map ---
@@ -64,7 +71,6 @@ async def refresh_loop(
             )
             new_map = {v.vehicle_id: v for v in vehicles}
             new_ids = set(new_map.keys())
-
             for gone_id in prev_vehicle_ids - new_ids:
                 released = orchestrator.release_vehicle(gone_id)
                 if released:
@@ -73,7 +79,6 @@ async def refresh_loop(
                         len(released),
                         gone_id,
                     )
-
             orchestrator.set_vehicle_map(new_map)
             prev_vehicle_ids = new_ids
         except Exception:
@@ -89,6 +94,11 @@ async def refresh_loop(
             )
         except Exception:
             logger.exception("Passenger pool refresh failed; keeping current cache")
+
+        # --- Signal first iteration completion (once) ---
+        if first_iteration_done is not None:
+            first_iteration_done.set()
+            first_iteration_done = None  # no-op on next iteration
 
         # --- Wait interval or shutdown ---
         try:

@@ -251,3 +251,35 @@ async def test_loop_survives_pool_fetch_failure(monkeypatch) -> None:
 
     # Vehicle map still refreshed despite pool failure.
     assert orchestrator.set_vehicle_map.call_count >= 2
+
+
+async def test_first_iteration_done_signalled_after_first_fetch(monkeypatch) -> None:
+    monkeypatch.setattr("passenger_service.refresh._RETRY_ATTEMPTS", 1)
+    monkeypatch.setattr("passenger_service.refresh._RETRY_DELAY", 0.0)
+
+    vehicle_fetcher = AsyncMock()
+    vehicle_fetcher.fetch_active_vehicles.return_value = [_vehicle("veh-a")]
+    pool_fetcher = AsyncMock()
+    pool_fetcher.fetch_passenger_ids.return_value = []
+    orchestrator = MagicMock()
+    orchestrator.release_vehicle.return_value = []
+
+    stop = asyncio.Event()
+    first_done = asyncio.Event()
+    task = asyncio.create_task(
+        refresh_loop(
+            orchestrator=orchestrator,
+            vehicle_map_fetcher=vehicle_fetcher,
+            pool_fetcher=pool_fetcher,
+            settings=_settings(interval=60.0),  # long; first iter must be quick
+            stop_event=stop,
+            first_iteration_done=first_done,
+        )
+    )
+    try:
+        await asyncio.wait_for(first_done.wait(), timeout=1.0)
+        # Once set, it stays set; second iteration won't unset it.
+        assert first_done.is_set()
+    finally:
+        stop.set()
+        await asyncio.wait_for(task, timeout=1.0)
