@@ -70,10 +70,14 @@ class ArrivalOrchestrator:
             crush_capacity_factor=settings.CRUSH_CAPACITY_FACTOR,
             revenue_per_km=settings.REVENUE_PER_KM,
         )
+        self._events_published: int = 0
 
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
+    def events_published(self) -> int:
+        """Count of occupancy events published since this orchestrator started."""
+        return self._events_published
 
     def set_vehicle_map(self, vehicles: Mapping[str, VehicleInfo]) -> None:
         """Replace the in-memory vehicle map.
@@ -180,6 +184,7 @@ class ArrivalOrchestrator:
                 payload=event.model_dump(),
                 qos=1,
             )
+            self._events_published += 1
             published = event
 
         # 5. Re-arm + update observations

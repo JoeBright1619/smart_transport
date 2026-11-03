@@ -372,3 +372,18 @@ async def test_two_vehicles_never_share_real_passenger_id() -> None:
     ids_a = {p["passenger_id"] for p in state_a.passengers if p["passenger_id"]}
     ids_b = {p["passenger_id"] for p in state_b.passengers if p["passenger_id"]}
     assert ids_a.isdisjoint(ids_b), f"shared IDs: {ids_a & ids_b}"
+
+
+async def test_events_published_counter_increments_on_publish() -> None:
+    stops = [_stop("stp-a", 0, 0.0, 0.0), _stop("stp-b", 1, 0.001, 0.0)]
+    orch, publisher, *_ = _make_orchestrator(
+        route_cache_stops=stops,
+        sequence_client_result=0,
+        vehicle_map={"veh-1": _vehicle()},
+    )
+    assert orch.events_published() == 0
+
+    await orch.handle_position(_position(0.001, 0.0))
+    assert orch.events_published() == 1
+
+    publisher.publish.assert_called_once()
