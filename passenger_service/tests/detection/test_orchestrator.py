@@ -387,3 +387,13 @@ async def test_events_published_counter_increments_on_publish() -> None:
     assert orch.events_published() == 1
 
     publisher.publish.assert_called_once()
+
+
+def test_vehicle_count_reflects_map() -> None:
+    orch, *_ = _make_orchestrator(
+        vehicle_map={"veh-a": _vehicle(), "veh-b": _vehicle(vehicle_id="veh-b")}
+    )
+    assert orch.vehicle_count() == 2
+
+    orch.set_vehicle_map({})
+    assert orch.vehicle_count() == 0

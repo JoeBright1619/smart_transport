@@ -79,6 +79,10 @@ class ArrivalOrchestrator:
         """Count of occupancy events published since this orchestrator started."""
         return self._events_published
 
+    def vehicle_count(self) -> int:
+        """Number of vehicles currently in the in-memory map."""
+        return len(self._vehicle_map)
+
     def set_vehicle_map(self, vehicles: Mapping[str, VehicleInfo]) -> None:
         """Replace the in-memory vehicle map.
 
