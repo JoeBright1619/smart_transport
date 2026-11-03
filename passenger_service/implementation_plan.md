@@ -882,9 +882,9 @@ separate work remains.
 - [x] Commit: `passenger_service: add FastAPI app with health endpoints`
 
 ### Task 6.2 — Entry point
-- [ ] Create `passenger_service/main.py` as a thin uvicorn runner
+- [x] Create `passenger_service/main.py` as a thin uvicorn runner
       mirroring `gps_service/main.py`.
-- [ ] Commit: `passenger_service: add service entry point`
+- [x] Commit: `passenger_service: add service entry point`
 
 ---
 
