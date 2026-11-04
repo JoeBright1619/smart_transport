@@ -130,18 +130,18 @@ async def _handle_stop_arrival(
     stop_index: int,
     now: datetime,
 ) -> None:
-    """Handle passenger boarding/alighting when vehicle arrives at a stop."""
-    from app.websocket.passenger_simulation import simulate_passengers_at_stop
+    """Legacy passenger sim disabled (Phase 7.4). No-op until Phase 8
+    removes this function and its caller."""
 
     try:
-        await simulate_passengers_at_stop(
-            db=db,
-            vehicle=vehicle,
-            stops=stops,
-            current_stop_index=stop_index,
-            state=state,
-            now=now,
-        )
+        #    await simulate_passengers_at_stop(
+        #        db=db,
+        #        vehicle=vehicle,
+        #        stops=stops,
+        #        current_stop_index=stop_index,
+        #        state=state,
+        #        now=now,
+        #    )
         logger.debug(
             "Processed passengers at stop for vehicle %s",
             vehicle.id,

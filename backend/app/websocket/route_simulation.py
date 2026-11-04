@@ -11,7 +11,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.geo_math import bearing, haversine_distance, move_along_bearing
 from app.models.route import RouteStop, Stop
 from app.models.vehicle import Vehicle
-from app.websocket.passenger_simulation import simulate_passengers_at_stop
 from app.websocket.route_trip_records import complete_trip, end_journey, start_trip
 
 TICK_SECONDS = 5
@@ -142,9 +141,12 @@ async def advance_vehicle(
         state["dwell_remaining"] = DWELL_TICKS
         state["at_stop_name"] = stops[current_stop_index].name
 
-        await simulate_passengers_at_stop(
-            db, vehicle, stops, current_stop_index, state, now
-        )
+        # await simulate_passengers_at_stop(
+        #    db, vehicle, stops, current_stop_index, state, now
+        # )
+        # Legacy passenger simulation disabled (Phase 7.4 cutover).
+        # The replacement runs in passenger_service and is consumed via
+        # MQTT (gps/+/+/occupancy) by OccupancyMQTTSubscriber.
 
         if state["next_stop_index"] == 0:
             # One full loop of the route done. Track it on the vehicle (persists across

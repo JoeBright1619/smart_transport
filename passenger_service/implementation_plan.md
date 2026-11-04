@@ -940,12 +940,12 @@ loop is disabled (Task 7.4).
 - [x] Commit: `backend: broadcast occupancy updates over WebSocket`
 
 ### Task 7.4 — Cutover: disable legacy simulation
-- [ ] Disable the legacy simulation loop (feature flag, or remove its scheduler
+- [x] Disable the legacy simulation loop (feature flag, or remove its scheduler
       registration), confirming the exact mechanism in code. Do not delete the
       module yet.
-- [ ] Test: with the flag off, the legacy tick does not run and nothing else in
+- [x] Test: with the flag off, the legacy tick does not run and nothing else in
       the backend suite changes.
-- [ ] Commit: `backend: disable legacy passenger simulation loop`
+- [x] Commit: `backend: disable legacy passenger simulation loop`
 
 ### Task 7.5 — Wire subscriber into app startup
 - [ ] Register the occupancy subscriber in the backend's FastAPI lifespan,
