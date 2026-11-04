@@ -929,15 +929,15 @@ loop is disabled (Task 7.4).
 - [x] Commit: `backend: add occupancy service with idempotent writes`
 
 ### Task 7.3 — WebSocket broadcast
-- [ ] After each **inserted** occupancy commit, call `manager.publish_to_tenant(...)`
+- [x] After each **inserted** occupancy commit, call `manager.publish_to_tenant(...)`
       with the existing `vehicle_occupancy_updated` message shape
       (`vehicleId`, `currentOccupancy`, `seatingCapacity`,
       `remainingSeats = max(0, seatingCapacity - currentOccupancy)`). Today this
       broadcast fires from `passenger_simulation.py`, which is deleted in Phase 8,
       so the new service must emit the same message.
-- [ ] Test: mocked broadcaster; commit triggers a broadcast with the expected
+- [x] Test: mocked broadcaster; commit triggers a broadcast with the expected
       envelope; duplicate delivery does not.
-- [ ] Commit: `backend: broadcast occupancy updates over WebSocket`
+- [x] Commit: `backend: broadcast occupancy updates over WebSocket`
 
 ### Task 7.4 — Cutover: disable legacy simulation
 - [ ] Disable the legacy simulation loop (feature flag, or remove its scheduler

@@ -415,3 +415,33 @@ async def test_record_idempotency_key_collision_does_not_duplicate_children(
         .all()
     )
     assert len(children) == 2  # not 4
+
+
+async def test_record_returns_inserted_true_on_success(db, tenant, vehicle) -> None:
+    event = _event(vehicle_id=vehicle.id, tenant_id=tenant.id)
+    result = await occupancy_service.record(db, event)
+    await db.commit()
+
+    assert result.inserted is True
+    assert result.seating_capacity == vehicle.seating_capacity
+
+
+async def test_record_returns_inserted_false_on_duplicate(db, tenant, vehicle) -> None:
+    event = _event(vehicle_id=vehicle.id, tenant_id=tenant.id)
+    await occupancy_service.record(db, event)
+    await db.commit()
+
+    result = await occupancy_service.record(db, event)
+    await db.commit()
+
+    assert result.inserted is False
+    assert result.seating_capacity is None
+
+
+async def test_record_returns_inserted_false_on_unknown_vehicle(db, tenant) -> None:
+    event = _event(vehicle_id="veh-missing", tenant_id=tenant.id)
+    result = await occupancy_service.record(db, event)
+    await db.commit()
+
+    assert result.inserted is False
+    assert result.seating_capacity is None

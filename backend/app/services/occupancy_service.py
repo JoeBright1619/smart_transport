@@ -21,6 +21,7 @@ caller's transaction, mirroring gps_handler.process_gps_update.
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from datetime import datetime
 
 from fastapi import HTTPException
@@ -41,7 +42,20 @@ from app.crud import analytics as analytics_service
 logger = logging.getLogger(__name__)
 
 
-async def record(db: AsyncSession, event: OccupancyEventSchema) -> None:
+@dataclass(frozen=True)
+class RecordResult:
+    """Outcome of record(db, event).
+
+    inserted is False when the event was a duplicate (same idempotency_key)
+    or when the vehicle was unknown. seating_capacity is populated only on
+    insert (needed for the occupancy WebSocket broadcast, Task 7.3).
+    """
+
+    inserted: bool
+    seating_capacity: int | None
+
+
+async def record(db: AsyncSession, event: OccupancyEventSchema) -> RecordResult:
     """Idempotently persist an occupancy event and its side effects.
 
     Unknown vehicle: log WARNING and return (no side effects).
@@ -61,7 +75,7 @@ async def record(db: AsyncSession, event: OccupancyEventSchema) -> None:
             event.vehicle_id,
             event.tenant_id,
         )
-        return
+        return RecordResult(inserted=False, seating_capacity=None)
 
     # 2. Idempotent insert; bail out on duplicate before any side effect.
     inserted_id = await _insert_occupancy_or_none(db, event)
@@ -70,7 +84,7 @@ async def record(db: AsyncSession, event: OccupancyEventSchema) -> None:
             "Duplicate occupancy event (idempotency_key=%s); skipping side effects",
             event.idempotency_key,
         )
-        return
+        return RecordResult(inserted=False, seating_capacity=None)
 
     # 3. Side effects — one transaction, caller commits.
     await _insert_boarding_children(db, inserted_id, event)
@@ -97,6 +111,7 @@ async def record(db: AsyncSession, event: OccupancyEventSchema) -> None:
             threshold_fraction=settings.CAPACITY_ALERT_THRESHOLD,
             dedup_window_seconds=settings.CAPACITY_ALERT_DEDUP_SECONDS,
         )
+    return RecordResult(inserted=True, seating_capacity=vehicle.seating_capacity)
 
 
 # ---------------------------------------------------------------------------

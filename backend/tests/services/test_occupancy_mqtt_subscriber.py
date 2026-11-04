@@ -17,6 +17,9 @@ from app.services.occupancy_mqtt_subscriber import (
     OCCUPANCY_TOPIC,
     OccupancyMQTTSubscriber,
 )
+from app.services.occupancy_service import RecordResult
+
+mock_record = AsyncMock(return_value=RecordResult(inserted=True, seating_capacity=45))
 
 
 def _paho_message(topic: str, payload: dict) -> MagicMock:
@@ -123,32 +126,32 @@ class TestProcessOccupancy:
     async def test_process_commits_after_record(self) -> None:
         """_process_occupancy opens a session, calls record, commits."""
         sub, _, _ = _make()
-        _paho_message("gps/ten-1/veh-1/occupancy", _valid_event())
-
         # Reconstruct the validated event exactly as on_message would.
-        from app.schemas.occupancy import OccupancyEvent
+        from app.schemas.occupancy import OccupancyEvent as OccupancyEventSchema
 
-        event = OccupancyEvent.model_validate(_valid_event())
+        event = OccupancyEventSchema.model_validate(_valid_event())
 
-        # Fake the session context manager.
-        fake_session = AsyncMock()
+        fake_session = MagicMock()
         fake_session.__aenter__ = AsyncMock(return_value=fake_session)
         fake_session.__aexit__ = AsyncMock(return_value=None)
         fake_session.commit = AsyncMock()
 
-        fake_factory = MagicMock(return_value=fake_session)
-
         with patch(
             "app.services.occupancy_mqtt_subscriber.AsyncSessionLocal",
-            fake_factory,
+            MagicMock(return_value=fake_session),
         ), patch(
             "app.services.occupancy_mqtt_subscriber.record",
             new_callable=AsyncMock,
-        ) as mock_record:
+            return_value=RecordResult(
+                inserted=True, seating_capacity=45
+            ),  # ← key change
+        ) as mock_record, patch(
+            "app.services.occupancy_mqtt_subscriber.manager.publish_to_tenant",
+            new_callable=AsyncMock,
+        ):
             await sub._process_occupancy(event)
 
         mock_record.assert_awaited_once()
-        # The event passed through unchanged.
         assert mock_record.call_args.args[1].idempotency_key == "veh-1:stop-1:3"
         fake_session.commit.assert_awaited_once()
 
@@ -156,9 +159,9 @@ class TestProcessOccupancy:
         """record() raising is not swallowed here; the done-callback handles it."""
         sub, _, _ = _make()
 
-        from app.schemas.occupancy import OccupancyEvent
+        from app.schemas.occupancy import OccupancyEvent as OccupancyEventSchema
 
-        event = OccupancyEvent.model_validate(_valid_event())
+        event = OccupancyEventSchema.model_validate(_valid_event())
 
         fake_session = AsyncMock()
         fake_session.__aenter__ = AsyncMock(return_value=fake_session)
@@ -177,3 +180,70 @@ class TestProcessOccupancy:
                 await sub._process_occupancy(event)
 
         fake_session.commit.assert_not_awaited()
+
+    async def test_process_broadcasts_on_insert(self) -> None:
+        """Insert path broadcasts vehicle_occupancy_updated with the legacy envelope."""
+        sub, _, _ = _make()
+
+        from app.schemas.occupancy import OccupancyEvent as OccupancyEventSchema
+        from app.services.occupancy_service import RecordResult
+
+        event = OccupancyEventSchema.model_validate(_valid_event())
+        # _valid_event has onboard=10, seating 45 → remaining = 35
+
+        fake_session = MagicMock()
+        fake_session.__aenter__ = AsyncMock(return_value=fake_session)
+        fake_session.__aexit__ = AsyncMock(return_value=None)
+        fake_session.commit = AsyncMock()
+
+        with patch(
+            "app.services.occupancy_mqtt_subscriber.AsyncSessionLocal",
+            MagicMock(return_value=fake_session),
+        ), patch(
+            "app.services.occupancy_mqtt_subscriber.record",
+            new_callable=AsyncMock,
+            return_value=RecordResult(inserted=True, seating_capacity=45),
+        ), patch(
+            "app.services.occupancy_mqtt_subscriber.manager.publish_to_tenant",
+            new_callable=AsyncMock,
+        ) as mock_publish:
+            await sub._process_occupancy(event)
+
+        mock_publish.assert_awaited_once()
+        tenant_arg, payload = mock_publish.call_args.args
+        assert tenant_arg == "ten-1"
+        assert payload == {
+            "type": "vehicle_occupancy_updated",
+            "vehicleId": "veh-1",
+            "currentOccupancy": 10,
+            "seatingCapacity": 45,
+            "remainingSeats": 35,
+        }
+
+    async def test_process_does_not_broadcast_on_duplicate(self) -> None:
+        sub, _, _ = _make()
+
+        from app.schemas.occupancy import OccupancyEvent as OccupancyEventSchema
+        from app.services.occupancy_service import RecordResult
+
+        event = OccupancyEventSchema.model_validate(_valid_event())
+
+        fake_session = MagicMock()
+        fake_session.__aenter__ = AsyncMock(return_value=fake_session)
+        fake_session.__aexit__ = AsyncMock(return_value=None)
+        fake_session.commit = AsyncMock()
+
+        with patch(
+            "app.services.occupancy_mqtt_subscriber.AsyncSessionLocal",
+            MagicMock(return_value=fake_session),
+        ), patch(
+            "app.services.occupancy_mqtt_subscriber.record",
+            new_callable=AsyncMock,
+            return_value=RecordResult(inserted=False, seating_capacity=None),
+        ), patch(
+            "app.services.occupancy_mqtt_subscriber.manager.publish_to_tenant",
+            new_callable=AsyncMock,
+        ) as mock_publish:
+            await sub._process_occupancy(event)
+
+        mock_publish.assert_not_awaited()

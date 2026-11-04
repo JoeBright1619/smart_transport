@@ -29,6 +29,7 @@ from app.core.database import AsyncSessionLocal
 from app.core.mqtt_client import MQTTClient
 from app.schemas.occupancy import OccupancyEvent
 from app.services.occupancy_service import record
+from app.websocket.manager import manager
 
 logger = logging.getLogger(__name__)
 
@@ -102,14 +103,34 @@ class OccupancyMQTTSubscriber:
         )
 
     async def _process_occupancy(self, event: OccupancyEvent) -> None:
-        """Persist a validated occupancy event in its own transaction."""
+        """Persist a validated occupancy event and broadcast if newly inserted."""
         async with AsyncSessionLocal() as db:
-            await record(db, event)
+            result = await record(db, event)
             await db.commit()
             logger.info(
-                "OCCUPANCY COMMITTED: vehicle=%s key=%s",
+                "OCCUPANCY COMMITTED: vehicle=%s key=%s inserted=%s",
                 event.vehicle_id,
                 event.idempotency_key,
+                result.inserted,
+            )
+
+        # Broadcast only on insert — duplicates are invisible to clients.
+        # After commit, so clients never see an uncommitted occupancy.
+        if result.inserted:
+            remaining_seats = (
+                max(0, result.seating_capacity - event.onboard)
+                if result.seating_capacity is not None
+                else None
+            )
+            await manager.publish_to_tenant(
+                event.tenant_id,
+                {
+                    "type": "vehicle_occupancy_updated",
+                    "vehicleId": event.vehicle_id,
+                    "currentOccupancy": event.onboard,
+                    "seatingCapacity": result.seating_capacity,
+                    "remainingSeats": remaining_seats,
+                },
             )
 
     @staticmethod
