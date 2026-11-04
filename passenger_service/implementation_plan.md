@@ -903,7 +903,7 @@ loop is disabled (Task 7.4).
 - [x] Commit: `backend: add occupancy MQTT subscriber`
 
 ### Task 7.2 — Occupancy service
-- [ ] `backend/app/services/occupancy_service.py` with
+- [x] `backend/app/services/occupancy_service.py` with
       `record(db, event: OccupancyEvent) -> None`:
       1. Look up the vehicle (tenant-scoped); unknown → log WARNING and skip.
       2. `INSERT INTO occupancy_events ... ON CONFLICT (idempotency_key) DO NOTHING`.
@@ -921,12 +921,12 @@ loop is disabled (Task 7.4).
            type is a DB enum, include the migration here.
       All writes in one transaction. A duplicate delivery skips everything in
       step 3, including the alert.
-- [ ] Test: dedup on idempotency key (children, vehicle update, revenue, alert all
+- [x] Test: dedup on idempotency key (children, vehicle update, revenue, alert all
       skipped on duplicate); capacity alert at threshold; no alert below
       threshold; second alert within 5 minutes suppressed; unknown vehicle is
       logged and skipped; per-passenger child rows cascade-delete with parent;
       revenue accumulates.
-- [ ] Commit: `backend: add occupancy service with idempotent writes`
+- [x] Commit: `backend: add occupancy service with idempotent writes`
 
 ### Task 7.3 — WebSocket broadcast
 - [ ] After each **inserted** occupancy commit, call `manager.publish_to_tenant(...)`
