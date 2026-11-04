@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import uvicorn
 
+
 from passenger_service.api.app import create_app
 from passenger_service.config import settings
 

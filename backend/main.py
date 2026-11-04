@@ -16,6 +16,7 @@ from app.core.database import engine
 from app.core.errors import _error_detail
 from app.core.mqtt_client import MQTTClient
 from app.services.gps_mqtt_subscriber import GPSMQTTSubscriber
+from app.services.occupancy_mqtt_subscriber import OccupancyMQTTSubscriber
 from app.services.simulation_runner import (
     stop_vehicle_simulation,
 )
@@ -131,10 +132,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     loop = asyncio.get_running_loop()
 
     mqtt_client = MQTTClient()
-    subscriber = GPSMQTTSubscriber(mqtt_client, loop)
+    gps_subscriber = GPSMQTTSubscriber(mqtt_client, loop)
+    occupancy_subscriber = OccupancyMQTTSubscriber(mqtt_client, loop)
 
     mqtt_client.connect()
-    subscriber.start()
+    # GPS subscriber sets the fallback on_message handler; occupancy
+    # subscriber registers a topic-filter callback via
+    # message_callback_add. Both share one paho client.
+    gps_subscriber.start()
+    occupancy_subscriber.start()
 
     await _warn_if_db_behind_head()
     await _reconcile_orphaned_trips_on_startup()
@@ -144,6 +150,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     try:
         yield
     finally:
+        # Disconnecting the shared paho client drops both subscriptions.
         mqtt_client.disconnect()
         await stop_vehicle_simulation()
         await engine.dispose()

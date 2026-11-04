@@ -948,10 +948,10 @@ loop is disabled (Task 7.4).
 - [x] Commit: `backend: disable legacy passenger simulation loop`
 
 ### Task 7.5 — Wire subscriber into app startup
-- [ ] Register the occupancy subscriber in the backend's FastAPI lifespan,
+- [x] Register the occupancy subscriber in the backend's FastAPI lifespan,
       alongside the existing GPS subscriber.
-- [ ] Test: app starts, both subscriptions are registered.
-- [ ] Commit: `backend: wire occupancy subscriber into app lifespan`
+- [x] Test: app starts, both subscriptions are registered.
+- [x] Commit: `backend: wire occupancy subscriber into app lifespan`
 
 ---
 
