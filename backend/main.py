@@ -44,6 +44,12 @@ from app.websocket import tracking
 
 logger = logging.getLogger(__name__)
 
+# Root handler so INFO from app.* reaches stdout. Uvicorn configures its
+# own loggers but leaves the root bare; without this, `logging.getLogger("app").setLevel(INFO)`
+# has no handler to write to and INFO lines are discarded by the lastResort handler.
+
+logging.getLogger("app").setLevel(logging.INFO)
+
 
 def _error_response(status_code: int, code: str, message: str) -> JSONResponse:
     return JSONResponse(
@@ -126,6 +132,13 @@ def _is_error_envelope(detail: Any) -> bool:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    uvicorn_logger = logging.getLogger("uvicorn.error")
+    app_logger = logging.getLogger("app")
+    app_logger.setLevel(logging.INFO)
+    if uvicorn_logger.handlers:
+        app_logger.handlers = uvicorn_logger.handlers
+        app_logger.propagate = False
+
     async with engine.connect() as conn:
         await conn.execute(text("SELECT 1"))
 
