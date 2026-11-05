@@ -48,7 +48,7 @@ services:
       ACCESS_TOKEN_EXPIRE_MINUTES: "15"
       REFRESH_TOKEN_EXPIRE_DAYS: "7"
       CORS_ORIGINS: "http://localhost:5173"
-      DATABASE_URL: postgresqlasyncpg://transport:transport@db:5432/transport_db
+      DATABASE_URL: postgresql+asyncpg://transport:transport@db:5432/transport_db
       REDIS_URL: redis://redis:6379/0
       SUPERADMIN_PASSWORD: Admin@123456
       SEED_PASSWORD: Password123!
