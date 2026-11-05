@@ -958,13 +958,13 @@ loop is disabled (Task 7.4).
 ## Phase 8 — Verification and cleanup
 
 ### Task 8.1 — Cutover verification (gate before deletion)
-- [ ] `docker compose down && docker compose up --build`; wait for one full route loop.
-- [ ] `SELECT COUNT(*) FROM occupancy_events;` grows.
-- [ ] `SELECT COUNT(*) FROM boarding_passenger_events;` grows.
-- [ ] `SELECT vehicle_id, current_occupancy FROM vehicles;` plausible non-zero values.
-- [ ] `analytics_daily.revenue` grows once per stop (legacy writer is really off).
+- [x] `docker compose down && docker compose up --build`; wait for one full route loop.
+- [x] `SELECT COUNT(*) FROM occupancy_events;` grows.
+- [x] `SELECT COUNT(*) FROM boarding_passenger_events;` grows.
+- [x] `SELECT vehicle_id, current_occupancy FROM vehicles;` plausible non-zero values.
+- [x] `analytics_daily.revenue` grows once per stop (legacy writer is really off).
 | `backend/app/services/boarding_service.py` | `record_single_boarding` / `record_stop_events` — writes the legacy `boarding_records` table | Same, **after** the Task 8.1 equivalence check: for a sampled vehicle+stop, boardings/alightings counts in `boarding_records` and in `boarding_passenger_events` agree over the same `arrival_sequence` range |
-- [ ] Commit: `docs: record cutover verification` — paste the query outputs (counts, occupancy snapshot, revenue delta, equivalence-check results) into the commit message.
+- [x] Commit: `docs: record cutover verification` — paste the query outputs (counts, occupancy snapshot, revenue delta, equivalence-check results) into the commit message.
 
 ### Task 8.2 — Delete the legacy simulation and boarding pipeline
 - [ ] Before deleting, `rg` for `completed_loops` / `planned_loops` writes in
