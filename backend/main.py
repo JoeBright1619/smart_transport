@@ -17,9 +17,6 @@ from app.core.errors import _error_detail
 from app.core.mqtt_client import MQTTClient
 from app.services.gps_mqtt_subscriber import GPSMQTTSubscriber
 from app.services.occupancy_mqtt_subscriber import OccupancyMQTTSubscriber
-from app.services.simulation_runner import (
-    stop_vehicle_simulation,
-)
 from app.routers import (
     alerts,
     analytics,
@@ -158,14 +155,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await _warn_if_db_behind_head()
     await _reconcile_orphaned_trips_on_startup()
 
-    # start_vehicle_simulation()
-
     try:
         yield
     finally:
         # Disconnecting the shared paho client drops both subscriptions.
         mqtt_client.disconnect()
-        await stop_vehicle_simulation()
         await engine.dispose()
 
 
