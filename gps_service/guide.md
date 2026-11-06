@@ -397,10 +397,97 @@ responsibilities are split three ways:
       auto-start test still passes.
 - [x] Commit: `refactor(backend): clean up simulation_runner.py`
 
-- [ ] **Task 5.3: Remove route_simulation.py imports from backend**
-  - Remove `advance_vehicle()` imports
-  - Keep `route_trip_records.py` functions (trip lifecycle)
-  - **Commit:** `refactor(backend): remove route_simulation imports`
+### Task 5.3 — Remove route_simulation imports from backend
+
+`route_simulation.py` has four external consumers: `tracking.py`,
+`arrival_service.py`, `trip_service.py`, and the test suite. This task
+removes the production dependencies in 5.3a and deletes the module +
+its tests in 5.3b.
+
+**Design note — next_stop_index duplication.** gps_service's
+`SimulationEngine` tracks `state.next_stop_index` per vehicle to drive
+movement. The backend's `route_simulation._state[vehicle_id]` tracks
+its own copy for display (WS `nextStopName`, `arrival_service` ETAs).
+After 5.3a, the backend derives `next_stop_index` from position
+(nearest stop + 1). This is an approximation: when a vehicle has just
+left stop A and is closer to B than to A, it computes "next = C" while
+gps_service's true value is B. Matches the pre-existing fallback in
+`arrival_service` (not worse than today). Task 5.7 (evaluate after
+5.3b) may wire `nextStopId` through the MQTT payload to eliminate the
+approximation if the demo needs exact ETAs.
+
+#### Task 5.3a — Extract position-derived helpers
+
+- [x] Create `backend/app/services/route_progress.py` with:
+      - `StopPoint` (dataclass, moved from `route_simulation.py`)
+      - `load_route_stops` + `get_stops_cached` (per-process cache)
+      - `compute_next_stop_index(vehicle, stops) -> int` — nearest stop
+        + 1 (position-derived; see design note above)
+      - `get_next_stop_name(vehicle, stops) -> str`
+      - `compute_progress_pct(vehicle, stops) -> int`
+- [x] Rewire `backend/app/websocket/tracking.py`:
+      - Replace `from app.websocket.route_simulation import (...)` with
+        `from app.services.route_progress import (...)`.
+      - `fuel`, `currentOccupancy`: from `vehicle.fuel` /
+        `vehicle.current_occupancy` (written by the GPS handler and
+        occupancy pipeline). Drop `_state` accesses.
+      - `nextStopName`, `progressPct`: from the new helpers.
+      - `atStop`: **dropped** — always `""`. It was a visual-only field
+        fed by sim `dwell_remaining`; no equivalent in the MQTT
+        pipeline. See follow-up note below.
+- [x] Rewire `backend/app/services/arrival_service.py`:
+      - Replace lazy `_state` imports with top-level
+        `from app.services.route_progress import get_stops_cached,
+        compute_next_stop_index, StopPoint`.
+      - `current_occupancy`: from `vehicle.current_occupancy`.
+      - `_next_stop_index` becomes a one-line delegate to
+        `compute_next_stop_index`.
+- [x] Update `backend/app/services/trip_service.py`:
+      - Remove `from app.websocket import route_simulation`.
+      - Delete the two `route_simulation.clear_vehicle_state(...)`
+        calls (they cleared `_state`, which no longer exists).
+- [x] Test: `pytest backend/tests -q` — same count as before, all green.
+      `rg "route_simulation" backend/app/` returns only
+      `route_simulation.py` itself.
+- [x] **Follow-up (not in this commit):** if the frontend uses `atStop`,
+      add a backend query for the most recent `occupancy_event` per
+      vehicle (within dwell window) to repopulate it. Defer until
+      confirmed needed.
+- [x] Commit: `refactor(backend): extract route position helpers`
+
+#### Task 5.3b — Delete route_simulation.py
+
+- [ ] Delete `backend/app/websocket/route_simulation.py`.
+- [ ] Delete tests that directly exercise it:
+      - `backend/tests/test_fuel_model.py` (fuel depletion over sim ticks)
+      - `backend/tests/trips/test_journey_rounds.py` (loop counting via sim)
+      - `backend/tests/trips/test_simulation_trip_dedup.py`
+      - `backend/tests/test_capacity_and_delay_alerts.py` (patches sim
+        random/randint to trigger alerts; the loop no longer exists)
+- [ ] Update `backend/guidelines/architecture.md` — remove
+      `route_simulation.py` from the file listing.
+- [ ] Test: full backend suite green; `rg "route_simulation" backend/`
+      returns zero hits (excluding `alembic/versions/`).
+- [ ] Commit: `refactor(backend): delete route_simulation`
+
+**Note on lost test coverage:** the four test files above tested
+behaviour that no longer exists after 5.2 + 5.3a:
+- `advance_vehicle` movement, deceleration, congestion, dwell
+- fuel depletion over sim ticks (vehicle.fuel is now written by the
+  GPS handler from MQTT)
+- loop counting via `completed_loops` (already stale; see design §12)
+- delay alerts (`delay_crossed` came from `advance_vehicle`; see 5.2's
+  "alerts dropped" note)
+
+No equivalent tests are added — the equivalent behaviour lives in
+gps_service (`SimulationEngine`) and passenger_service (occupancy
+pipeline), tested there.
+
+**Task 5.7 (evaluate)** — after 5.3b, watch `/api/v1/arrivals` ETAs.
+If they look wrong near stops (vehicle "arriving at C" while actually
+heading to B), add `nextStopId` to the gps_service MQTT payload, store
+it on `vehicles` (new column), and read it in `tracking` /
+`arrival_service`. Not scheduled; evaluate from real behaviour.
 
 - [ ] **Task 5.4: Update backend architecture documentation**
   - Update `backend/guidelines/architecture.md` to reflect MQTT GPS service

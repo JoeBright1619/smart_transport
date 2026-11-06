@@ -15,8 +15,7 @@ from app.models.tenant import Tenant
 from app.models.user import User
 from app.models.vehicle import Vehicle
 from app.websocket.manager import manager
-from app.websocket.route_simulation import (
-    _state,
+from app.services.route_progress import (
     compute_progress_pct,
     get_next_stop_name,
     get_stops_cached,
@@ -146,10 +145,7 @@ async def _build_vehicle_update_message(tenant_id: str) -> dict[str, Any]:
             stops = (
                 await get_stops_cached(db, vehicle.route_id) if vehicle.route_id else []
             )
-            state = _state.get(vehicle.id, {})
-            current_occupancy = int(
-                state.get("current_occupancy", vehicle.current_occupancy)
-            )
+            current_occupancy = int(vehicle.current_occupancy)
             vehicle_data.append(
                 {
                     "vehicleId": vehicle.id,
@@ -157,20 +153,14 @@ async def _build_vehicle_update_message(tenant_id: str) -> dict[str, Any]:
                     "lng": vehicle.lng,
                     "speed": vehicle.speed or 0,
                     "heading": vehicle.heading or 0,
-                    "fuel": round(state.get("fuel_pct", vehicle.fuel or 100)),
+                    "fuel": round(vehicle.fuel or 100),
                     "engineStatus": vehicle.engine_status,
                     "timestamp": timestamp.isoformat(),
-                    "nextStopName": get_next_stop_name(vehicle.id, stops),
-                    "progressPct": (
-                        compute_progress_pct(vehicle, stops, state)
-                        if stops and state
-                        else 0
-                    ),
-                    "atStop": (
-                        state.get("at_stop_name", "")
-                        if state.get("dwell_remaining", 0) > 0
-                        else ""
-                    ),
+                    "nextStopName": get_next_stop_name(vehicle, stops),
+                    "progressPct": compute_progress_pct(vehicle, stops) if stops else 0,
+                    # atStop was a sim-only field (dwell_remaining). No equivalent
+                    # in the MQTT pipeline; leaving empty. See Task 5.3a follow-up.
+                    "atStop": "",
                     "currentOccupancy": current_occupancy,
                     "seatingCapacity": vehicle.seating_capacity,
                     "remainingSeats": max(

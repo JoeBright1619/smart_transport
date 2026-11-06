@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import TYPE_CHECKING
 
 from fastapi import status
 from sqlalchemy import select
@@ -15,31 +14,11 @@ from app.models.vehicle import Vehicle
 from app.models.tenant import Tenant
 from app.schemas.arrival import ArrivalRead, PublicArrivalRead
 
-if TYPE_CHECKING:
-    from app.websocket.route_simulation import StopPoint
-
-
-def _fallback_next_stop_index(vehicle: Vehicle, stops: list[StopPoint]) -> int:
-    nearest_index = min(
-        range(len(stops)),
-        key=lambda index: haversine_distance(
-            vehicle.lat or 0,
-            vehicle.lng or 0,
-            stops[index].lat,
-            stops[index].lng,
-        ),
-    )
-    return (nearest_index + 1) % len(stops)
-
-
-def _next_stop_index(vehicle: Vehicle, stops: list[StopPoint]) -> int:
-    from app.websocket.route_simulation import _state  # lazy: avoid circular import
-
-    state = _state.get(vehicle.id, {})
-    next_stop_index = int(state.get("next_stop_index", -1))
-    if 0 <= next_stop_index < len(stops):
-        return next_stop_index
-    return _fallback_next_stop_index(vehicle, stops)
+from app.services.route_progress import (
+    StopPoint,
+    compute_next_stop_index,
+    get_stops_cached,
+)
 
 
 def _route_distance_to_stop_km(
@@ -53,7 +32,7 @@ def _route_distance_to_stop_km(
     if not target_indices or vehicle.lat is None or vehicle.lng is None:
         return None
 
-    next_stop_index = _next_stop_index(vehicle, stops)
+    next_stop_index = compute_next_stop_index(vehicle, stops)
     distance_m = haversine_distance(
         vehicle.lat,
         vehicle.lng,
@@ -111,11 +90,6 @@ async def get_arrivals_for_stop(
         )
     ).all()
 
-    from app.websocket.route_simulation import (
-        _state,
-        get_stops_cached,
-    )  # lazy: avoid circular import
-
     now = datetime.now(timezone.utc)
     arrivals: list[ArrivalRead] = []
     for vehicle, route in rows:
@@ -138,10 +112,7 @@ async def get_arrivals_for_stop(
             estimated_arrival_time = now + timedelta(minutes=eta_minutes)
             arrival_status = "active"
 
-        v_state = _state.get(vehicle.id, {})
-        current_occupancy = int(
-            v_state.get("current_occupancy", len(v_state.get("passengers", [])))
-        )
+        current_occupancy = int(vehicle.current_occupancy)
         seating_capacity = vehicle.seating_capacity
         arrivals.append(
             ArrivalRead(
@@ -196,11 +167,6 @@ async def get_cross_tenant_arrivals(
         )
     ).all()
 
-    from app.websocket.route_simulation import (
-        _state,
-        get_stops_cached,
-    )  # lazy: avoid circular import
-
     now = datetime.now(timezone.utc)
     arrivals: list[PublicArrivalRead] = []
     for vehicle, route, tenant in rows:
@@ -222,10 +188,7 @@ async def get_cross_tenant_arrivals(
             estimated_arrival_time = now + timedelta(minutes=eta_minutes)
             arrival_status = "active"
 
-        v_state = _state.get(vehicle.id, {})
-        current_occupancy = int(
-            v_state.get("current_occupancy", len(v_state.get("passengers", [])))
-        )
+        current_occupancy = int(vehicle.current_occupancy)
         seating_capacity = vehicle.seating_capacity
         arrivals.append(
             PublicArrivalRead(

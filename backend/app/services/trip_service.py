@@ -13,7 +13,6 @@ from app.models.driver import Driver
 from app.models.vehicle import Vehicle
 from app.schemas.trip import DEFAULT_JOURNEY_LOOPS, TripCreate, TripUpdate
 from app.services import audit_service, route_service
-from app.websocket import route_simulation
 
 
 async def get_trips(
@@ -198,7 +197,6 @@ async def _activate_trip(db: AsyncSession, trip: Trip, now: datetime) -> None:
     vehicle.status = "active"
     # Drop any leftover in-memory sim state so this journey initialises cleanly from the
     # vehicle's persisted values (fuel, position) rather than a previous journey's.
-    route_simulation.clear_vehicle_state(vehicle.id)
     # Start the journey's rounds counter. planned_loops is only defaulted when the
     # caller (start_journey / dispatch) hasn't already chosen a count.
     vehicle.completed_loops = 0
@@ -250,7 +248,6 @@ async def _finalize_trip(
         # Back at the depot — refuel and drop any stale in-memory sim state so the next
         # journey starts clean (fresh fuel, position and loop counters).
         vehicle.fuel = 100
-        route_simulation.clear_vehicle_state(vehicle.id)
         if new_status == "completed":
             vehicle.current_occupancy = 0
 
