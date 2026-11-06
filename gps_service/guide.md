@@ -457,18 +457,18 @@ approximation if the demo needs exact ETAs.
 
 #### Task 5.3b — Delete route_simulation.py
 
-- [ ] Delete `backend/app/websocket/route_simulation.py`.
-- [ ] Delete tests that directly exercise it:
+- [x] Delete `backend/app/websocket/route_simulation.py`.
+- [x] Delete tests that directly exercise it:
       - `backend/tests/test_fuel_model.py` (fuel depletion over sim ticks)
       - `backend/tests/trips/test_journey_rounds.py` (loop counting via sim)
       - `backend/tests/trips/test_simulation_trip_dedup.py`
       - `backend/tests/test_capacity_and_delay_alerts.py` (patches sim
         random/randint to trigger alerts; the loop no longer exists)
-- [ ] Update `backend/guidelines/architecture.md` — remove
+- [x] Update `backend/guidelines/architecture.md` — remove
       `route_simulation.py` from the file listing.
-- [ ] Test: full backend suite green; `rg "route_simulation" backend/`
+- [x] Test: full backend suite green; `rg "route_simulation" backend/`
       returns zero hits (excluding `alembic/versions/`).
-- [ ] Commit: `refactor(backend): delete route_simulation`
+- [x] Commit: `refactor(backend): delete route_simulation`
 
 **Note on lost test coverage:** the four test files above tested
 behaviour that no longer exists after 5.2 + 5.3a:
