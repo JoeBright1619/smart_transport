@@ -51,7 +51,7 @@ async def _run_lifespan_startup() -> tuple[MagicMock, MagicMock]:
         "main.OccupancyMQTTSubscriber", return_value=fake_occ_sub
     ), patch("main._warn_if_db_behind_head", new_callable=AsyncMock), patch(
         "main._reconcile_orphaned_trips_on_startup", new_callable=AsyncMock
-    ), patch("main.stop_vehicle_simulation", new_callable=AsyncMock):
+    ):
         from main import lifespan
 
         app = FastAPI()
@@ -79,9 +79,7 @@ async def test_lifespan_uses_one_shared_mqtt_client() -> None:
         "main.OccupancyMQTTSubscriber"
     ) as mock_occ_cls, patch(
         "main._warn_if_db_behind_head", new_callable=AsyncMock
-    ), patch(
-        "main._reconcile_orphaned_trips_on_startup", new_callable=AsyncMock
-    ), patch("main.stop_vehicle_simulation", new_callable=AsyncMock):
+    ), patch("main._reconcile_orphaned_trips_on_startup", new_callable=AsyncMock):
         mock_mqtt = MagicMock()
         mock_mqtt.connect = MagicMock()
         mock_mqtt.disconnect = MagicMock()

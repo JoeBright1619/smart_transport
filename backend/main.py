@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from pathlib import Path
 from typing import Any
 
@@ -10,13 +10,15 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
+from datetime import datetime, timezone
 
 from app.core.config import settings
-from app.core.database import engine
+from app.core.database import engine, AsyncSessionLocal
 from app.core.errors import _error_detail
 from app.core.mqtt_client import MQTTClient
 from app.services.gps_mqtt_subscriber import GPSMQTTSubscriber
 from app.services.occupancy_mqtt_subscriber import OccupancyMQTTSubscriber
+from app.services.trip_auto_start import auto_start_scheduled_trips
 from app.routers import (
     alerts,
     analytics,
@@ -127,6 +129,28 @@ def _is_error_envelope(detail: Any) -> bool:
     )
 
 
+async def _auto_start_loop(stop_event: asyncio.Event) -> None:
+    """Periodically activate scheduled trips whose time has come.
+
+    Replaces the auto-start cycle that used to run inside the deleted
+    vehicle simulation loop (gps_service Phase 5, Task 5.2). 5s interval
+    matches the old TICK_SECONDS.
+    """
+    while not stop_event.is_set():
+        now = datetime.now(timezone.utc)
+        async with AsyncSessionLocal() as db:
+            try:
+                await auto_start_scheduled_trips(db, now)
+                await db.commit()
+            except Exception:
+                await db.rollback()
+                logger.warning("Auto-start cycle failed", exc_info=True)
+        try:
+            await asyncio.wait_for(stop_event.wait(), timeout=5.0)
+        except asyncio.TimeoutError:
+            pass
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     uvicorn_logger = logging.getLogger("uvicorn.error")
@@ -155,11 +179,22 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await _warn_if_db_behind_head()
     await _reconcile_orphaned_trips_on_startup()
 
+    # Start the auto-start loop (replaces the simulation_runner cycle).
+    auto_start_stop = asyncio.Event()
+    auto_start_task = asyncio.create_task(_auto_start_loop(auto_start_stop))
+
     try:
         yield
     finally:
         # Disconnecting the shared paho client drops both subscriptions.
         mqtt_client.disconnect()
+        auto_start_stop.set()
+        try:
+            await asyncio.wait_for(auto_start_task, timeout=5.0)
+        except asyncio.TimeoutError:
+            auto_start_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await auto_start_task
         await engine.dispose()
 
 

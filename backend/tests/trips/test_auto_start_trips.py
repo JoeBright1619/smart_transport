@@ -12,7 +12,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from app.schemas.trip import TripUpdate, classify_delay
-from app.services import simulation_runner, trip_service
+from app.services import trip_auto_start, trip_service
 
 
 @pytest.fixture
@@ -55,10 +55,10 @@ async def _scheduled_trip(
 def test_start_offset_is_deterministic_and_bounded():
     for i in range(300):
         tid = f"trip-{i}"
-        offset = simulation_runner.start_offset_minutes(tid)
+        offset = trip_auto_start.start_offset_minutes(tid)
         assert -2 <= offset <= 4
         # Stable across calls — the "is it due yet?" check must not drift each tick.
-        assert simulation_runner.start_offset_minutes(tid) == offset
+        assert trip_auto_start.start_offset_minutes(tid) == offset
 
 
 # ---------------------------------------------------------------------------
@@ -107,7 +107,7 @@ async def test_auto_start_activates_due_trip(
         db, make_trip, tenant, idle_vehicle, route, driver_user, starts_in_min=-20
     )
 
-    started = await simulation_runner.auto_start_scheduled_trips(db, now)
+    started = await trip_auto_start.auto_start_scheduled_trips(db, now)
 
     assert trip.id in started
     await db.refresh(trip)
@@ -128,7 +128,7 @@ async def test_auto_start_skips_future_trip(
         db, make_trip, tenant, idle_vehicle, route, driver_user, starts_in_min=30
     )
 
-    started = await simulation_runner.auto_start_scheduled_trips(db, now)
+    started = await trip_auto_start.auto_start_scheduled_trips(db, now)
 
     assert trip.id not in started
     await db.refresh(trip)
@@ -152,7 +152,7 @@ async def test_short_window_trip_starts_within_window(
     trip.scheduled_end = now
     await db.flush()
 
-    started = await simulation_runner.auto_start_scheduled_trips(db, now)
+    started = await trip_auto_start.auto_start_scheduled_trips(db, now)
 
     assert trip.id in started
 
@@ -172,7 +172,7 @@ async def test_auto_start_skips_non_idle_vehicle(
         db, make_trip, tenant, vehicle, route, driver_user, starts_in_min=-20
     )
 
-    started = await simulation_runner.auto_start_scheduled_trips(db, now)
+    started = await trip_auto_start.auto_start_scheduled_trips(db, now)
 
     assert trip.id not in started
     await db.refresh(trip)

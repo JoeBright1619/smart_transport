@@ -348,11 +348,54 @@ Before marking any task complete:
   - Keep `auto_start_scheduled_trips()` if still needed (move to trip_service)
   - **Commit:** `refactor(backend): disable internal GPS simulation`
 
-- [ ] **Task 5.2: Clean up simulation_runner.py**
-  - Remove `simulate_active_vehicles()` and related functions
-  - Remove vehicle position update logic
-  - Keep alert evaluation logic if used elsewhere
-  - **Commit:** `refactor(backend): clean up simulation_runner.py`
+### Task 5.2 — Clean up simulation_runner.py
+
+Delete `backend/app/services/simulation_runner.py`. Its three
+responsibilities are split three ways:
+
+1. **Auto-start scheduled trips** (`auto_start_scheduled_trips`,
+   `start_offset_minutes`) — **kept**. Move verbatim to a new module
+   `backend/app/services/trip_auto_start.py`. Add a periodic task in the
+   backend lifespan (equivalent to the old `_simulation_loop` tick,
+   5s interval) so auto-start continues to work without a manual click.
+2. **Vehicle movement + telemetry + fuel/delay alerts**
+   (`simulate_active_vehicles`, `advance_vehicle` consumer) — **deleted**.
+   Replaced by gps_service → MQTT → backend (`gps_handler` writes
+   telemetry). Low-fuel and delay alerts are **not** restored in v1;
+   see the "Alerts dropped" note below.
+3. **Simulation loop plumbing** (`start_vehicle_simulation`,
+   `stop_vehicle_simulation`, `_simulation_loop`, `_auto_start_cycle`,
+   `_simulation_task` global) — **deleted**. The loop's only caller
+   was its own `start_vehicle_simulation`, which Task 7.4 commented out
+   in `main.py`; Task 5.1 removed the orphaned stop call.
+
+- [x] Create `backend/app/services/trip_auto_start.py` with
+      `start_offset_minutes` and `auto_start_scheduled_trips`, moved
+      verbatim from `simulation_runner.py`.
+- [x] Add `_auto_start_loop(stop_event)` and its task to `backend/main.py`'s
+      lifespan (5s interval, matching the old `TICK_SECONDS`).
+- [x] Delete `backend/app/services/simulation_runner.py`.
+- [x] Update `backend/tests/trips/test_auto_start_trips.py` — import
+      `auto_start_scheduled_trips` from the new module.
+- [x] Update `backend/guidelines/architecture.md` — remove
+      `simulation_runner.py` from the file listing (5.4 does the broader
+      doc rewrite; this is the minimal edit so the doc doesn't reference
+      a deleted file).
+- [x] **Alerts dropped (document in commit):**
+      - Low-fuel alert fired at `fuel < LOW_FUEL_THRESHOLD` (15%). No
+        equivalent in the MQTT pipeline. A future task could add a
+        low-fuel check to `gps_handler.process_position` (which already
+        receives `fuel` on the MQTT payload via `GPSPositionUpdate`).
+      - Delay alert fired when `advance_vehicle` signalled
+        `delay_crossed`. No equivalent signal exists in the MQTT
+        pipeline; retired permanently unless a new delay detection is
+        designed.
+      - Capacity alert continues to fire via `occupancy_service.record`
+        (Task 7.2) — unaffected by this task.
+- [x] Test: full backend suite passes; `rg "simulation_runner" backend/`
+      returns only `guidelines/architecture.md` (which 5.4 updates);
+      auto-start test still passes.
+- [x] Commit: `refactor(backend): clean up simulation_runner.py`
 
 - [ ] **Task 5.3: Remove route_simulation.py imports from backend**
   - Remove `advance_vehicle()` imports
