@@ -4,22 +4,13 @@ tank is refilled to 100% at the depot when the journey ends (auto or manual)."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, patch
 
-import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.route import RouteStop, Stop
 from app.schemas.trip import TripUpdate
 from app.services import trip_service
 from app.websocket import route_simulation
-
-_PUBLISH = "app.websocket.passenger_simulation.manager.publish_to_tenant"
-
-
-@pytest.fixture
-async def admin(make_user, tenant):
-    return await make_user(tenant_id=tenant.id, role="admin")
 
 
 def _now() -> datetime:
@@ -76,9 +67,8 @@ async def test_fuel_does_not_refill_at_terminal(
     await db.flush()
     route_simulation.clear_vehicle_state(vehicle.id)
 
-    with patch(_PUBLISH, new=AsyncMock()):
-        for _ in range(6):  # crosses the terminal at least once
-            await route_simulation.advance_vehicle(db, vehicle, _now())
+    for _ in range(6):  # crosses the terminal at least once
+        await route_simulation.advance_vehicle(db, vehicle, _now())
 
     # Old behaviour reset fuel to 100 at the terminal; it must only ever draw down now.
     assert vehicle.fuel <= 50
@@ -86,7 +76,7 @@ async def test_fuel_does_not_refill_at_terminal(
 
 
 async def test_completing_journey_refuels_at_depot(
-    db, admin, make_route, make_driver, make_vehicle, tenant
+    db, admin_user, make_route, make_driver, make_vehicle, tenant
 ):
     route = await make_route(tenant_id=tenant.id)
     driver = await make_driver(tenant_id=tenant.id)
@@ -99,13 +89,13 @@ async def test_completing_journey_refuels_at_depot(
         lng=30.06,
     )
     trip = await trip_service.start_journey(
-        db, vehicle=vehicle, tenant_id=tenant.id, current_user_id=admin.id
+        db, vehicle=vehicle, tenant_id=tenant.id, current_user_id=admin_user.id
     )
     vehicle.fuel = 20  # ran low during the journey
     await db.flush()
 
     await trip_service.update_trip(
-        db, trip.id, TripUpdate(status="completed"), tenant.id, admin.id
+        db, trip.id, TripUpdate(status="completed"), tenant.id, admin_user.id
     )
 
     assert vehicle.fuel == 100
@@ -130,11 +120,10 @@ async def test_auto_end_refuels_at_depot(
     await db.flush()
     route_simulation.clear_vehicle_state(vehicle.id)
 
-    with patch(_PUBLISH, new=AsyncMock()):
-        for _ in range(10):
-            await route_simulation.advance_vehicle(db, vehicle, _now())
-            if vehicle.status != "active":
-                break
+    for _ in range(10):
+        await route_simulation.advance_vehicle(db, vehicle, _now())
+        if vehicle.status != "active":
+            break
 
     assert vehicle.status == "idle"
     assert vehicle.fuel == 100

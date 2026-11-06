@@ -4,111 +4,14 @@ from __future__ import annotations
 
 from datetime import date, datetime, timezone
 
-from sqlalchemy import and_, select, update
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.boarding_record import BoardingRecord
-from app.models.passenger_profile import PassengerProfile
 from app.models.route import Stop
 from app.models.trip import Trip
 from app.models.vehicle import Vehicle
 from app.schemas.boarding import BoardingRecordRead, PassengerTripRead
-
-
-async def record_stop_events(
-    db: AsyncSession,
-    vehicle: Vehicle,
-    stop_id: str,
-    boarding_count: int,
-    alighting_count: int,
-    occupancy_after_boarding: int,
-    now: datetime,
-    passenger_id: str | None = None,
-    stop_name: str = "",
-    route_id: str | None = None,
-    trip_id: str | None = None,
-) -> None:
-    """Persist one boarding row and one alighting row for a stop visit.
-
-    ``trip_id`` attributes these (otherwise-anonymous) counts to the loop's trip, so a
-    trip's total ridership can be summed straight from the boarding records.
-    """
-    if alighting_count > 0:
-        occupancy_after_alight = max(0, occupancy_after_boarding - boarding_count)
-        db.add(
-            BoardingRecord(
-                trip_id=trip_id,
-                stop_id=stop_id,
-                route_id=route_id,
-                passenger_id=passenger_id,
-                event_type="alighted",
-                count=alighting_count,
-                recorded_at=now,
-                occupancy_after=occupancy_after_alight,
-                tenant_id=vehicle.tenant_id,
-            )
-        )
-
-    if boarding_count > 0:
-        db.add(
-            BoardingRecord(
-                trip_id=trip_id,
-                stop_id=stop_id,
-                route_id=route_id,
-                passenger_id=passenger_id,
-                event_type="boarded",
-                count=boarding_count,
-                recorded_at=now,
-                occupancy_after=occupancy_after_boarding,
-                tenant_id=vehicle.tenant_id,
-            )
-        )
-        if passenger_id:
-            await db.execute(
-                update(PassengerProfile)
-                .where(PassengerProfile.user_id == passenger_id)
-                .values(total_trips_recorded=PassengerProfile.total_trips_recorded + 1)
-            )
-
-    if occupancy_after_boarding >= vehicle.seating_capacity:
-        from app.services import alert_service  # lazy: avoid circular import
-
-        await alert_service.create_capacity_alert(
-            db, vehicle, occupancy_after_boarding, stop_name
-        )
-
-
-async def record_single_boarding(
-    db: AsyncSession,
-    trip_id: str | None,
-    stop_id: str,
-    passenger_id: str,
-    event_type: str,
-    tenant_id: str,
-    occupancy_after: int,
-    now: datetime,
-    route_id: str | None = None,
-) -> None:
-    """Persist one boarding or alighting row for a single identified passenger."""
-    db.add(
-        BoardingRecord(
-            trip_id=trip_id,
-            route_id=route_id,
-            stop_id=stop_id,
-            passenger_id=passenger_id,
-            event_type=event_type,
-            count=1,
-            recorded_at=now,
-            occupancy_after=occupancy_after,
-            tenant_id=tenant_id,
-        )
-    )
-    if event_type == "boarded":
-        await db.execute(
-            update(PassengerProfile)
-            .where(PassengerProfile.user_id == passenger_id)
-            .values(total_trips_recorded=PassengerProfile.total_trips_recorded + 1)
-        )
 
 
 async def list_boardings(

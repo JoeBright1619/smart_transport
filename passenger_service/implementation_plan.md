@@ -966,25 +966,56 @@ loop is disabled (Task 7.4).
 | `backend/app/services/boarding_service.py` | `record_single_boarding` / `record_stop_events` — writes the legacy `boarding_records` table | Same, **after** the Task 8.1 equivalence check: for a sampled vehicle+stop, boardings/alightings counts in `boarding_records` and in `boarding_passenger_events` agree over the same `arrival_sequence` range |
 - [x] Commit: `docs: record cutover verification` — paste the query outputs (counts, occupancy snapshot, revenue delta, equivalence-check results) into the commit message.
 
-### Task 8.2 — Delete the legacy simulation and boarding pipeline
-- [ ] Before deleting, `rg` for `completed_loops` / `planned_loops` writes in
-      `passenger_simulation.py`; list them in the commit message (they stop
-      updating — see the loop-counting disclaimer in design §10).
-- [ ] Remove `backend/app/services/passenger_simulation.py` (confirm exact path).
-- [ ] Remove any scheduled task or background loop that drove it (the one
-      disabled in Task 7.4).
-- [ ] Remove `backend/app/services/boarding_service.py`
-      (`record_single_boarding`, `record_stop_events`).
-- [ ] Remove `backend/app/models/boarding_record.py`.
-- [ ] Alembic migration dropping `boarding_records`, `boarding_event_type_enum`,
-      and `idx_boarding_*` indexes.
-- [ ] Remove `backend/tests/test_passenger_simulation.py` and any
-      `test_boarding_*` tests.
-- [ ] Add a comment in `backend/app/models/trip.py` noting the table is
-      vestigial in v1.
-- [ ] Test: full backend suite passes; `alembic downgrade`/`upgrade` round-trip clean;
-      `rg "passenger_simulation|boarding_records" backend/ --glob '!**/alembic/versions/**'` has no hits.
-- [ ] Commit: `backend: remove legacy passenger simulation and boarding records`
+### Task 8.2 — Remove legacy passenger simulation [DONE]
+- [x] `rg` for `completed_loops` / `planned_loops` writes in
+      `passenger_simulation.py`. **Result: no hits** — loop counting lives
+      in `route_simulation.advance_vehicle`, unaffected by this task.
+- [x] Remove `backend/app/websocket/passenger_simulation.py` (path is
+      `websocket/`, not `services/` — brief was wrong).
+- [x] Remove `passenger_simulation` imports and no-op call sites from
+      `backend/app/websocket/route_simulation.py` and
+      `backend/app/services/route_tracking_service.py` (the latter's
+      `_handle_stop_arrival` becomes unreachable; removed with the import).
+- [x] Trim `backend/app/services/boarding_service.py`: remove
+      `record_single_boarding` and `record_stop_events` (only callers were
+      the deleted module). **Keep** `list_boardings` and
+      `list_my_boardings` — `routers/boardings.py` serves
+      `GET /api/v1/boardings` and `/me`, consumed by
+      `frontend/src/app/services/boarding.service.ts:18`.
+- [x] Remove `backend/tests/test_passenger_simulation.py`.
+- [x] Remove `backend/tests/test_websocket_occupancy.py` (targeted only
+      the deleted `simulate_passengers_at_stop`; equivalent behavior
+      tested in `passenger_service/tests/simulation/test_engine.py`).
+- [x] Strip the now-inert `_PUBLISH` patches
+      (`app.websocket.passenger_simulation.manager.publish_to_tenant`)
+      from `test_journey_rounds.py`, `test_fuel_model.py`,
+      `test_simulation_trip_dedup.py`. The `route_simulation.advance_vehicle`
+      loops remain live; only the dead patch wrapper is removed.
+- [x] Remove `record_stop_events`-dependent tests from
+      `test_capacity_alerts.py` and `passengers/test_stats.py`.
+- [x] Test: full backend suite passes; `rg "passenger_simulation" backend/app/`
+      returns no hits.
+- [x] Commit: `backend: remove legacy passenger simulation`
+
+**Deferred (out of scope for 8.2):**
+- **`boarding_records` table drop** — `routers/boardings.py` still serves
+  `/api/v1/boardings` and `/me`; the frontend consumes `/me`. The table is
+  now frozen historical data (4,753 rows). Dropping requires either a data
+  migration to `boarding_passenger_events` or a frontend change to retire
+  `/boardings/me`. Tracked as a future cleanup once that decision is made.
+- **`boarding_record.py` model** — still read by `list_boardings` and
+  `list_my_boardings`.
+- **`trip.py` vestigial-table comment** — cosmetic; not added.
+
+**Related work in other services:**
+- **`route_simulation.py` / `simulation_runner.py` removal + consumer
+  rewires** (arrival_service, tracking, trip_service) lives in
+  **gps_service's implementation plan, Phase 5** — the cutover that
+  originated when gps_service replaced the vehicle simulation. Not
+  duplicated here. See `gps_service/implementation_plan.md` (or wherever
+  it lives) Tasks 5.1–5.6.
+- **Documentation** (architecture overview, README update) is Task 8.3
+  below.
 
 ### Task 8.3 — Documentation
 - [ ] Add `docs/architecture.md` explaining the full system: backend,

@@ -12,7 +12,6 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.boarding_record import BoardingRecord
-from app.models.passenger_profile import PassengerProfile
 from tests.conftest import auth_headers
 
 
@@ -157,41 +156,3 @@ async def test_stats_weekly_trips_this_week(
     data = r.json()["data"]
     assert data["thisWeekTrips"] == 3
     assert len(data["weeklyTrips"]) == 4
-
-
-async def test_stats_increments_profile_on_boarding(
-    db: AsyncSession, passenger_user, stop, tenant
-):
-    """record_stop_events should increment total_trips_recorded when passenger_id is set."""
-    from datetime import datetime, timezone
-
-    from app.models.vehicle import Vehicle
-    from app.services.boarding_service import record_stop_events
-
-    vehicle = Vehicle(
-        id="veh-stats-test",
-        tenant_id=tenant.id,
-        registration_number="ST 0001",
-        model="Bus",
-        seating_capacity=40,
-        status="active",
-        engine_status="good",
-        is_deleted=False,
-    )
-    db.add(vehicle)
-    db.add(PassengerProfile(user_id=passenger_user.id, total_trips_recorded=0))
-    await db.flush()
-
-    from sqlalchemy import select
-
-    now = datetime.now(timezone.utc)
-    await record_stop_events(
-        db, vehicle, stop.id, 1, 0, 1, now, passenger_id=passenger_user.id
-    )
-    await db.flush()
-
-    profile = await db.scalar(
-        select(PassengerProfile).where(PassengerProfile.user_id == passenger_user.id)
-    )
-    assert profile is not None
-    assert profile.total_trips_recorded == 1

@@ -95,28 +95,6 @@ async def test_capacity_alert_broadcasts_ws_event(db: AsyncSession, vehicle):
 # ---------------------------------------------------------------------------
 
 
-async def test_record_stop_events_no_alert_below_capacity(db: AsyncSession, vehicle):
-    from datetime import datetime, timezone
-
-    from app.services.boarding_service import record_stop_events
-
-    now = datetime.now(timezone.utc)
-
-    with patch(_PATCH, new_callable=AsyncMock) as mock_publish:
-        await record_stop_events(
-            db,
-            vehicle,
-            "stop-001",
-            boarding_count=1,
-            alighting_count=0,
-            occupancy_after_boarding=vehicle.seating_capacity - 5,
-            now=now,
-            stop_name="Market",
-        )
-
-    assert not mock_publish.called
-
-
 # ---------------------------------------------------------------------------
 # GET /vehicles/{id}/occupancy endpoint tests
 # ---------------------------------------------------------------------------

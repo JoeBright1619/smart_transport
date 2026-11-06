@@ -9,7 +9,6 @@ loop's trip and stands the vehicle down: idle, driver freed, occupancy cleared.
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, patch
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,8 +18,6 @@ from app.models.trip import Trip
 from app.schemas.trip import TripCreate, TripUpdate
 from app.services import trip_service
 from app.websocket import route_simulation
-
-_PUBLISH = "app.websocket.passenger_simulation.manager.publish_to_tenant"
 
 
 def _now() -> datetime:
@@ -194,11 +191,10 @@ async def test_journey_auto_ends_after_planned_loops(
     await db.flush()
     route_simulation.clear_vehicle_state(vehicle.id)
 
-    with patch(_PUBLISH, new=AsyncMock()):
-        for _ in range(10):
-            await route_simulation.advance_vehicle(db, vehicle, _now())
-            if vehicle.status != "active":
-                break
+    for _ in range(10):
+        await route_simulation.advance_vehicle(db, vehicle, _now())
+        if vehicle.status != "active":
+            break
 
     # The one planned round is done → the journey stood the vehicle down.
     assert vehicle.status == "idle"
@@ -243,8 +239,7 @@ async def test_uncapped_journey_keeps_running(
     await db.flush()
     route_simulation.clear_vehicle_state(vehicle.id)
 
-    with patch(_PUBLISH, new=AsyncMock()):
-        await route_simulation.advance_vehicle(db, vehicle, _now())
+    await route_simulation.advance_vehicle(db, vehicle, _now())
 
     # A loop completed, but with no cap the vehicle keeps running.
     assert vehicle.status == "active"
