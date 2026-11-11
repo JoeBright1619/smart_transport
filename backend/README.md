@@ -306,11 +306,3 @@ Comprehensive guidelines are available in the `guidelines/` directory:
 5. **Type Safety**: Leverage Pydantic v2 and SQLAlchemy 2.x typing
 
 ---
-
-## License
-
-All rights reserved.
-This repository is provided for viewing and evaluation purposes only. No permission is granted to copy, modify, distribute, sublicense, or use this code for commercial or other purposes without prior written permission.
----
-
-## Contributors
