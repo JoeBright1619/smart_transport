@@ -1,6 +1,6 @@
 # Smart Transport
 
-Smart Transport is a full-stack public transport management system for a multi-tenant fleet operation. It combines a FastAPI backend with a React/Vite frontend for managing vehicles, routes, stops, drivers, trips, alerts, maintenance, analytics, arrivals, authentication, and live vehicle tracking.
+Smart Transport is a full-stack public transport management system for a multi-tenant fleet operation. It combines a FastAPI backend with a React/Vite frontend for managing vehicles, routes, stops, drivers, trips, alerts, maintenance, analytics, arrivals, authentication, and live vehicle tracking. `gps_service` publishes vehicle positions to MQTT, `passenger_service` derives occupancy events from those positions, and the backend persists and broadcasts the resulting live state.
 
 ## Features
 
@@ -21,6 +21,7 @@ Smart Transport is a full-stack public transport management system for a multi-t
 | Backend | FastAPI, SQLAlchemy 2, Alembic, Pydantic |
 | Database | PostgreSQL |
 | Cache / realtime support | Redis |
+| Event transport | MQTT (Eclipse Mosquitto) |
 | Auth | JWT access tokens, HttpOnly refresh-token cookies |
 | Frontend | React, Vite, TypeScript, React Router |
 | UI | Radix UI, Tailwind CSS, Lucide icons |
@@ -34,9 +35,11 @@ Smart Transport is a full-stack public transport management system for a multi-t
 smart_transport/
   backend/              FastAPI app, routers, schemas, models, migrations, tests
   frontend/             React/Vite frontend application
+  gps_service/          Vehicle simulation and MQTT position publisher
+  passenger_service/    Passenger simulation and MQTT occupancy publisher
   docs/                 Architecture, setup, API notes, seed plan, roadmap
   shared/               Shared planning and conventions
-  docker-compose.yml    PostgreSQL, Redis, and backend services
+  docker-compose.yml    Six services: backend, gps_service, passenger_service, PostgreSQL, Redis, MQTT
 ```
 
 ## Prerequisites
@@ -78,14 +81,18 @@ From the repository root:
 docker compose up -d
 ```
 
-This starts PostgreSQL, Redis, and the FastAPI backend. Services are available at:
+This starts PostgreSQL, Redis, MQTT, the FastAPI backend, `gps_service`, and `passenger_service`. Services are available at:
 
 | Service | URL |
 |---|---|
 | API | `http://localhost:8000` |
 | API docs (Swagger) | `http://localhost:8000/docs` |
+| GPS service | `http://localhost:8001` |
+| Passenger service | `http://localhost:8002` |
 | PostgreSQL | `localhost:5432` |
 | Redis | `localhost:6379` |
+
+MQTT is available on port `1883` (with WebSocket MQTT on port `9001`).
 
 ### 2. Run database migrations
 
@@ -217,12 +224,12 @@ All JSON field names use camelCase (the backend serializes via response aliases)
 
 - [Development setup](docs/Dev-Setup.md)
 - [Architecture](docs/Architecture.md)
+- [Known architecture gaps](docs/Architecture.md#12-known-gaps-after-phase-5)
 - [Tech stack](docs/TechStack.md)
 - [MVP scope](docs/MVP-Scope.md)
 - [Seed plan](docs/Seed-Plan.md)
 - [Roadmap](docs/Roadmap.md)
 - [Frontend integration plan](frontend/IMPLEMENTATION.md)
-- [Simulation plan](SIMULATION_PLAN.md)
 
 ## Development Notes
 
