@@ -1,32 +1,60 @@
 # Smart Transport
 
-Smart Transport is a full-stack public transport management system for a multi-tenant fleet operation. It combines a FastAPI backend with a React/Vite frontend for managing vehicles, routes, stops, drivers, trips, alerts, maintenance, analytics, arrivals, authentication, and live vehicle tracking. `gps_service` publishes vehicle positions to MQTT, `passenger_service` derives occupancy events from those positions, and the backend persists and broadcasts the resulting live state.
+A multi-tenant public transport management system built as a three-service
+distributed system: a FastAPI backend, two microservices (`gps_service`,
+`passenger_service`) connected by MQTT, and a React/Vite frontend.
+
+The system simulates a fleet of buses moving along routes in real time,
+tracks their positions, and derives passenger occupancy at each stop — all
+persisted to Postgres and broadcast to a live map over WebSocket.
+
+## What it demonstrates
+
+- **Distributed data pipeline.** `gps_service` publishes vehicle positions to
+  MQTT every 5 seconds; `passenger_service` consumes those positions, detects
+  stop arrivals, simulates passenger boarding/alighting, and publishes
+  occupancy events; the backend consumes both streams, persists them
+  idempotently, and fans out WebSocket updates via Redis pub/sub.
+- **Multi-tenant SaaS architecture.** Every operational record is scoped to a
+  `tenant_id`. Auth supports five roles (superadmin, admin, operator,
+  dispatcher, passenger), with tenant-scoped and universal service tokens for
+  cross-tenant consumers.
+- **Async Python throughout.** FastAPI + SQLAlchemy 2.0 async + asyncpg +
+  paho-mqtt, with an async test suite on in-memory SQLite.
+- **Real-time dashboard.** React + TypeScript + Leaflet with a WebSocket-driven
+  live vehicle map, analytics charts, and PDF export.
+
+See [`docs/Architecture.md`](docs/Architecture.md) for the full design and
+[`docs/Architecture.md#12-known-gaps-after-phase-5`](docs/Architecture.md#12-known-gaps-after-phase-5)
+for what's intentionally out of scope.
 
 ## Features
 
 - Multi-tenant authentication with JWT access tokens and HttpOnly refresh-token cookies
-- Tenant registration and role-based users
+- Role-based user management (superadmin / admin / operator / dispatcher / passenger)
 - Vehicle, route, stop, driver, trip, alert, and maintenance APIs
-- Dashboard and analytics API responses
-- Arrival estimate and WebSocket vehicle tracking endpoints
-- Superadmin tenant management endpoints
-- React dashboard UI with routing, protected pages, maps, tables, forms, and toast feedback
-- Live vehicle tracking map with real-time WebSocket updates
-- Analytics page with trend charts, route performance, fleet analysis, and PDF export
+- Dashboard and analytics endpoints with trend and fleet-performance breakdowns
+- Arrival estimates (ETA at any stop, per active vehicle)
+- WebSocket live vehicle tracking with Redis-backed multi-tenant fan-out
+- Automated alert generation (low-fuel, delay, speeding, breakdown, capacity)
+- Passenger occupancy derived from a real MQTT pipeline
+- Superadmin tenant management, impersonation, and audit logging
+- React dashboard with maps, charts, tables, forms, and PDF export
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Backend | FastAPI, SQLAlchemy 2, Alembic, Pydantic |
-| Database | PostgreSQL |
-| Cache / realtime support | Redis |
+| Backend | FastAPI, SQLAlchemy 2 (async), Alembic, Pydantic v2 |
+| Database | PostgreSQL 15 |
+| Cache / real-time | Redis 7 (pub/sub + caching) |
 | Event transport | MQTT (Eclipse Mosquitto) |
 | Auth | JWT access tokens, HttpOnly refresh-token cookies |
-| Frontend | React, Vite, TypeScript, React Router |
+| Frontend | React 18, Vite, TypeScript, React Router |
 | UI | Radix UI, Tailwind CSS, Lucide icons |
 | Maps / charts | Leaflet, React Leaflet, Recharts |
 | PDF export | jsPDF, jspdf-autotable |
+| Services | FastAPI (×3), paho-mqtt, aiohttp |
 | Tooling | Docker Compose, pytest, Ruff |
 
 ## Repository Structure
@@ -35,41 +63,20 @@ Smart Transport is a full-stack public transport management system for a multi-t
 smart_transport/
   backend/              FastAPI app, routers, schemas, models, migrations, tests
   frontend/             React/Vite frontend application
-  gps_service/          Vehicle simulation and MQTT position publisher
-  passenger_service/    Passenger simulation and MQTT occupancy publisher
+  gps_service/          Vehicle simulation, MQTT position publisher
+  passenger_service/    Passenger simulation, MQTT occupancy publisher
   docs/                 Architecture, setup, API notes, seed plan, roadmap
   shared/               Shared planning and conventions
-  docker-compose.yml    Six services: backend, gps_service, passenger_service, PostgreSQL, Redis, MQTT
+  docker-compose.yml    Six services: backend, gps_service, passenger_service,
+                        PostgreSQL, Redis, MQTT
 ```
 
 ## Prerequisites
 
-- Node.js 18+
 - Docker Desktop
+- Node.js 18+ (for local frontend development only — the frontend can also
+  run against the dockerized backend)
 - Git
-
-## Environment Files
-
-Backend — copy the example and leave values as-is for Docker:
-
-```bash
-cp backend/.env.example backend/.env
-```
-
-> **Important:** Do not change `DATABASE_URL` or `REDIS_URL` in `backend/.env`. Those variables are only read when running the backend outside Docker. The Docker Compose setup injects its own values via `environment:` in `docker-compose.yml` and the backend container connects to the `db` and `redis` services automatically.
-
-Frontend:
-
-```bash
-cp frontend/.env.example frontend/.env.local
-```
-
-Default frontend values (no changes needed for local development):
-
-```env
-VITE_API_BASE_URL=http://localhost:8000
-VITE_WS_URL=ws://localhost:8000
-```
 
 ## Quick Start
 
@@ -81,7 +88,8 @@ From the repository root:
 docker compose up -d
 ```
 
-This starts PostgreSQL, Redis, MQTT, the FastAPI backend, `gps_service`, and `passenger_service`. Services are available at:
+This starts PostgreSQL, Redis, MQTT, the FastAPI backend, `gps_service`, and
+`passenger_service`. Services are available at:
 
 | Service | URL |
 |---|---|
@@ -91,8 +99,13 @@ This starts PostgreSQL, Redis, MQTT, the FastAPI backend, `gps_service`, and `pa
 | Passenger service | `http://localhost:8002` |
 | PostgreSQL | `localhost:5432` |
 | Redis | `localhost:6379` |
+| MQTT | `localhost:1883` (WebSocket MQTT: `localhost:9001`) |
 
-MQTT is available on port `1883` (with WebSocket MQTT on port `9001`).
+Wait for containers to report healthy:
+
+```bash
+docker compose ps
+```
 
 ### 2. Run database migrations
 
@@ -106,9 +119,13 @@ docker compose exec backend alembic upgrade head
 docker compose exec backend python -m app.core.seed
 ```
 
-This seeds 5 tenants, 8 vehicles, 6 routes, 8 drivers, 5 active trips, 90 days of historical trips (~900 records), 90 days of analytics records, maintenance records, and alerts.
+This seeds 5 tenants, 8 vehicles, 6 routes, 8 drivers, 5 active trips, 90
+days of historical trips, 90 days of analytics, maintenance records, and
+alerts.
 
-> **Warning:** Always run the seed command inside the container using `docker compose exec backend ...`. Running `python -m app.core.seed` directly from your local terminal connects to your local PostgreSQL (if any) instead of the Docker database, and the data will not appear in the app.
+> **Note:** Always run the seed command inside the container using
+> `docker compose exec backend ...`. Running `python -m app.core.seed` from
+> your local terminal connects to your local PostgreSQL, not the Docker one.
 
 ### 4. Start the frontend
 
@@ -118,7 +135,25 @@ npm install
 npm run dev
 ```
 
-Frontend runs at `http://localhost:5173`.
+Frontend runs at `http://localhost:5173`. It connects to the backend at
+`http://localhost:8000` and the WebSocket at `ws://localhost:8000`.
+
+Within ~10 seconds of the backend services starting, the live map on the
+Vehicle Tracking page should show buses moving along their routes, with
+occupancy updates arriving at each stop.
+
+### 5. (Optional) Explore the services
+
+```bash
+# GPS service status
+curl http://localhost:8001/status
+
+# Passenger service status
+curl http://localhost:8002/status
+
+# Watch positions flow through MQTT
+docker compose exec mqtt mosquitto_sub -h localhost -t 'gps/+/+/position' -v
+```
 
 ## Demo Credentials
 
@@ -132,20 +167,8 @@ After seeding, these accounts are available:
 | Dispatcher | `dispatcher@ecofleet.rw` | `Password123!` |
 | Passenger | `passenger@ecofleet.rw` | `Password123!` |
 
-## Frontend Integration Status
-
-All 33 frontend–backend integration tasks are complete. The frontend communicates entirely with the real backend API — no mock data remains.
-
-Completed:
-
-- Frontend environment variables and Axios client setup
-- Backend-aligned TypeScript types (camelCase throughout)
-- JWT injection, token refresh, and session expiry handling
-- Auth context, login, register, and logout flows
-- All resource service files: users, vehicles, routes, stops, drivers, trips, alerts, maintenance, analytics, arrivals, and superadmin
-- All pages connected to real API: Dashboard, Fleet Management, Route Management, Driver Management, Trip Management, Dispatch, Alerts, Maintenance, Analytics, Vehicle Tracking, and Superadmin
-- Live WebSocket vehicle tracking
-- Analytics PDF export
+> These credentials are demo-only and stored as plaintext in the seed script.
+> Rotate them before deploying anywhere accessible from the internet.
 
 ## Useful Commands
 
@@ -155,6 +178,7 @@ Docker (run from repository root):
 docker compose up -d                                      # start all services
 docker compose ps                                         # check running containers
 docker compose logs -f backend                            # stream backend logs
+docker compose logs -f passenger_service                  # stream passenger-service logs
 docker compose down                                       # stop all services
 docker compose down -v                                    # stop and delete volumes (wipes database)
 ```
@@ -186,19 +210,6 @@ npm run preview    # preview production build locally
 npm run typecheck  # TypeScript type check
 ```
 
-## Connecting to Databases
-
-**pgAdmin (PostgreSQL):**
-
-1. Open pgAdmin and add a new server.
-2. Host: `localhost`, Port: `5432`
-3. Database: `transport_db`, Username: `transport`, Password: `transport`
-
-**RedisInsight:**
-
-1. Open RedisInsight and add a new connection.
-2. Host: `localhost`, Port: `6379` (no password by default)
-
 ## API Notes
 
 Backend responses use a consistent envelope:
@@ -218,22 +229,50 @@ Backend responses use a consistent envelope:
 }
 ```
 
-All JSON field names use camelCase (the backend serializes via response aliases). Interactive OpenAPI docs are available at `http://localhost:8000/docs`.
+All JSON field names use camelCase (the backend serializes via response
+aliases). Interactive OpenAPI docs are available at
+`http://localhost:8000/docs`.
 
-## More Documentation
+## Documentation
 
+- [Architecture overview](docs/Architecture.md)
+- [Known gaps](docs/Architecture.md#12-known-gaps-after-phase-5)
 - [Development setup](docs/Dev-Setup.md)
-- [Architecture](docs/Architecture.md)
-- [Known architecture gaps](docs/Architecture.md#12-known-gaps-after-phase-5)
 - [Tech stack](docs/TechStack.md)
+- [API reference](docs/API-Spec.md)
 - [MVP scope](docs/MVP-Scope.md)
 - [Seed plan](docs/Seed-Plan.md)
 - [Roadmap](docs/Roadmap.md)
-- [Frontend integration plan](frontend/IMPLEMENTATION.md)
+
+## Connecting to Databases
+
+**pgAdmin (PostgreSQL):**
+
+1. Open pgAdmin and add a new server.
+2. Host: `localhost`, Port: `5432`
+3. Database: `transport_db`, Username: `transport`, Password: `transport`
+
+**RedisInsight:**
+
+1. Open RedisInsight and add a new connection.
+2. Host: `localhost`, Port: `6379` (no password by default)
+
+**MQTT Explorer (or any MQTT client):**
+
+1. Connect to `localhost:1883`.
+2. Subscribe to `gps/+/+/position` to watch vehicle position events.
+3. Subscribe to `gps/+/+/occupancy` to watch occupancy events.
 
 ## Development Notes
 
-- Keep `frontend/.env.local` and `backend/.env` local; commit only `.env.example` files.
-- Keep files small and focused. Frontend pages should mostly compose smaller components, hooks, and helpers.
-- If login fails, check that Docker containers are running (`docker compose ps`), CORS allows `http://localhost:5173`, and seed data has been created with `docker compose exec backend python -m app.core.seed`.
-- The `pgdata` Docker volume persists the database across restarts. Use `docker compose down -v` only if you want a clean slate.
+- Keep `frontend/.env.local`, `backend/.env`, and `passenger_service/.env`
+  local; commit only `.env.example` files.
+- If login fails, check that all Docker containers are running
+  (`docker compose ps`), CORS allows `http://localhost:5173`, and seed data
+  was created with `docker compose exec backend python -m app.core.seed`.
+- The `pgdata` Docker volume persists the database across restarts. Use
+  `docker compose down -v` only if you want a clean slate.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
