@@ -1,6 +1,6 @@
 # Smart Public Transport Tracking & Fleet Management – System Architecture
 
-> **Last updated:** 2026-03-24
+> **Last updated:** 2026-11-11
 > This document describes the target system architecture for both the prototype and production system.
 
 ---
@@ -21,32 +21,28 @@ The system serves five actors:
 ## 2. High-Level Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        Client Layer                         │
-│  Browser (React SPA)  ← REST/JSON + WebSocket →  Mobile App │
-└───────────────────────────┬─────────────────────────────────┘
-                            │ HTTPS / WSS
-┌───────────────────────────▼─────────────────────────────────┐
-│                       API Gateway / Reverse Proxy           │
-│                  (Nginx — routing, TLS termination)         │
-└──────┬────────────────────┬────────────────────────┬────────┘
-       │                    │                        │
-┌──────▼──────┐   ┌─────────▼──────────┐  ┌─────────▼───────┐
-│  REST API   │   │  WebSocket Server  │  │  Static Files   │
-│  (FastAPI)  │   │  (FastAPI + Redis) │  │  (Vite Build)   │
-└──────┬──────┘   └─────────┬──────────┘  └─────────────────┘
-       │                    │
-┌──────▼────────────────────▼──────────────────────────────────┐
-│                     Service Layer                             │
-│  VehicleService  TripService  DispatchService  AlertService   │
-│  DriverService   MaintenanceService  AnalyticsService         │
-└──────┬────────────▬──────────────────────────────────────────┘
-       │            │
-┌──────▼────┐  ┌────▼──────────┐
-│PostgreSQL │  │  Redis Cache  │
-│  (Primary │  │  (Pub/Sub +   │
-│  Database)│  │   Sessions)   │
-└───────────┘  └───────────────┘
+┌──────────────────┐       REST / WSS       ┌──────────────────────────────┐
+│ Frontend          │◄──────────────────────►│ backend                      │
+│ React SPA         │                        │ REST API + WebSocket server │
+└──────────────────┘                        └───────┬───────────┬──────────┘
+                                                     │           │
+                                               PostgreSQL       Redis
+                                               vehicles,        tenant-scoped
+                                               telemetry,       WebSocket pub/sub
+                                               occupancy data
+                                                     ▲
+                                                     │ subscribes
+                    gps/{tenant}/{vehicle}/position │
+┌──────────────────┐                         ┌──────┴──────┐
+│ gps_service      │── publishes ───────────►│ MQTT broker │◄── publishes ─┐
+│ SimulationEngine │                         └──────┬──────┘               │
+│ movement, speed, │                                │ consumes              │
+│ congestion, fuel │                                ▼                       │
+└──────────────────┘                    ┌───────────────────┐              │
+                                        │ passenger_service │──────────────┘
+                                        │ arrival detection,│ gps/{tenant}/{vehicle}/occupancy
+                                        │ boarding/alighting│
+                                        └───────────────────┘
 ```
 
 ---
@@ -137,6 +133,7 @@ PATCH  /api/v1/users/{id}
 GET    /api/v1/vehicles
 POST   /api/v1/vehicles
 GET    /api/v1/vehicles/{id}
+GET    /api/v1/vehicles/{id}/latest-arrival-sequence
 PATCH  /api/v1/vehicles/{id}
 DELETE /api/v1/vehicles/{id}
 
@@ -165,6 +162,15 @@ GET    /api/v1/alerts
 POST   /api/v1/alerts/{id}/acknowledge
 
 GET    /api/v1/analytics?from=&to=
+
+GET    /api/v1/passengers       (superadmin or universal passenger-service token)
+
+Cross-service (universal token)
+GET    /api/v1/service/whoami
+GET    /api/v1/service/routes/{id}
+GET    /api/v1/service/vehicles
+GET    /api/v1/service/vehicles/{id}
+GET    /api/v1/service/vehicles/{id}/latest-arrival-sequence
 
 WS     /ws/tracking             → real-time vehicle positions (JWT-authenticated)
 ```
@@ -289,6 +295,38 @@ audit_logs                               ← Immutable. Never soft-delete or upd
  ├── metadata (JSONB — stores before/after diff or context)
  └── created_at
 
+occupancy_events                         ← Append-only events from passenger_service.
+ ├── id (PK, UUID, prefix: occ-)
+ ├── tenant_id (FK → tenants), vehicle_id (FK → vehicles)
+ ├── stop_id, route_id, arrival_sequence
+ ├── boardings, alightings, onboard
+ ├── idempotency_key (UNIQUE)
+ ├── position_timestamp, service_timestamp, revenue_delta
+ └── created_at, updated_at
+
+boarding_passenger_events                ← Per-passenger children of occupancy_events.
+ ├── id (PK, UUID, prefix: bpe-)
+ ├── occupancy_event_id (FK → occupancy_events)
+ ├── passenger_id (FK → users, nullable)
+ ├── event_type ENUM('boarded','alighted')
+ └── created_at
+
+boarding_records                         ← Read-only legacy; writer removed in Phase 8;
+                                          /api/v1/boardings still serves historical rows.
+
+analytics                                ← Daily tenant aggregation.
+ ├── id (PK, UUID, prefix: analytics-)
+ ├── tenant_id (FK → tenants), date
+ ├── total_fuel_consumption, total_revenue
+ └── created_at
+
+service_tokens                           ← Machine-to-machine authentication tokens.
+ ├── id (PK, UUID, prefix: stk-)
+ ├── tenant_id (FK → tenants, nullable for universal tokens)
+ ├── name, token_prefix, token_hash (UNIQUE), scopes
+ ├── is_active
+ └── created_at, last_used_at
+
 ── INDEXES (Required) ──────────────────────────────────
  idx_vehicles_tenant_id
  idx_routes_tenant_id
@@ -306,31 +344,35 @@ audit_logs                               ← Immutable. Never soft-delete or upd
 ## 6. Real-Time Architecture
 
 ```
-GPS Feed / Backend Simulation (per tenant)
-        │
+gps_service
+  SimulationEngine (movement, speed, congestion, fuel; ~5 s tick)
+        │ publishes gps/{tenant}/{vehicle}/position
         ▼
- AlertService.evaluate(tenant_id)  ◄── triggered on each position update
-        │
-        ▼
-  PostgreSQL (persist alert if triggered)
-        │
-        ▼
-  Redis Pub/Sub — tenant-scoped channel
-  "vehicle_updates:{tenant_id}"         ← e.g. vehicle_updates:ten-abc123
-        │
-        ▼
-  ConnectionManager
-  (stores tenant_id per WebSocket client)
-        │  broadcasts ONLY to clients matching tenant_id
-        ▼
-  React Frontend — tenant-isolated map view
-  (updates markers only for the logged-in company's vehicles)
+     MQTT broker ─────────────► passenger_service
+        │                        detects stop arrivals and simulates boarding/alighting
+        │                        │ publishes gps/{tenant}/{vehicle}/occupancy
+        ▼                        ▼
+GPSMQTTSubscriber             OccupancyMQTTSubscriber
+        │                        │ idempotent record()
+        ▼                        ▼
+vehicles lat/lng/speed/        occupancy_events + boarding_passenger_events;
+heading/fuel + telemetry       vehicles.current_occupancy; analytics revenue;
+        │                      capacity alert
+        └──────────────┬───────────────┘
+                       ▼
+        WebSocket tracking loop reads persisted vehicle state
+                       │
+                       ▼
+        Redis pub/sub: vehicle_updates:{tenant_id}
+                       │
+                       ▼
+        tenant-scoped WebSocket clients
 ```
 
-- Vehicle positions are updated every **5 seconds**.
+- `gps_service` publishes vehicle positions about every **5 seconds**; the backend is a consumer and does not simulate vehicle or passenger state.
 - Each tenant's vehicles are broadcast exclusively on their own Redis channel.
 - A `superadmin` may subscribe to `vehicle_updates:all` for platform-wide monitoring (disabled in prototype).
-- In the prototype phase, the frontend simulates real-time updates with `use-vehicle-simulation.ts`.
+- Occupancy inserts also emit a `vehicle_occupancy_updated` message after commit; duplicate MQTT deliveries do not produce an additional client message.
 
 ---
 
@@ -388,8 +430,11 @@ CI/CD:     GitHub Actions → Docker image build → container deployment
 services:
   frontend:    # Vite dev server
   backend:     # FastAPI + uvicorn
+  gps_service: # vehicle simulation and MQTT position publisher
+  passenger_service: # passenger simulation and MQTT occupancy publisher
   db:          # postgres:15
   redis:       # redis:7
+  mqtt:        # Eclipse Mosquitto broker
   nginx:       # reverse proxy (optional in dev)
 ```
 
@@ -404,3 +449,34 @@ services:
 | API throughput | Async FastAPI + uvicorn workers; connection pooling (asyncpg) |
 | Horizontal scaling | Stateless API workers; shared Redis for WebSocket state |
 | Database load | Read replicas for analytics queries; indexes on hot columns |
+
+---
+
+## 11. Service Split Rationale
+
+`gps_service` owns vehicle movement, speed, congestion, and fuel simulation, while `passenger_service` owns stop-arrival detection and passenger boarding/alighting. Separating these concerns lets each service scale and evolve independently, and leaves the backend as a pure consumer of MQTT events plus the authoritative REST, persistence, alerting, and WebSocket layer.
+
+---
+
+## 12. Known Gaps after Phase 5
+
+| Gap | Severity | Restore note |
+|---|---|---|
+| `atStop` in `vehicle_update` is always `""` | Visible frontend regression | The prior in-process simulator supplied the dwell-stop name. Restore it by propagating stop/dwell state through the MQTT pipeline or deriving it reliably in the backend. |
+
+The Phase 5 plan premise that low-fuel and delay alerts were retired was incorrect: both remain active in `gps_handler.process_gps_update`, alongside speeding and breakdown alerts. Capacity alerts are triggered by `occupancy_service.record`.
+
+| Alert type | Current trigger path |
+|---|---|
+| Low fuel | `gps_handler.process_gps_update` on transition below the 15% fuel threshold |
+| Delay | `gps_handler.process_gps_update` on each position update via `alert_service.auto_generate` |
+| Speeding | `gps_handler.process_gps_update` when GPS speed exceeds its threshold |
+| Breakdown | `gps_handler.process_gps_update` when `engine_status` is `critical` |
+| Capacity | `occupancy_service.record` when onboard occupancy reaches the configured threshold |
+
+---
+
+## 13. Known Limitations
+
+- Restart caveats remain: route-position and tracking state includes per-process in-memory caches and state, so a restart can discard transient state. Startup reconciliation handles orphaned trips, but does not make the transient state durable.
+- `completed_loops` is maintained by the backend's `route_tracking_service._handle_loop_complete` when it observes a route wrap from position-derived tracking. `gps_service`'s `SimulationEngine` has no completed-loop counter.
