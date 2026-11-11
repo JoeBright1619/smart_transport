@@ -1,3 +1,8 @@
+> **Historical document.** This design doc was authored before
+> passenger_service implementation began. It describes the intended
+> design, not the current shipped system. For the current
+> architecture, see [docs/Architecture.md](../../docs/Architecture.md).
+
 # Passenger Service — Design Document
 
 ## 1. Architecture Diagram
