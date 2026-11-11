@@ -18,3 +18,4 @@ Load only the file relevant to your task — do not load the full spec unnecessa
 | [api/analytics.md](./api/analytics.md) | `/api/v1/analytics` |
 | [api/tracking.md](./api/tracking.md) | `/api/v1/arrivals` + `WS /ws/tracking` |
 | [api/superadmin.md](./api/superadmin.md) | `/superadmin/*` |
+| [api/service.md](./api/service.md) | `/api/v1/service/whoami` (tenant-scoped) + `/api/v1/service/{routes,vehicles}*` (cross-tenant) |
