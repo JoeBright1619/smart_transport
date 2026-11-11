@@ -53,9 +53,7 @@ This system addresses these challenges by providing real-time tracking, automate
 - Comprehensive audit logging for all critical operations
 
 **Simulation & Testing**
-- Built-in vehicle position simulator for development
-- Passenger demand simulation
-- Traffic condition simulation
+- Vehicle simulation (`gps_service`) and passenger simulation (`passenger_service`) run as separate services, connected via MQTT.
 - 40+ comprehensive test suites ensuring system reliability
 
 ---
@@ -81,6 +79,7 @@ This system addresses these challenges by providing real-time tracking, automate
 
 ### Real-Time & Caching
 - **Redis 5.0+**: Pub/sub for WebSocket fan-out, analytics caching
+- **MQTT (Mosquitto)**: Position and occupancy events between the simulation services and backend
 - **WebSockets**: Live vehicle tracking, real-time occupancy updates
 - **Tenant-scoped channels**: Data isolation across transport operators
 
@@ -115,20 +114,27 @@ All critical operations (user actions, vehicle changes, trip modifications) are 
 
 ### Real-Time Architecture
 ```
-GPS Device/Simulator → Backend API → Redis Pub/Sub (tenant-scoped)
-                                           ↓
-                                    ConnectionManager
-                                           ↓
-                            WebSocket Clients (filtered by tenant)
+gps_service → MQTT: gps/{tenant}/{vehicle}/position → GPSMQTTSubscriber
+                                                         ↓
+                                              vehicles + telemetry (PostgreSQL)
+                                                         ↓
+passenger_service ← same position topic                 WebSocket tracking loop
+       ↓ stop-arrival detection and boarding/alighting              ↓
+MQTT: gps/{tenant}/{vehicle}/occupancy → OccupancyMQTTSubscriber → Redis Pub/Sub
+                                               ↓                         ↓
+           occupancy events, passenger events, revenue, capacity alert  WebSocket clients
 ```
 
+The backend does not simulate vehicles or passengers. It consumes MQTT events, persists the resulting state, and publishes tenant-scoped updates through Redis and WebSockets.
+
 ### Automated Alert System
-- **Delay alerts**: Trip running >5 minutes behind schedule
-- **Breakdown alerts**: Vehicle engine status critical
+- **Low-fuel alerts**: `gps_handler.process_gps_update` detects a transition below 15% fuel
+- **Delay alerts**: `gps_handler.process_gps_update` evaluates delay on each GPS position update
+- **Breakdown alerts**: `gps_handler.process_gps_update` detects `engine_status: critical`
 - **Maintenance alerts**: Service due within 7 days
 - **Geofence alerts**: Vehicle >500m outside route corridor
-- **Speeding alerts**: Speed >80 km/h
-- **Capacity alerts**: Vehicle >90% full
+- **Speeding alerts**: `gps_handler.process_gps_update` detects GPS speed above its configured threshold
+- **Capacity alerts**: `occupancy_service.record` detects occupancy at the configured threshold
 
 ### Service Layer Pattern
 All business logic resides in `app/services/`, keeping routers thin and focused on HTTP concerns. Services are injected with database sessions and tenant context.
@@ -144,10 +150,10 @@ backend/
 ├── alembic/                   # Database migrations
 ├── app/
 │   ├── core/                  # Config, database, security, dependencies
-│   ├── models/                # SQLAlchemy ORM models (16 entities)
+│   ├── models/                # SQLAlchemy ORM models (18 entities)
 │   ├── schemas/               # Pydantic request/response schemas
-│   ├── routers/               # API endpoints (16 routers)
-│   ├── services/              # Business logic (20+ services)
+│   ├── routers/               # API endpoints (18 routers)
+│   ├── services/              # Business logic (27 services)
 │   └── websocket/             # Real-time tracking WebSocket handlers
 └── tests/                     # 40+ test files, tenant isolation tests
 ```
@@ -162,6 +168,7 @@ See [`guidelines/architecture.md`](guidelines/architecture.md) for the complete 
 - Python 3.11+
 - PostgreSQL 15+
 - Redis 5.0+
+- MQTT broker (Mosquitto in Docker Compose)
 
 ### Installation
 
@@ -230,6 +237,7 @@ Once running, visit:
 
 **Fleet Management**
 - `GET/POST /api/v1/vehicles` - List/create vehicles
+- `GET /api/v1/vehicles/{id}/latest-arrival-sequence` - Latest passenger-service arrival sequence for a tenant vehicle
 - `GET/POST /api/v1/drivers` - Manage drivers
 - `GET/POST /api/v1/maintenance` - Maintenance records
 
@@ -239,9 +247,9 @@ Once running, visit:
 - `GET/POST /api/v1/trips` - Trip scheduling
 
 **Passenger Services**
-- `POST /api/v1/passengers/register` - Passenger registration
+- `GET /api/v1/passengers` - Cross-tenant passenger pool (superadmin or universal service token)
 - `GET /api/v1/arrivals` - Real-time ETAs at stops
-- `POST /api/v1/boardings` - Record boarding/alighting
+- `GET /api/v1/boardings` - Historical legacy boarding records
 
 **Analytics & Monitoring**
 - `GET /api/v1/analytics` - Fleet KPIs
@@ -250,6 +258,13 @@ Once running, visit:
 
 **Real-Time Tracking**
 - `WS /ws/tracking?token={jwt}` - Live vehicle positions
+
+**Cross-Service (Universal Token)**
+- `GET /api/v1/service/whoami` - Identify a tenant-scoped calling service
+- `GET /api/v1/service/routes/{id}` - Get a route across tenants
+- `GET /api/v1/service/vehicles` - List active vehicles across tenants
+- `GET /api/v1/service/vehicles/{id}` - Get a vehicle across tenants
+- `GET /api/v1/service/vehicles/{id}/latest-arrival-sequence` - Get an arrival sequence across tenants
 
 ---
 
@@ -261,6 +276,8 @@ All configuration is managed through environment variables (see [`guidelines/con
 |----------|-------------|----------|
 | `DATABASE_URL` | PostgreSQL connection string | Yes |
 | `REDIS_URL` | Redis connection string | Yes |
+| `MQTT_BROKER_URL` | MQTT broker hostname or URL | No (default: `localhost`) |
+| `MQTT_BROKER_PORT` | MQTT broker port | No (default: `1883`) |
 | `SECRET_KEY` | JWT signing secret (32+ chars) | Yes |
 | `CORS_ORIGINS` | Allowed frontend origins (comma-separated) | Yes |
 | `DEBUG` | Enable debug mode | No (default: false) |
