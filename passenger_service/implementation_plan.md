@@ -1018,16 +1018,16 @@ loop is disabled (Task 7.4).
   below.
 
 ### Task 8.3 — Documentation
-- [ ] Add `docs/architecture.md` explaining the full system: backend,
+- [x] Add `docs/architecture.md` explaining the full system: backend,
       gps_service, passenger_service, MQTT topics, data flow, the
       occupancy → `occupancy_events` / `boarding_passenger_events` → WebSocket
       pipeline, and the reasoning behind the split.
-- [ ] Include a **Known limitations** section carrying forward design §12, and a
+- [x] Include a **Known limitations** section carrying forward design §12, and a
       **loop-counting disclaimer**: gps_service has no loop counting today, so
       `planned_loops` / `completed_loops` are stale or unset until it does.
-- [ ] Update root `README.md` to reflect the three-service layout and the
+- [x] Update root `README.md` to reflect the three-service layout and the
       `docker compose up` demo flow.
-- [ ] Commit: `docs: add architecture overview`
+- [x] Commit: `docs: add architecture overview`
 
 ---
 

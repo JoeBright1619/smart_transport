@@ -489,7 +489,7 @@ heading to B), add `nextStopId` to the gps_service MQTT payload, store
 it on `vehicles` (new column), and read it in `tracking` /
 `arrival_service`. Not scheduled; evaluate from real behaviour.
 
-- [ ] **Task 5.4: Update backend architecture documentation**
+- [x] **Task 5.4: Update backend architecture documentation**
   - Update `backend/guidelines/architecture.md` to reflect MQTT GPS service
   - Document new data flow: GPS service → MQTT → Backend
   - **Commit:** `docs(backend): update architecture for GPS service`
